@@ -1,132 +1,240 @@
-# College ERP Dashboard
+# EduDash — College ERP Dashboard
 
-A Duolingo-inspired, gamified college ERP dashboard built with React + Vite + JavaScript.
+A modern, gamified college ERP dashboard built with **React + Vite + JavaScript**. EduDash features a premium UI with multilingual support (English & Hindi), smooth Framer Motion animations, and a comprehensive suite of student-facing modules.
 
-## Features
+---
 
-- 🎓 **Modern UI**: Duolingo-inspired design with playful colors and animations
-- ⚡ **Fast Development**: Vite for lightning-fast development and builds
-- 🎨 **Tailwind CSS**: Utility-first CSS framework with custom Duolingo green theme
-- 🎭 **Framer Motion**: Smooth animations and transitions
-- 🎯 **Lucide React**: Beautiful, consistent icons
-- 🧪 **Testing**: Vitest + React Testing Library + fast-check for property-based testing
-- 📱 **Responsive**: Desktop-first design that works on all devices
+## ✨ Features
 
-## Tech Stack
+- 🎓 **Premium UI** — modern glassmorphism design with a playful, vibrant aesthetic
+- 🌐 **Multilingual** — full English / Hindi (EN/HI) toggle via React Context
+- ⚡ **Fast Development** — Vite for lightning-fast HMR and builds
+- 🎨 **Tailwind CSS** — utility-first styling with a custom design token theme
+- 🎭 **Framer Motion** — smooth page transitions and micro-animations
+- 🎯 **Lucide React** — consistent, beautiful icon system
+- 🧭 **SPA Navigation** — custom client-side router (no external router dependency)
+- 📱 **Responsive** — desktop-first layout that adapts to mobile via collapsible sidebar
+- 🔒 **Auth Context** — lightweight mock authentication layer
+- 🧪 **Testing** — Vitest + React Testing Library + fast-check (property-based tests)
 
-- **Frontend**: React 18 + JavaScript (no TypeScript)
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS with custom theme
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Testing**: Vitest + React Testing Library + fast-check
-- **Font**: Nunito from Google Fonts
+---
 
-## Getting Started
+## 🗂️ Modules & Pages
+
+| Route Key         | Page Component            | Description                                      |
+|-------------------|---------------------------|--------------------------------------------------|
+| `home`            | `HomePage`                | Dashboard overview with all summary widgets      |
+| `courses`         | `CoursesPage`             | Enrolled courses list with drill-down navigation |
+| `subject_<id>`    | `SubjectDetailPage`       | Per-subject detail view (accessed from Courses)  |
+| `faculty`         | `FacultyPage`             | Faculty directory with contact info              |
+| `timetable`       | `WeeklyTimetablePage`     | Full weekly class timetable                      |
+| `examination`     | `ExaminationPage`         | Exam schedule, results, and grading              |
+| `calendar`        | `SchoolCalendarPage`      | Academic calendar with events                    |
+| `feeDetails`      | `FeeDetailsPage`          | Detailed fee ledger and payment history          |
+| `documents`       | `DocumentsPage`           | Student document repository                      |
+| `achievements`    | `AchievementsPage`        | Badges, awards, and milestones                   |
+| `mentorSupport`   | `MentorSupportPage`       | Mentor profiles, anonymous requests, sessions    |
+| `clubsCommittees` | `ClubsCommitteesPage`     | Student clubs and committee memberships          |
+| `transport`       | `TransportPage`           | Bus routes, schedule, and transport details      |
+
+---
+
+## 🧩 Component Library
+
+| Component                | Description                                              |
+|--------------------------|----------------------------------------------------------|
+| `Sidebar`                | Collapsible navigation sidebar with custom scrollbar     |
+| `Header`                 | Top bar with notifications, date, language toggle        |
+| `HeroBanner`             | Welcome banner with student info                         |
+| `ActionNeededSection`    | Quick-action cards (attendance warnings, due fees, etc.) |
+| `AttendanceCard`         | Overall attendance circular progress                     |
+| `SubjectAttendanceCards` | Per-subject attendance breakdown                         |
+| `FeeCard`                | Fee summary with due date and status badge               |
+| `TimetableCard`          | Today's timetable with period slots                      |
+| `CredentialsCard`        | Library / email credential display                       |
+| `LMSCard`                | LMS stats — streak, completion, pending assignments      |
+| `VCMessageCard`          | Vice-Chancellor's message card                           |
+| `NoticeBoard`            | Notices and exam alerts board                            |
+| `EventBoard`             | Upcoming events and happenings                           |
+| `MainCard`               | Reusable card shell used across dashboard modules        |
+| `FloatingWidgets`        | Floating UI helper widgets                               |
+| `HelperButton`           | Floating help trigger button                             |
+| `HelperPopup`            | Help/FAQ popup panel                                     |
+
+---
+
+## 🌐 Multilingual Support
+
+Translation files live in `src/translations/`:
+
+| File            | Scope                                   |
+|-----------------|-----------------------------------------|
+| `common.js`     | Shared UI strings (buttons, labels)     |
+| `homepage.js`   | Home dashboard strings                  |
+| `exam.js`       | Examination module strings              |
+| `mentor.js`     | Mentor Support module strings           |
+| `newSections.js`| Newer module labels                     |
+| `index.js`      | Translation registry / export barrel    |
+
+Language state is managed via `LanguageContext` (`src/context/LanguageContext.jsx`). Toggle between **EN** and **HI** from the header.
+
+---
+
+## 🏗️ Tech Stack
+
+| Layer        | Technology                              |
+|--------------|-----------------------------------------|
+| Frontend     | React 18 + JavaScript (no TypeScript)   |
+| Build Tool   | Vite 5                                  |
+| Styling      | Tailwind CSS 3 with custom theme        |
+| Animations   | Framer Motion 11                        |
+| Icons        | Lucide React                            |
+| State        | React Context (Auth + Language)         |
+| Testing      | Vitest + React Testing Library + fast-check |
+| Font         | Nunito (Google Fonts)                   |
+
+---
+
+## 📁 Project Structure
+
+```
+school-erp-dashboard/
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── components/              # Reusable UI components (17 components)
+│   │   ├── MainCard.jsx         # Shared card shell
+│   │   ├── Sidebar.jsx          # Collapsible navigation sidebar
+│   │   ├── Header.jsx           # Top navigation bar
+│   │   ├── AttendanceCard.jsx
+│   │   ├── FeeCard.jsx
+│   │   ├── TimetableCard.jsx
+│   │   └── ...                  # Other dashboard widgets
+│   ├── pages/                   # Full-page views (12 pages)
+│   │   ├── CoursesPage.jsx
+│   │   ├── FeeDetailsPage.jsx
+│   │   ├── MentorSupportPage.jsx
+│   │   ├── ExaminationPage.jsx
+│   │   └── ...
+│   ├── context/                 # React Context providers
+│   │   ├── AuthContext.jsx      # Mock auth state
+│   │   └── LanguageContext.jsx  # EN/HI language toggle
+│   ├── data/                    # Static dummy data (no API/backend)
+│   ├── translations/            # EN + HI string maps
+│   ├── services/                # Service layer (mock)
+│   ├── utils/                   # Utility helpers
+│   ├── test/                    # Test setup and utilities
+│   ├── App.jsx                  # Root component + SPA router
+│   ├── main.jsx                 # App entry point
+│   ├── index.css                # Global base styles
+│   └── App.css                  # App-level styles
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── eslint.config.js
+└── package.json
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
+- **Node.js** 18 or higher
+- **npm** (or yarn / pnpm)
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd school-erp-dashboard
+
+# 2. Install dependencies
+npm install
+```
 
 ### Development
-
-Start the development server:
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
+App runs at **`http://localhost:5173`** with hot module replacement.
 
-### Building
-
-Build for production:
+### Production Build
 
 ```bash
 npm run build
 ```
 
-### Testing
-
-Run tests:
+Preview the production build locally:
 
 ```bash
-npm run test
+npm run preview
 ```
 
-Run tests with UI:
+---
+
+## 🧪 Testing
 
 ```bash
+# Run all tests (headless)
+npm run test
+
+# Run tests with interactive UI
 npm run test:ui
 ```
 
-### Linting
+Tests use **Vitest** + **React Testing Library** + **fast-check** for property-based testing.
 
-Run ESLint:
+---
+
+## 🔍 Linting
 
 ```bash
 npm run lint
 ```
 
-## Project Structure
+---
 
-```
-college-erp-dashboard/
-├── public/
-│   └── vite.svg
-├── src/
-│   ├── components/          # React components
-│   ├── data/               # Static dummy data
-│   ├── test/               # Test setup and utilities
-│   ├── utils/              # Utility functions
-│   ├── App.jsx             # Main app component
-│   ├── main.jsx            # App entry point
-│   └── index.css           # Global styles
-├── index.html              # HTML template
-├── vite.config.js          # Vite configuration
-├── tailwind.config.js      # Tailwind CSS configuration
-├── postcss.config.js       # PostCSS configuration
-└── package.json            # Dependencies and scripts
-```
+## 🎨 Design System
 
-## Design System
+### Color Palette
 
-### Colors
-
-- **Primary Green**: `#58CC02` (Duolingo green)
-- **Primary Dark**: `#46A302` (hover state)
-- **Background**: `#F7F7F7` (light gray)
+| Token            | Value       | Usage                          |
+|------------------|-------------|--------------------------------|
+| Background       | `#caf0f8`   | App background (sky blue)      |
+| Primary Accent   | `#0077b6`   | Focus highlights, CTAs         |
+| Card Background  | `#ffffff`   | Card shells                    |
+| Sidebar BG       | Custom dark | Collapsible sidebar            |
 
 ### Typography
 
-- **Font Family**: Nunito (Google Fonts)
+- **Font**: [Nunito](https://fonts.google.com/specimen/Nunito) (Google Fonts)
 - **Weights**: 400, 600, 700, 800, 900
 
-### Animations
+### Animation Patterns
 
-- Custom gradient animations
-- Float animations for decorative elements
-- Framer Motion for component transitions
+- **Page transitions** — `AnimatePresence` with `opacity` + `y` fade-slide (250ms)
+- **Sidebar** — Spring-animated `marginLeft` on main content (`stiffness: 300, damping: 30`)
+- **Component entrance** — Staggered `motion.div` reveals per card/section
+- **Highlight glow** — Outline pulse on scroll-to-section navigation
 
-## Requirements Fulfilled
+---
 
-✅ **1.1**: React + Vite + JavaScript (no TypeScript)  
-✅ **1.2**: Tailwind CSS for all styling  
-✅ **1.3**: Framer Motion for animations  
-✅ **1.4**: Lucide React for icons  
-✅ **1.5**: Static dummy data only (no APIs/backend)  
-✅ **1.6**: Project runs with `npm run dev` without errors  
-✅ **1.7**: Nunito font imported from Google Fonts
+## 📌 Architecture Notes
 
-## License
+- **No external router** — page navigation is managed via `activePage` state + a `switch` in `App.jsx`
+- **Static data only** — all data comes from `src/data/dummyData.js`; no API calls
+- **Always-mounted modal pattern** — modals/popups use CSS visibility (`opacity`/`pointer-events`) rather than conditional rendering to avoid unmount/remount animation glitches
+- **Sidebar scroll** — custom-styled scrollbar aligned to EduDash palette; layout-stable with no shifting
+- **Performance** — Stable ref patterns (`useRef`, `useCallback`, `useMemo`) prevent unnecessary re-renders in `App.jsx` and `HomePage`
 
-This project is for educational purposes.
+---
+
+## 📄 License
+
+This project is for **educational purposes** only.
