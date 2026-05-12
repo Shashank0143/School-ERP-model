@@ -8,7 +8,7 @@ import {
   Bell,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 
 const containerVariants = {
   hidden: {},
@@ -28,7 +28,7 @@ const widgetVariants = {
 function ExamWidget({ nextExam }) {
   const { name, date } = nextExam;
   const { t } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
 
   return (
     <motion.div
@@ -77,7 +77,7 @@ function ExamWidget({ nextExam }) {
 
 function AttendanceWarningWidget({ attendanceWarnings }) {
   const { t } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
   if (!attendanceWarnings || attendanceWarnings.length === 0) return null;
 
   return (
@@ -133,7 +133,7 @@ function AttendanceWarningWidget({ attendanceWarnings }) {
 
 function AssignmentsWidget({ pendingAssignments }) {
   const { t } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
   const isUrgent = pendingAssignments > 0;
 
   return (

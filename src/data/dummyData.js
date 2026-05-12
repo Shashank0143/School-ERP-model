@@ -6,6 +6,7 @@ export const dummyData = {
     id: "SCH2024011",
     name: "Ashish",
     fullName: "Ashish Kumar",
+    enrollmentNo: "202100567892A",
     email: "ashish.kumar@springdale.edu.in",
     class: "Class 11 — Science",
     section: "Section A",
@@ -497,6 +498,7 @@ export const dummyData = {
         room: "Room 11A",
         startTime: "08:50",
         endTime: "09:35",
+        status: "ended",
       },
       {
         id: "t2",
@@ -506,6 +508,7 @@ export const dummyData = {
         room: "Room 11A",
         startTime: "09:40",
         endTime: "10:25",
+        status: "live",
       },
       {
         id: "t3",
@@ -515,6 +518,7 @@ export const dummyData = {
         room: "Lab 2",
         startTime: "10:40",
         endTime: "11:25",
+        status: "upcoming",
       },
     ],
     Wednesday: [
@@ -715,18 +719,18 @@ export const dummyData = {
 
   // ── School Calendar ───────────────────────────────────────────
   schoolCalendar: {
-    academicYear: "2024–25",
+    academicYear: "2025–26",
     terms: [
       {
         id: "t1",
         name: "Term 1",
-        period: "April 2024 – September 2024",
+        period: "April 2025 – September 2025",
         status: "completed",
       },
       {
         id: "t2",
         name: "Term 2",
-        period: "October 2024 – March 2025",
+        period: "October 2025 – March 2026",
         status: "ongoing",
       },
     ],
@@ -902,6 +906,41 @@ export const dummyData = {
     ],
   },
 
+  // ── Fee Details ───────────────────────────────────────────────
+  feeDetails: {
+    balance: 10650,
+    totalPaid: 42000,
+    pending: 10650,
+    structure: [
+      { id: "s1", semester: "Semester 1", academicFee: 12000, hostelFee: 5000, status: "paid", total: 17000 },
+      { id: "s2", semester: "Semester 2", academicFee: 12000, hostelFee: 5000, status: "paid", total: 17000 },
+      { id: "s3", semester: "Semester 3", academicFee: 13500, hostelFee: 5000, status: "unpaid", total: 18500 },
+      { id: "s4", semester: "Semester 4", academicFee: 13500, hostelFee: 5000, status: "upcoming", total: 18500 }
+    ],
+    bills: [
+      { id: "b1", billNo: "BL-2025-003", dueDate: "31 July 2025", amount: 18500, status: "unpaid", emiAvailable: true, paidAmount: 8000, remainingAmount: 10500 },
+      { id: "b2", billNo: "BL-2024-002", dueDate: "15 Jan 2025", amount: 17000, status: "paid", emiAvailable: false, paidAmount: 17000, remainingAmount: 0 },
+      { id: "b3", billNo: "BL-2024-001", dueDate: "15 Jul 2024", amount: 17000, status: "paid", emiAvailable: false, paidAmount: 17000, remainingAmount: 0 }
+    ],
+    receipts: [
+      { id: "r1", receiptNo: "RCP-2025-081", date: "10 Jul 2025", amount: 8000, mode: "Credit Card", status: "success", for: "Semester 3 Part 1" },
+      { id: "r2", receiptNo: "RCP-2025-012", date: "10 Jan 2025", amount: 17000, mode: "Net Banking", status: "success", for: "Semester 2" },
+      { id: "r3", receiptNo: "RCP-2024-054", date: "12 Jul 2024", amount: 17000, mode: "UPI", status: "success", for: "Semester 1" }
+    ],
+    itCertificate: {
+      year: "2024-2025",
+      studentName: "Ashish Kumar",
+      rollNo: "11A-023",
+      totalPaid: 34000,
+      dateGenerated: "01 Apr 2025",
+      documentId: "IT-2024-25-0234"
+    },
+    miscInvoices: [
+      { id: "i1", invoiceNo: "INV-LIB-01", type: "Library Fine", dueDate: "05 Aug 2025", amount: 150, status: "unpaid" },
+      { id: "i2", invoiceNo: "INV-LAB-02", type: "Lab Equipment Breakage", dueDate: "15 Nov 2024", amount: 500, status: "paid" }
+    ]
+  },
+
   // ── Floating Widgets ──────────────────────────────────────────
   widgets: {
     nextExam: { name: "Physics Practical", date: "18 July 2025" },
@@ -916,22 +955,18 @@ export const dummyData = {
 
   // ── Navigation ────────────────────────────────────────────────
   navItems: [
-    { id: "home", label: "Home", icon: "Home", active: true },
-    { id: "timetable", label: "Timetable", icon: "Clock", active: false },
-    { id: "courses", label: "My Subjects", icon: "BookOpen", active: false },
-    { id: "faculty", label: "My Teachers", icon: "Users", active: false },
-    {
-      id: "examination",
-      label: "Examinations",
-      icon: "FileText",
-      active: false,
-    },
-    {
-      id: "calendar",
-      label: "School Calendar",
-      icon: "Calendar",
-      active: false,
-    },
-    { id: "logout", label: "Logout", icon: "LogOut", active: false },
+    { id: "home", label: "Home", labelKey: "nav.home", icon: "Home", active: true },
+    { id: "timetable", label: "Timetable", labelKey: "nav.timetable", icon: "Clock", active: false },
+    { id: "courses", label: "My Subjects", labelKey: "nav.courses", icon: "BookOpen", active: false },
+    { id: "faculty", label: "My Teachers", labelKey: "nav.faculty", icon: "Users", active: false },
+    { id: "feeDetails", label: "Fee Details", labelKey: "nav.feeDetails", icon: "FileText", active: false },
+    { id: "examination", label: "Examinations", labelKey: "nav.examination", icon: "ClipboardList", active: false },
+    { id: "calendar", label: "School Calendar", labelKey: "nav.calendar", icon: "Calendar", active: false },
+    { id: "documents", label: "Documents", labelKey: "nav.documents", icon: "FolderOpen", active: false },
+    { id: "achievements", label: "Achievements", labelKey: "nav.achievements", icon: "Medal", active: false },
+    { id: "mentorSupport", label: "Mentor Support", labelKey: "nav.mentorSupport", icon: "LifeBuoy", active: false },
+    { id: "clubsCommittees", label: "Clubs & Committees", labelKey: "nav.clubs", icon: "Users", active: false },
+    { id: "transport", label: "Transport", labelKey: "nav.transport", icon: "Bus", active: false },
+    { id: "logout", label: "Logout", labelKey: "nav.logout", icon: "LogOut", active: false },
   ],
 };

@@ -1,6 +1,7 @@
-import React from "react";
+import MainCard from "./MainCard";
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 24 },
@@ -20,17 +21,15 @@ function getInitials(name) {
 }
 
 function VCMessageCard({ vcName, vcTitle, message, avatarColor, index = 0 }) {
+  const { t } = useLanguage();
   const initials = getInitials(vcName);
 
   return (
-    <motion.div
+    <MainCard
       custom={index}
       variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      className="relative rounded-3xl shadow-md overflow-hidden cursor-default select-none"
-      role="region"
-      aria-label={`Message from ${vcName}, ${vcTitle}`}
+      className="h-full relative cursor-default select-none overflow-hidden"
+      aria-label={`${t("vc.title")}: ${vcName}, ${t(vcTitle)}`}
     >
       {/* Background gradient using palette */}
       <div
@@ -38,13 +37,6 @@ function VCMessageCard({ vcName, vcTitle, message, avatarColor, index = 0 }) {
         style={{
           background:
             "linear-gradient(135deg, #03045e08, #0077b612, #00b4d810)",
-        }}
-      />
-      {/* Top accent bar */}
-      <div
-        className="absolute top-0 left-0 right-0 h-1 pointer-events-none"
-        style={{
-          background: "linear-gradient(90deg, #03045e, #0077b6, #00b4d8)",
         }}
       />
 
@@ -87,7 +79,7 @@ function VCMessageCard({ vcName, vcTitle, message, avatarColor, index = 0 }) {
               className="text-xs font-semibold mt-0.5"
               style={{ color: "#0077b6" }}
             >
-              {vcTitle}
+              {t(vcTitle)}
             </p>
           </div>
         </div>
@@ -102,9 +94,9 @@ function VCMessageCard({ vcName, vcTitle, message, avatarColor, index = 0 }) {
           />
           <blockquote
             className="pl-8 pr-2 text-sm font-semibold leading-relaxed italic text-gray-700"
-            aria-label={`Quote: ${message}`}
+            aria-label={`${t("vc.quote")}: ${t(message)}`}
           >
-            {message}
+            {t(message)}
           </blockquote>
           <div className="flex justify-end mt-1 pr-2">
             {/* Closing quote: rotate 180° to get proper closing quotation mark */}
@@ -124,11 +116,11 @@ function VCMessageCard({ vcName, vcTitle, message, avatarColor, index = 0 }) {
             style={{ backgroundColor: "#0077b6" }}
           />
           <span className="text-xs font-bold" style={{ color: "#0077b6" }}>
-            — {vcName}, {vcTitle}
+            — {vcName}, {t(vcTitle)}
           </span>
         </div>
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 

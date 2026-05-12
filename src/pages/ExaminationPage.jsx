@@ -14,6 +14,7 @@ import {
 import { useLanguage } from "../context/LanguageContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
+import MainCard from "../components/MainCard";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -33,36 +34,14 @@ const cardVariants = {
   },
 };
 
-// ── Section heading ───────────────────────────────────────────────────────────
-function SectionHeading({ icon: Icon, title, color = NAVY }) {
-  return (
-    <div className="flex items-center gap-2 mb-4">
-      <div
-        className="w-3 h-3 rounded-full flex-shrink-0"
-        style={{ backgroundColor: color }}
-        aria-hidden="true"
-      />
-      <h2 className="text-base font-extrabold" style={{ color: NAVY }}>
-        {title}
-      </h2>
-    </div>
-  );
-}
-
 // ── Admit Card ────────────────────────────────────────────────────────────────
 function AdmitCardSection({ admitCard }) {
+  const { t } = useLanguage();
   return (
-    <motion.div
+    <MainCard
       variants={cardVariants}
-      className="bg-white rounded-2xl shadow-md overflow-hidden"
-      style={{ outline: `1px solid ${LIME}` }}
+      className="h-full"
     >
-      {/* Accent bar */}
-      <div
-        className="h-1.5 w-full"
-        style={{ background: `linear-gradient(90deg, ${NAVY}, ${TEAL})` }}
-        aria-hidden="true"
-      />
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -74,9 +53,9 @@ function AdmitCardSection({ admitCard }) {
             </div>
             <div>
               <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
-                Admit Card
+                {t("exam.admitCard")}
               </h3>
-              <p className="text-xs text-gray-400">{admitCard.examName}</p>
+              <p className="text-xs text-gray-400">{t(admitCard.examName)}</p>
             </div>
           </div>
           {admitCard.issued ? (
@@ -84,21 +63,21 @@ function AdmitCardSection({ admitCard }) {
               className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
               style={{ backgroundColor: SAGE + "25", color: SAGE }}
             >
-              <CheckCircle size={16} aria-hidden="true" /> Issued
+              <CheckCircle size={16} aria-hidden="true" /> {t("exam.issued")}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-amber-100 text-amber-600">
-              <Clock size={13} aria-hidden="true" /> Pending
+              <Clock size={13} aria-hidden="true" /> {t("exam.pending")}
             </span>
           )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            { label: "Roll Number", value: admitCard.rollNo },
-            { label: "Exam Center", value: admitCard.examCenter },
-            { label: "Reporting Time", value: admitCard.reportingTime },
-            { label: "Exam Dates", value: admitCard.examDates },
+            { label: "exam.rollNumber", value: admitCard.rollNo },
+            { label: "exam.examCenter", value: admitCard.examCenter },
+            { label: "exam.reportingTime", value: admitCard.reportingTime },
+            { label: "exam.examDates", value: admitCard.examDates },
           ].map((item) => (
             <div
               key={item.label}
@@ -109,7 +88,7 @@ function AdmitCardSection({ admitCard }) {
                 className="text-[10px] font-extrabold uppercase tracking-wide mb-0.5"
                 style={{ color: TEAL }}
               >
-                {item.label}
+                {t(item.label)}
               </p>
               <p className="text-sm font-bold" style={{ color: NAVY }}>
                 {item.value}
@@ -121,29 +100,24 @@ function AdmitCardSection({ admitCard }) {
         <button
           className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition-all hover:opacity-90"
           style={{ backgroundColor: NAVY, color: LIME }}
-          aria-label="Download admit card"
+          aria-label={t("exam.downloadAdmitCard")}
         >
           <Download size={20} aria-hidden="true" />
-          Download Admit Card
+          {t("exam.downloadAdmitCard")}
         </button>
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 
 // ── Exam Schedule ─────────────────────────────────────────────────────────────
 function ScheduleSection({ schedule }) {
+  const { t } = useLanguage();
   return (
-    <motion.div
+    <MainCard
       variants={cardVariants}
-      className="bg-white rounded-2xl shadow-md overflow-hidden"
-      style={{ outline: `1px solid ${LIME}` }}
+      className="h-full"
     >
-      <div
-        className="h-1.5 w-full"
-        style={{ background: `linear-gradient(90deg, ${TEAL}, ${SAGE})` }}
-        aria-hidden="true"
-      />
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
@@ -155,10 +129,10 @@ function ScheduleSection({ schedule }) {
           </div>
           <div>
             <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
-              Exam Schedule
+              {t("exam.schedule")}
             </h3>
             <p className="text-xs text-gray-400">
-              Half-Yearly Examination 2025
+              {t("Half-Yearly Examination 2025")}
             </p>
           </div>
         </div>
@@ -200,7 +174,7 @@ function ScheduleSection({ schedule }) {
                   className="text-sm font-bold truncate"
                   style={{ color: NAVY }}
                 >
-                  {exam.subject}
+                  {t(exam.subject)}
                 </p>
                 <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                   <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -216,29 +190,24 @@ function ScheduleSection({ schedule }) {
                 className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
                 style={{ backgroundColor: TEAL + "20", color: TEAL }}
               >
-                Upcoming
+                {t("exam.upcoming")}
               </span>
             </motion.div>
           ))}
         </div>
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
 function ResultsSection({ results }) {
+  const { t } = useLanguage();
   return (
-    <motion.div
+    <MainCard
       variants={cardVariants}
-      className="bg-white rounded-2xl shadow-md overflow-hidden"
-      style={{ outline: `1px solid ${LIME}` }}
+      className="h-full"
     >
-      <div
-        className="h-1.5 w-full"
-        style={{ background: `linear-gradient(90deg, ${SAGE}, ${TEAL})` }}
-        aria-hidden="true"
-      />
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
@@ -246,9 +215,9 @@ function ResultsSection({ results }) {
           </div>
           <div>
             <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
-              Results
+              {t("exam.results")}
             </h3>
-            <p className="text-xs text-gray-400">Past examination results</p>
+            <p className="text-xs text-gray-400">{t("exam.pastResults")}</p>
           </div>
         </div>
 
@@ -261,11 +230,10 @@ function ResultsSection({ results }) {
               <Info size={31} style={{ color: TEAL }} aria-hidden="true" />
             </div>
             <p className="text-sm font-bold" style={{ color: NAVY }}>
-              No results declared yet
+              {t("exam.noResults")}
             </p>
             <p className="text-xs text-gray-400 max-w-xs leading-relaxed">
-              Results for the Half-Yearly Examination 2025 will be published
-              here once declared by the school.
+              {t("exam.noResultsDetail")}
             </p>
           </div>
         ) : (
@@ -277,7 +245,7 @@ function ResultsSection({ results }) {
                 style={{ backgroundColor: LIME }}
               >
                 <p className="text-sm font-bold" style={{ color: NAVY }}>
-                  {r.examName}
+                  {t(r.examName)}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">{r.date}</p>
               </div>
@@ -285,23 +253,18 @@ function ResultsSection({ results }) {
           </div>
         )}
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 
 // ── Instructions ──────────────────────────────────────────────────────────────
 function InstructionsSection({ instructions }) {
+  const { t } = useLanguage();
   return (
-    <motion.div
+    <MainCard
       variants={cardVariants}
-      className="bg-white rounded-2xl shadow-md overflow-hidden"
-      style={{ outline: `1px solid ${LIME}` }}
+      className="h-full"
     >
-      <div
-        className="h-1.5 w-full"
-        style={{ background: `linear-gradient(90deg, ${NAVY}, ${SAGE})` }}
-        aria-hidden="true"
-      />
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
@@ -313,10 +276,10 @@ function InstructionsSection({ instructions }) {
           </div>
           <div>
             <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
-              Exam Instructions
+              {t("exam.instructions")}
             </h3>
             <p className="text-xs text-gray-400">
-              Please read carefully before the exam
+              {t("exam.instructionDesc")}
             </p>
           </div>
         </div>
@@ -330,12 +293,12 @@ function InstructionsSection({ instructions }) {
               >
                 {i + 1}
               </span>
-              <p className="text-sm text-gray-600 leading-snug">{inst}</p>
+              <p className="text-sm text-gray-600 leading-snug">{t(inst)}</p>
             </li>
           ))}
         </ol>
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 
@@ -356,10 +319,10 @@ function ExaminationPage({ examination }) {
           </div>
           <div>
             <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-              Examinations
+              {t("exam.title")}
             </h1>
             <p className="text-sm text-gray-500">
-              Half-Yearly 2025 · Class 11 Science
+              {t("exam.subtitle")}
             </p>
           </div>
           <div className="ml-auto">
@@ -393,7 +356,7 @@ function ExaminationPage({ examination }) {
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}
-        titleKey="examination.title"
+        titleKey="exam.title"
         contentEn="The Examinations section shows your admit card, upcoming exam schedule, past results, and important exam instructions. Download your admit card before the exam date."
         contentHi="परीक्षा अनुभाग आपका प्रवेश पत्र, आगामी परीक्षा कार्यक्रम, पिछले परिणाम और महत्वपूर्ण परीक्षा निर्देश दिखाता है। परीक्षा तिथि से पहले अपना प्रवेश पत्र डाउनलोड करें।"
       />

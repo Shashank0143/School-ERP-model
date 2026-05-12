@@ -16,6 +16,7 @@ import {
 import { useLanguage } from "../context/LanguageContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
+import MainCard from "../components/MainCard";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -42,6 +43,7 @@ const cardVariants = {
 };
 
 function TypeBadge({ type }) {
+  const { t } = useLanguage();
   const isElective = type === "elective";
   return (
     <span
@@ -51,33 +53,21 @@ function TypeBadge({ type }) {
         color: isElective ? TEAL : SAGE,
       }}
     >
-      {isElective ? "Elective" : "Core"}
+      {isElective ? t("curriculum.type.elective") : t("curriculum.type.core")}
     </span>
   );
 }
 
-function SubjectCard({ course }) {
+function SubjectCard({ course, onNavigatePage }) {
   const IconComponent = SUBJECT_ICONS[course.id] ?? BookOpen;
+  const { t } = useLanguage();
 
   return (
-    <motion.div
+    <MainCard
       variants={cardVariants}
-      className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
-      style={{ outline: `1px solid ${LIME}` }}
-      role="article"
+      className="h-full flex flex-col"
       aria-label={`${course.name} — ${course.code}`}
     >
-      {/* Accent top bar */}
-      <div
-        className="h-1.5 w-full"
-        style={{
-          background:
-            course.type === "elective"
-              ? `linear-gradient(90deg, ${TEAL}, ${SAGE})`
-              : `linear-gradient(90deg, ${NAVY}, ${TEAL})`,
-        }}
-        aria-hidden="true"
-      />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
         {/* Header */}
@@ -98,7 +88,7 @@ function SubjectCard({ course }) {
                 className="text-base font-extrabold leading-tight"
                 style={{ color: NAVY }}
               >
-                {course.name}
+                {t(`sub.${course.id}`) || course.name}
               </h3>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <Hash size={14} style={{ color: TEAL }} aria-hidden="true" />
@@ -138,27 +128,41 @@ function SubjectCard({ course }) {
               className="text-xs font-extrabold uppercase tracking-wide"
               style={{ color: TEAL }}
             >
-              Teachers
+              {t("courses.teachers")}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {course.teachers.map((t, i) => (
+            {course.teachers.map((t_name, i) => (
               <span
                 key={i}
                 className="text-xs font-semibold px-2.5 py-1 rounded-full"
                 style={{ backgroundColor: NAVY + "12", color: NAVY }}
               >
-                {t}
+                {t_name}
               </span>
             ))}
           </div>
         </div>
+
+        {/* View Curriculum Button */}
+        <div className="mt-auto pt-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigatePage(`subject_${course.id}`);
+            }}
+            className="w-full bg-white hover:bg-[#caf0f8] text-[#03045e] border-2 border-[#03045e] font-bold py-2 rounded-xl transition-colors text-sm shadow-sm flex items-center justify-center gap-2"
+          >
+            <BookOpen size={16} />
+            {t("curriculum.viewBtn")}
+          </button>
+        </div>
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 
-function CoursesPage({ courses = [] }) {
+function CoursesPage({ courses = [], onNavigatePage }) {
   const { t } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
 
@@ -175,9 +179,9 @@ function CoursesPage({ courses = [] }) {
           </div>
           <div>
             <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-              My Subjects
+              {t("courses.title")}
             </h1>
-            <p className="text-sm text-gray-500">Class 11 — Science Stream</p>
+            <p className="text-sm text-gray-500">{t("courses.subtitle")}</p>
           </div>
           <div className="ml-auto">
             <HelperButton
@@ -196,7 +200,7 @@ function CoursesPage({ courses = [] }) {
               aria-hidden="true"
             />
             <h2 className="text-base font-extrabold" style={{ color: NAVY }}>
-              Core Subjects
+              {t("courses.core")}
             </h2>
             <span
               className="text-xs font-bold px-2 py-0.5 rounded-full"
@@ -212,7 +216,7 @@ function CoursesPage({ courses = [] }) {
             animate="visible"
           >
             {core.map((course) => (
-              <SubjectCard key={course.id} course={course} />
+              <SubjectCard key={course.id} course={course} onNavigatePage={onNavigatePage} />
             ))}
           </motion.div>
         </div>
@@ -227,7 +231,7 @@ function CoursesPage({ courses = [] }) {
                 aria-hidden="true"
               />
               <h2 className="text-base font-extrabold" style={{ color: NAVY }}>
-                Elective Subjects
+                {t("courses.elective")}
               </h2>
               <span
                 className="text-xs font-bold px-2 py-0.5 rounded-full"
@@ -243,7 +247,7 @@ function CoursesPage({ courses = [] }) {
               animate="visible"
             >
               {elective.map((course) => (
-                <SubjectCard key={course.id} course={course} />
+                <SubjectCard key={course.id} course={course} onNavigatePage={onNavigatePage} />
               ))}
             </motion.div>
           </div>

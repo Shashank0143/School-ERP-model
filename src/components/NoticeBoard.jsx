@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import MainCard from "./MainCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { getNoticePriorityStyle } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
 
@@ -70,12 +71,13 @@ const NOTICE_LEGEND = [
   },
 ];
 
-function NoticeItem({ notice, index, isParentMode, t }) {
+function NoticeItem({ notice, index, isParentMode }) {
+  const { t } = useLanguage();
   const { title, date, priority, icon } = notice;
   const IconComponent = ICON_MAP[icon] ?? Bell;
   const { bgClass, textClass } = getNoticePriorityStyle(priority);
 
-  const priorityLabel = t(`notice.priority.${priority}`) || priority;
+  const priorityLabel = t(`priority.${priority}`) || priority;
 
   return (
     <motion.li
@@ -85,12 +87,9 @@ function NoticeItem({ notice, index, isParentMode, t }) {
       animate="visible"
       whileHover={{ scale: 1.015, x: 4 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      /* FIX: removed inline onMouseEnter/Leave style mutations — they bypass
-         React's reconciler and cause layout thrashing on every hover.
-         Using a Tailwind hover class is GPU-composited and zero-cost. */
       className="flex items-start gap-3 p-3 rounded-2xl transition-colors duration-150 cursor-default hover:bg-[#caf0f8]"
       role="listitem"
-      aria-label={`${priorityLabel} priority notice: ${title}`}
+      aria-label={`${priorityLabel} priority notice: ${t(title)} on ${date}`}
     >
       <div
         className={`flex-shrink-0 p-2 rounded-xl ${bgClass}`}
@@ -110,7 +109,7 @@ function NoticeItem({ notice, index, isParentMode, t }) {
           className={`font-semibold leading-snug line-clamp-2 ${isParentMode ? "text-base" : "text-sm"}`}
           style={{ color: "#03045e" }}
         >
-          {title}
+          {t(title)}
         </p>
         <p className="text-xs text-gray-400 mt-0.5 font-medium">{date}</p>
       </div>
@@ -119,8 +118,8 @@ function NoticeItem({ notice, index, isParentMode, t }) {
 }
 
 function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
-  const { t, lang } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { t } = useLanguage();
+  const { isParent: isParentMode } = useAuth();
   const [activeTab, setActiveTab] = useState("notices");
   const [showHelper, setShowHelper] = useState(false);
 
@@ -134,20 +133,14 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
 
   return (
     <>
-      <motion.div
+      <MainCard
         custom={index}
         variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col relative"
-        style={{ outline: "1px solid #caf0f8" }}
-        role="region"
+        className="h-full flex flex-col relative"
         aria-label={t("notice.title")}
       >
-        {/* Helper button */}
         <HelperButton onClick={() => setShowHelper(true)} />
 
-        {/* Header */}
         <div className="px-6 pt-5 pb-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -170,11 +163,10 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
           </div>
         </div>
 
-        {/* Tabs */}
         <div
           className="flex gap-1 px-6 mt-4 border-b border-gray-100"
           role="tablist"
-          aria-label="Notice categories"
+          aria-label={t("notice.title")}
         >
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -209,7 +201,6 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
           })}
         </div>
 
-        {/* Content */}
         <div className="flex-1 px-4 py-3 min-h-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -227,14 +218,13 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
                   {t("notice.empty")}
                 </p>
               ) : (
-                <ul className="space-y-1" aria-label="Notice list">
+                <ul className="space-y-1" aria-label={t("notice.list")}>
                   {activeData.map((notice, i) => (
                     <NoticeItem
                       key={notice.id}
                       notice={notice}
                       index={i}
                       isParentMode={isParentMode}
-                      t={t}
                     />
                   ))}
                 </ul>
@@ -242,7 +232,7 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
             </motion.div>
           </AnimatePresence>
         </div>
-      </motion.div>
+      </MainCard>
 
       <HelperPopup
         isOpen={showHelper}

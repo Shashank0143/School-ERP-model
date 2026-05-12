@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import MainCard from "./MainCard";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 import { getFeeStatusStyle, getFeeProgress } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
 
@@ -62,6 +63,27 @@ function TrafficLight({ status }) {
   );
 }
 
+const getFeeStatus = (status) => {
+  const map = {
+    unpaid: {
+      color: "text-orange-500",
+      bg: "bg-orange-50",
+      messageKey: "fees.parentUnpaid",
+    },
+    paid: {
+      color: "text-green-500",
+      bg: "bg-green-50",
+      messageKey: "fees.parentPaid",
+    },
+    overdue: {
+      color: "text-red-500",
+      bg: "bg-red-50",
+      messageKey: "fees.parentOverdue",
+    },
+  };
+  return map[status] || map.unpaid;
+};
+
 function FeeCard({
   amount,
   currency = "₹",
@@ -69,14 +91,20 @@ function FeeCard({
   status,
   amountPaid,
   totalAmount,
+  onClick,
 }) {
   const { t, lang } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
 
   const { bgClass, textClass } = getFeeStatusStyle(status);
   const progress = getFeeProgress(amountPaid, totalAmount);
   const isPaid = status === "paid";
+  const feeStatus = getFeeStatus(status);
+
+  const formattedAmount = amount.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
+  const formattedPaid = amountPaid.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
+  const formattedTotal = totalAmount.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
 
   const amountColorMap = {
     paid: "text-[#00b4d8]",
@@ -92,25 +120,11 @@ function FeeCard({
   };
   const barColor = barColorMap[status] ?? "bg-[#0077b6]";
 
-  const glowMap = {
-    paid: "2px solid #00b4d8",
-    unpaid: "2px solid #0077b6",
-    overdue: "2px solid #EF4444",
-  };
-
-  const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-  const formatAmount = (n) => n.toLocaleString("en-IN");
   const StatusIcon = isPaid
     ? CheckCircle
     : status === "overdue"
       ? AlertOctagon
       : AlertTriangle;
-
-  const parentMsgKey = {
-    paid: "fees.parentPaid",
-    unpaid: "fees.parentUnpaid",
-    overdue: "fees.parentOverdue",
-  };
 
   const parentStatusLabel = {
     paid: t("fees.paid"),
@@ -120,142 +134,153 @@ function FeeCard({
 
   return (
     <>
-      <motion.div
+      <MainCard
         variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-white rounded-3xl p-6 shadow-md flex flex-col gap-4 cursor-default select-none relative overflow-hidden"
-        style={{ outline: glowMap[status] ?? glowMap.unpaid }}
-        role="region"
-        aria-label={`Fee status: ${statusLabel}. Amount due: ${currency}${formatAmount(amount)}`}
+        onClick={onClick}
+        className={`h-full p-7 flex flex-col select-none relative overflow-hidden ${onClick ? "cursor-pointer" : "cursor-default"}`}
+        aria-label={`Fee status: ${status}. Amount due: ${currency}${formattedAmount}`}
       >
-        {/* Helper button */}
-        <HelperButton onClick={() => setShowHelper(true)} />
-
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <div
-            className="p-2 rounded-xl"
-            style={{ backgroundColor: "#caf0f8" }}
-          >
-            <Wallet size={26} style={{ color: "#03045e" }} aria-hidden="true" />
+        {/* Header Row: Title on Left, Helper on Right */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <div
+              className="p-2.5 rounded-2xl"
+              style={{ backgroundColor: "#caf0f8" }}
+            >
+              <Wallet size={26} style={{ color: "#03045e" }} aria-hidden="true" />
+            </div>
+            <h2 className="text-lg font-extrabold" style={{ color: "#03045e" }}>
+              {t("fees.title")}
+            </h2>
           </div>
-          <h2 className="text-lg font-bold" style={{ color: "#03045e" }}>
-            {t("fees.title")}
-          </h2>
+          <HelperButton onClick={(e) => { e.stopPropagation(); setShowHelper(true); }} />
         </div>
 
-        {/* Pulsing warning — shown below header, not competing with HelperButton */}
+        {/* Status Row (Action Needed Indicator) */}
         {!isPaid && (
-          <span
-            className="flex items-center gap-1.5 self-start"
-            aria-label="Payment pending"
+          <div
+            className="flex items-center gap-2 mb-6 ml-1"
+            aria-label="Payment pending status"
           >
-            <span className="relative flex h-3 w-3">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
             </span>
-            <span className="text-xs font-semibold text-red-500">
+            <span className="text-[11px] font-black uppercase tracking-widest text-red-500/80">
               {t("fees.actionNeeded")}
             </span>
-          </span>
+          </div>
         )}
 
-        {/* Amount */}
-        <div className="flex items-baseline gap-1">
-          <motion.span
-            className={`text-5xl font-black ${amountColor} leading-none`}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-          >
-            {currency}
-            {formatAmount(amount)}
-          </motion.span>
-          <span className="text-sm text-gray-400 font-medium ml-1">
+        {/* Amount Section (PRIMARY) */}
+        <div className="flex flex-col gap-1 mb-6">
+          <div className="flex items-baseline gap-2">
+            <motion.span
+              className={`text-5xl font-black ${amountColor} tracking-tight leading-none`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
+              <span className="text-3xl mr-0.5">{currency}</span>
+              {formattedAmount}
+            </motion.span>
+          </div>
+          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">
             {t("fees.outstanding")}
           </span>
         </div>
 
-        {/* Due date */}
-        <div className="flex items-center gap-2 text-gray-500">
-          <Calendar size={21} className="flex-shrink-0" aria-hidden="true" />
-          <span className="text-sm font-semibold">
-            {t("fees.due")}: {dueDate}
-          </span>
+        {/* Metadata Row: Due Date + Badge */}
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
+          <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+            <Calendar size={18} className="text-[#0077b6]" aria-hidden="true" />
+            <span className="text-xs font-extrabold">
+              {t("fees.due")}: <span className="text-gray-800">{dueDate}</span>
+            </span>
+          </div>
+
+          <motion.div
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider border ${bgClass} ${textClass}`}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
+            <StatusIcon size={14} aria-hidden="true" />
+            {t(`status.${status}`)}
+          </motion.div>
         </div>
 
-        {/* Status badge */}
-        <motion.div
-          className={`self-start flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold ${bgClass} ${textClass}`}
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          aria-label={`Payment status: ${statusLabel}`}
-        >
-          <StatusIcon size={18} aria-hidden="true" />
-          {statusLabel}
-        </motion.div>
-
-        {/* Parent-friendly message */}
         {isParentMode && (
           <motion.div
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-3 mb-8"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.6 }}
+            transition={{ duration: 0.35, delay: 0.5 }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-1">
               <TrafficLight status={status} />
               <span
-                className="text-sm font-bold"
+                className="text-xs font-black uppercase tracking-wider"
                 style={{ color: TRAFFIC_COLOR[status] }}
               >
                 {parentStatusLabel[status]}
               </span>
             </div>
             <p
-              className="text-sm font-semibold leading-snug rounded-2xl px-4 py-2"
+              className="text-xs font-bold leading-relaxed rounded-2xl px-4 py-3 border border-[#00b4d8]/20"
               style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
             >
-              {t(parentMsgKey[status])}
+              {t(feeStatus.messageKey)}
             </p>
           </motion.div>
         )}
 
-        {/* Progress bar */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs font-semibold text-gray-500">
-            <span>
-              {t("fees.paid")}: {currency}
-              {formatAmount(amountPaid)}
-            </span>
-            <span>
-              {t("fees.total")}: {currency}
-              {formatAmount(totalAmount)}
+        {/* Progress Area */}
+        <div className="space-y-3 mt-auto pt-4 border-t border-gray-50">
+          <div className="flex justify-between items-end">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                {t("fees.paid")}
+              </p>
+              <p className="text-base font-black text-[#03045e]">
+                {currency}{formattedPaid}
+              </p>
+            </div>
+            <div className="text-right space-y-1">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                {t("fees.total")}
+              </p>
+              <p className="text-sm font-extrabold text-gray-500">
+                {currency}{formattedTotal}
+              </p>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div
+              className="w-full h-3 rounded-full overflow-hidden"
+              style={{ backgroundColor: "#caf0f8" }}
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <motion.div
+                className={`h-full rounded-full shadow-sm ${barColor}`}
+                initial={{ width: "0%" }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 1.2, ease: "easeOut", delay: 0.6 }}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-black text-[#0077b6] uppercase tracking-widest">
+              {progress}% {t("fees.paid")}
             </span>
           </div>
-          <div
-            className="w-full h-3 rounded-full overflow-hidden"
-            style={{ backgroundColor: "#caf0f8" }}
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Payment progress: ${progress}%`}
-          >
-            <motion.div
-              className={`h-full rounded-full ${barColor}`}
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 1.2, ease: "easeOut", delay: 0.4 }}
-            />
-          </div>
-          <p className="text-xs text-gray-400 text-right font-medium">
-            {progress}% {t("fees.paid").toLowerCase()}
-          </p>
         </div>
-      </motion.div>
+      </MainCard>
 
       <HelperPopup
         isOpen={showHelper}

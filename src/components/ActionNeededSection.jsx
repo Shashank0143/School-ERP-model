@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import MainCard from "./MainCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -9,7 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Priority config — drives colour, animation, sort order
@@ -17,8 +18,8 @@ import { useViewMode } from "../context/ViewModeContext";
 const PRIORITY_CONFIG = {
   critical: {
     order: 0,
-    badgeKey: "action.badge.urgent",
-    badgeBg: "bg-red-100 text-red-700",
+    badgeKey: "priority.urgent",
+    badgeBg: "bg-red-50 text-red-600 border-red-100",
     iconBg: "bg-red-50",
     iconColor: "text-red-500",
     border: "border-red-200",
@@ -27,8 +28,8 @@ const PRIORITY_CONFIG = {
   },
   important: {
     order: 1,
-    badgeKey: "action.badge.important",
-    badgeBg: "bg-orange-100 text-orange-700",
+    badgeKey: "priority.important",
+    badgeBg: "bg-orange-50 text-orange-600 border-orange-100",
     iconBg: "bg-orange-50",
     iconColor: "text-orange-500",
     border: "border-orange-200",
@@ -37,8 +38,8 @@ const PRIORITY_CONFIG = {
   },
   reminder: {
     order: 2,
-    badgeKey: "action.badge.reminder",
-    badgeBg: "bg-[#0077b6]/10 text-[#0077b6]",
+    badgeKey: "priority.reminder",
+    badgeBg: "bg-[#caf0f8] text-[#0077b6] border-[#00b4d8]/20",
     iconBg: "bg-[#caf0f8]",
     iconColor: "text-[#0077b6]",
     border: "border-[#00b4d8]/30",
@@ -57,6 +58,7 @@ function buildActions({
   pendingAssignments,
   isParentMode,
   t,
+  lang,
 }) {
   const voice = isParentMode ? "parent" : "student";
   const items = [];
@@ -65,26 +67,18 @@ function buildActions({
   if (Array.isArray(attendanceWarnings) && attendanceWarnings.length > 0) {
     const lowestPct = Math.min(...attendanceWarnings.map((w) => w.percentage));
     const isMulti = attendanceWarnings.length > 1;
-    const subjectList = attendanceWarnings.map((w) => w.subject).join(", ");
-    const firstSubject = attendanceWarnings[0].subject;
+    const subjectList = attendanceWarnings.map((w) => t(w.name)).join(", ");
+    const firstSubject = t(attendanceWarnings[0].name);
 
     const titleKey = isMulti
       ? `action.attendance.title.${voice}.multi`
       : `action.attendance.title.${voice}`;
-    const descKey = isMulti
-      ? `action.attendance.desc.${voice}.multi`
-      : `action.attendance.desc.${voice}`;
 
     items.push({
       id: "attendance",
       sectionId: "section-attendance",
       Icon: AlertTriangle,
       title: t(titleKey, {
-        subject: firstSubject,
-        pct: lowestPct,
-        subjects: subjectList,
-      }),
-      description: t(descKey, {
         subject: firstSubject,
         pct: lowestPct,
         subjects: subjectList,
@@ -97,7 +91,6 @@ function buildActions({
   if (fees && fees.status !== "paid") {
     const feeType = fees.status === "overdue" ? "overdue" : "unpaid";
     const titleKey = `action.fee.title.${voice}.${feeType}`;
-    const descKey = `action.fee.desc.${voice}.${feeType}`;
     items.push({
       id: "fee",
       sectionId: "section-fee",
@@ -105,12 +98,7 @@ function buildActions({
       title: t(titleKey, {
         date: fees.dueDate,
         currency: fees.currency,
-        amount: fees.amount.toLocaleString("en-IN"),
-      }),
-      description: t(descKey, {
-        date: fees.dueDate,
-        currency: fees.currency,
-        amount: fees.amount.toLocaleString("en-IN"),
+        amount: (fees?.amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN"),
       }),
       priority: fees.status === "overdue" ? "critical" : "important",
     });
@@ -126,7 +114,6 @@ function buildActions({
         name: nextExam.name,
         date: nextExam.date,
       }),
-      description: t(`action.exam.desc.${voice}`),
       priority: "reminder",
     });
   }
@@ -142,7 +129,6 @@ function buildActions({
       sectionId: "section-lms",
       Icon: ClipboardList,
       title: t(titleKey, { count: pendingAssignments }),
-      description: t(`action.assignments.desc.${voice}`),
       priority: "reminder",
     });
   }
@@ -155,7 +141,7 @@ function buildActions({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Single action item row
+// Single action item row — REFACTORED TO COMPACT ALERT CARD
 // ─────────────────────────────────────────────────────────────────────────────
 function ActionItem({ item, onNavigate, index, t }) {
   const p = PRIORITY_CONFIG[item.priority];
@@ -165,51 +151,47 @@ function ActionItem({ item, onNavigate, index, t }) {
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, delay: index * 0.07, ease: "easeOut" }}
+      className="h-full flex"
     >
       <motion.button
         onClick={() => onNavigate(item.sectionId)}
-        whileHover={{ scale: 1.015, x: 3 }}
-        whileTap={{ scale: 0.985 }}
+        whileHover={{ scale: 1.02, x: 2 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className={`w-full text-left flex items-start gap-3 p-3.5 rounded-xl border transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#00b4d8] ${p.bg} ${p.border}`}
+        className={`group w-full h-full text-left flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#00b4d8] ${p.bg} ${p.border}`}
         aria-label={`${item.title}`}
       >
-        {/* Icon */}
+        {/* Icon Area */}
         <div
-          className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${p.iconBg}`}
+          className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-110 ${p.iconBg}`}
         >
-          {/* FIX: removed repeat:Infinity Framer Motion animation on the icon.
-              Infinite JS-driven animations accumulate RAF callbacks over time
-              and are a primary cause of the UI freeze after extended use.
-              Using a CSS animation (animate-pulse) is GPU-composited and
-              has zero JS overhead. */}
           <item.Icon
-            size={17}
+            size={22}
             className={`${p.iconColor} ${p.pulse ? "animate-pulse" : ""}`}
             aria-hidden="true"
           />
         </div>
 
-        {/* Text */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-extrabold text-gray-800 leading-snug">
-            {item.title}
-          </p>
-          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-            {item.description}
-          </p>
-        </div>
-
-        {/* Badge + chevron */}
-        <div className="flex-shrink-0 flex flex-col items-end gap-1.5 self-center">
+        {/* Content Area */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          {/* Badge (Supporting element) */}
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${p.badgeBg}`}
+            className={`self-start text-[9px] font-black px-2 py-0.5 rounded-full border whitespace-nowrap uppercase tracking-widest transition-colors duration-200 ${p.badgeBg}`}
           >
             {t(p.badgeKey)}
           </span>
+          
+          {/* Main Title (Primary content) */}
+          <h3 className="text-[13px] font-extrabold text-gray-800 leading-[1.3] line-clamp-2">
+            {item.title}
+          </h3>
+        </div>
+
+        {/* CTA Arrow */}
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/50 flex items-center justify-center shadow-sm group-hover:bg-[#00b4d8] group-hover:text-white transition-all duration-200">
           <ChevronRight
-            size={13}
-            className="text-gray-400"
+            size={16}
+            className="transition-transform duration-200 group-hover:translate-x-0.5"
             aria-hidden="true"
           />
         </div>
@@ -228,8 +210,8 @@ export default function ActionNeededSection({
   pendingAssignments = 0,
   onNavigate,
 }) {
-  const { t } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { t, lang } = useLanguage();
+  const { isParent: isParentMode } = useAuth();
 
   const actions = useMemo(
     () =>
@@ -240,9 +222,10 @@ export default function ActionNeededSection({
         pendingAssignments,
         isParentMode,
         t,
+        lang,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attendanceWarnings, nextExam, fees, pendingAssignments, isParentMode, t],
+    [attendanceWarnings, nextExam, fees, pendingAssignments, isParentMode, t, lang],
   );
 
   const hasCritical = actions.some((a) => a.priority === "critical");
@@ -252,22 +235,18 @@ export default function ActionNeededSection({
       : t("action.itemCount_other", { count: actions.length });
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="bg-white border-2 border-[#00b4d8]/40 rounded-2xl shadow-md overflow-hidden"
+    <MainCard
+      as="section"
+      className="overflow-hidden"
       aria-label={t("action.title")}
       aria-live="polite"
     >
       {/* Header bar */}
       <div
-        className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[#caf0f8]"
-        style={{ background: "linear-gradient(90deg, #caf0f8, #ade8f4)" }}
+        className="flex items-center gap-2.5 px-6 py-4 border-b border-[#caf0f8]"
+        style={{ background: "linear-gradient(90deg, #f0faff, #caf0f8)" }}
       >
         {hasCritical && (
-          /* FIX: replaced repeat:Infinity Framer Motion animation with CSS
-             animate-ping — GPU-composited, zero JS overhead */
           <span
             className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 animate-ping"
             aria-hidden="true"
@@ -277,7 +256,7 @@ export default function ActionNeededSection({
           {actions.length === 0 ? t("action.summary") : t("action.title")}
         </h2>
         {actions.length > 0 && (
-          <span className="bg-[#0077b6] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+          <span className="bg-[#03045e] text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm ring-1 ring-white/20">
             {itemCountLabel}
           </span>
         )}
@@ -314,7 +293,7 @@ export default function ActionNeededSection({
           ) : (
             <motion.ul
               key="list"
-              className="flex flex-col gap-2.5"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               role="list"
               aria-label={t("action.title")}
             >
@@ -337,6 +316,6 @@ export default function ActionNeededSection({
           </p>
         )}
       </div>
-    </motion.section>
+    </MainCard>
   );
 }

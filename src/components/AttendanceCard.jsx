@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import MainCard from "./MainCard";
+import { motion, AnimatePresence } from "framer-motion";
 import { BarChart2 } from "lucide-react";
 import { getAttendanceStatus } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
 
@@ -173,10 +174,11 @@ function CircularRing({ percentage, strokeColor }) {
 
 function AttendanceCard({ overall, label }) {
   const { t, lang } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
-  const { status, colorClass, bgClass, strokeColor, message } =
+  const { status, colorClass, bgClass, strokeColor, messageKey } =
     getAttendanceStatus(overall);
 
   const glowMap = {
@@ -207,13 +209,9 @@ function AttendanceCard({ overall, label }) {
 
   return (
     <>
-      <motion.div
+      <MainCard
         variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center gap-4 cursor-default select-none relative"
-        style={{ outline: glowMap[status] ?? glowMap.excellent }}
-        role="region"
+        className="h-full p-6 items-center gap-4 cursor-default select-none relative"
         aria-label={`${cardLabel}: ${overall}%`}
       >
         {/* Helper button */}
@@ -234,7 +232,7 @@ function AttendanceCard({ overall, label }) {
         {/* Ring */}
         <div className="relative flex items-center justify-center">
           <CircularRing percentage={overall} strokeColor={strokeColor} />
-          <div className="absolute flex flex-col items-center justify-center gap-1">
+          <div className="absolute flex flex-col items-center justify-center gap-1.5">
             <motion.span
               className={`text-4xl font-black ${colorClass}`}
               initial={{ opacity: 0, scale: 0.7 }}
@@ -243,7 +241,58 @@ function AttendanceCard({ overall, label }) {
             >
               {overall}%
             </motion.span>
-            <StatusIcon status={status} />
+            
+            {/* Interactive Status Icon with Micro Legend */}
+            <div className="relative">
+              <motion.button
+                onClick={() => setShowLegend(!showLegend)}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                className="focus:outline-none p-1 rounded-full hover:bg-white/40 transition-colors duration-200"
+                aria-label="Show attendance legend"
+              >
+                <StatusIcon status={status} />
+              </motion.button>
+
+              <AnimatePresence>
+                {showLegend && (
+                  <>
+                    {/* Invisible Backdrop to close on click outside */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowLegend(false)}
+                      aria-hidden="true"
+                    />
+                    
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-48 p-3 rounded-2xl bg-white shadow-[0_10px_40px_-10px_rgba(3,4,94,0.3)] border border-[#caf0f8]"
+                    >
+                      {/* Triangle Pointer */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white" />
+                      
+                      <div className="space-y-2.5">
+                        {[
+                          { color: "#00b4d8", label: "Green (85%+)", desc: "Attendance is good" },
+                          { color: "#F59E0B", label: "Yellow (75-84%)", desc: "Needs improvement" },
+                          { color: "#EF4444", label: "Red (<75%)", desc: "Attendance is low" }
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full mt-0.5 flex-shrink-0" style={{ backgroundColor: item.color }} />
+                            <div>
+                              <p className="text-[10px] font-extrabold text-[#03045e] leading-none mb-0.5">{item.label}</p>
+                              <p className="text-[9px] font-bold text-gray-400 leading-tight">{item.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
@@ -254,7 +303,7 @@ function AttendanceCard({ overall, label }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.8 }}
         >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {t(`status.${status}`)}
         </motion.div>
 
         {/* Message — student or parent */}
@@ -290,10 +339,10 @@ function AttendanceCard({ overall, label }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.0 }}
           >
-            {message}
+            {t(messageKey)}
           </motion.p>
         )}
-      </motion.div>
+      </MainCard>
 
       <HelperPopup
         isOpen={showHelper}

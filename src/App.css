@@ -182,3 +182,51 @@
     border-right-color: var(--border);
   }
 }
+
+/* ── Sidebar nav scrollbar — EduDash premium style ──────────────────────────── */
+
+/* Firefox */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(173, 216, 230, 0.28) transparent;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  margin: 8px 0;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(173, 216, 230, 0.22);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(173, 216, 230, 0.45);
+  background-clip: padding-box;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:active {
+  background: rgba(173, 216, 230, 0.65);
+  background-clip: padding-box;
+}
+
+/* Widen slightly while the user is actively scrolling */
+.sidebar-nav:hover::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Layout safety — never overflow horizontally */
+.sidebar-nav {
+  overflow-x: hidden;
+}

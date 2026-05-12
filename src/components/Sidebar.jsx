@@ -15,7 +15,12 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  FolderOpen,
+  Medal,
+  LifeBuoy,
+  Bus,
 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const iconMap = {
   Home,
@@ -28,6 +33,10 @@ const iconMap = {
   FileText,
   Briefcase,
   LogOut,
+  FolderOpen,
+  Medal,
+  LifeBuoy,
+  Bus,
 };
 
 const backdropVariants = {
@@ -41,6 +50,7 @@ const drawerVariants = {
 
 // ── Single nav item ───────────────────────────────────────────────────────────
 function NavItem({ item, onClick, isCollapsed }) {
+  const { t } = useLanguage();
   const IconComponent = iconMap[item.icon] || Home;
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -80,7 +90,7 @@ function NavItem({ item, onClick, isCollapsed }) {
               transition={{ duration: 0.18, ease: "easeOut" }}
               className="truncate overflow-hidden whitespace-nowrap"
             >
-              {item.label}
+              {t(item.labelKey, item.label)}
             </motion.span>
           )}
         </AnimatePresence>
@@ -90,6 +100,7 @@ function NavItem({ item, onClick, isCollapsed }) {
       <AnimatePresence>
         {isCollapsed && showTooltip && (
           <motion.div
+            key="tooltip"
             initial={{ opacity: 0, x: -4 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -4 }}
@@ -104,7 +115,7 @@ function NavItem({ item, onClick, isCollapsed }) {
                 border: "1px solid rgba(202,240,248,0.2)",
               }}
             >
-              {item.label}
+              {t(item.labelKey, item.label)}
             </div>
           </motion.div>
         )}
@@ -120,6 +131,7 @@ function SidebarContent({
   isCollapsed,
   onToggleCollapse,
 }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col h-full">
       {/* Logo + collapse toggle */}
@@ -152,7 +164,7 @@ function SidebarContent({
                 EduDash
               </h1>
               <p className="text-xs text-white/50 font-medium whitespace-nowrap">
-                School Portal
+                {t("school.portal")}
               </p>
             </motion.div>
           )}
@@ -167,7 +179,7 @@ function SidebarContent({
             className={`flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors ${
               isCollapsed ? "mt-0" : "ml-auto"
             }`}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={isCollapsed ? t("sidebar.expand") : t("sidebar.collapse")}
           >
             {isCollapsed ? (
               <ChevronRight size={14} />
@@ -180,8 +192,8 @@ function SidebarContent({
 
       {/* Nav items */}
       <nav
-        className={`flex-1 overflow-y-auto py-4 space-y-1 ${isCollapsed ? "px-2" : "px-3"}`}
-        aria-label="Main navigation"
+        className={`sidebar-nav flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 ${isCollapsed ? "px-2" : "px-3"}`}
+        aria-label={t("common.mainNav") || "Main navigation"}
       >
         {navItems.map((item) => (
           <NavItem
@@ -200,6 +212,7 @@ function SidebarContent({
 function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { t } = useLanguage();
 
   React.useEffect(() => {
     if (openRef) openRef.current = () => setIsMobileOpen(true);
@@ -224,7 +237,7 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="hidden md:flex flex-col flex-shrink-0 fixed left-0 top-0 h-full z-30 shadow-xl overflow-hidden"
         style={{ backgroundColor: "#03045e" }}
-        aria-label="Sidebar navigation"
+        aria-label={t("common.sidebarNav") || "Sidebar navigation"}
       >
         <SidebarContent
           navItems={navItems}
@@ -239,7 +252,7 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
         className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
         style={{ color: "#03045e" }}
         onClick={() => setIsMobileOpen(true)}
-        aria-label="Open navigation menu"
+        aria-label={t("sidebar.open")}
       >
         <Menu size={22} />
       </button>
@@ -247,43 +260,43 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
       {/* ── Mobile drawer ── */}
       <AnimatePresence>
         {isMobileOpen && (
-          <>
-            <motion.div
-              key="backdrop"
-              variants={backdropVariants}
-              initial="closed"
-              animate="open"
-              exit="closed"
-              transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 bg-black/40 z-40"
+          <motion.div
+            key="backdrop"
+            variants={backdropVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 bg-black/40 z-40"
+            onClick={() => setIsMobileOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        {isMobileOpen && (
+          <motion.div
+            key="drawer"
+            variants={drawerVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            className="md:hidden fixed left-0 top-0 h-full w-72 shadow-2xl z-50 flex flex-col"
+            style={{ backgroundColor: "#03045e" }}
+          >
+            <button
+              className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
               onClick={() => setIsMobileOpen(false)}
-              aria-hidden="true"
-            />
-            <motion.div
-              key="drawer"
-              variants={drawerVariants}
-              initial="closed"
-              animate="open"
-              exit="closed"
-              className="md:hidden fixed left-0 top-0 h-full w-72 shadow-2xl z-50 flex flex-col"
-              style={{ backgroundColor: "#03045e" }}
+              aria-label={t("sidebar.close")}
             >
-              <button
-                className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                onClick={() => setIsMobileOpen(false)}
-                aria-label="Close navigation menu"
-              >
-                <X size={16} />
-              </button>
-              {/* Mobile drawer always shows full labels, no collapse toggle */}
-              <SidebarContent
-                navItems={navItems}
-                onNavClick={handleNavClick}
-                isCollapsed={false}
-                onToggleCollapse={null}
-              />
-            </motion.div>
-          </>
+              <X size={16} />
+            </button>
+            {/* Mobile drawer always shows full labels, no collapse toggle */}
+            <SidebarContent
+              navItems={navItems}
+              onNavClick={handleNavClick}
+              isCollapsed={false}
+              onToggleCollapse={null}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </>

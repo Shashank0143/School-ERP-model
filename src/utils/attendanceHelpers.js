@@ -9,7 +9,7 @@ export function getAttendanceStatus(percentage) {
       bgClass: "bg-[#00b4d8]/20",
       barClass: "bg-[#00b4d8]",
       strokeColor: "#00b4d8",
-      message: "Excellent! Keep it up",
+      messageKey: "attendance.excellent",
     };
   } else if (percentage >= 75) {
     return {
@@ -18,7 +18,7 @@ export function getAttendanceStatus(percentage) {
       bgClass: "bg-[#0077b6]/20",
       barClass: "bg-[#0077b6]",
       strokeColor: "#0077b6",
-      message: "Getting there! Push a bit more",
+      messageKey: "attendance.moderate",
     };
   } else {
     return {
@@ -27,7 +27,7 @@ export function getAttendanceStatus(percentage) {
       bgClass: "bg-red-100",
       barClass: "bg-red-400",
       strokeColor: "#EF4444",
-      message: "Attendance low! Attend more classes",
+      messageKey: "attendance.warning",
     };
   }
 }
@@ -50,8 +50,9 @@ export function getNoticePriorityStyle(priority) {
   return map[priority] ?? map.low;
 }
 
-export function formatDate(date) {
-  return date.toLocaleDateString("en-IN", {
+export function formatDate(date, lang = "en") {
+  const locale = lang === "hi" ? "hi-IN" : "en-IN";
+  return date.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",

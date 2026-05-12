@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import MainCard from "./MainCard";
 import { motion } from "framer-motion";
 import { BookOpen, ClipboardList, ExternalLink, Zap } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
 
@@ -28,7 +29,7 @@ function LMSCard({
   index = 0,
 }) {
   const { t, lang } = useLanguage();
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
 
   const completion = Math.min(100, Math.max(0, courseCompletion));
@@ -42,14 +43,10 @@ function LMSCard({
 
   return (
     <>
-      <motion.div
+      <MainCard
         custom={index}
         variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-5 relative overflow-hidden cursor-default select-none"
-        style={{ outline: "1px solid #caf0f8" }}
-        role="region"
+        className="h-full p-6 flex flex-col gap-5 relative overflow-hidden cursor-default select-none"
         aria-label={`LMS overview: ${completion}% course completion`}
       >
         {/* Helper button */}
@@ -119,13 +116,13 @@ function LMSCard({
         {/* Parent summary */}
         {isParentMode && (
           <motion.p
-            className="text-sm font-semibold leading-snug rounded-2xl px-4 py-2"
+            className="text-sm font-semibold leading-relaxed rounded-2xl px-4 py-2"
             style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.5 }}
           >
-            {parentSummary}
+            {t("lms.parentSummary", { pct: courseCompletion, pending: pendingAssignments })}
           </motion.p>
         )}
 
@@ -203,7 +200,7 @@ function LMSCard({
           <span>{t("lms.goToLms")}</span>
           <ExternalLink size={21} aria-hidden="true" />
         </motion.a>
-      </motion.div>
+      </MainCard>
 
       <HelperPopup
         isOpen={showHelper}

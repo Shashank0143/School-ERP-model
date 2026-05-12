@@ -17,3 +17,44 @@
     box-sizing: border-box;
   }
 }
+
+/* ── Sidebar nav scrollbar — EduDash premium style ── */
+
+/* Firefox */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(173, 216, 230, 0.35) transparent;
+}
+
+/* WebKit — Chrome, Edge, Safari */
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  margin-block: 8px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(173, 216, 230, 0.25);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(173, 216, 230, 0.5);
+  background-clip: padding-box;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:active {
+  background: rgba(173, 216, 230, 0.7);
+  background-clip: padding-box;
+}
+
+/* Slightly wider track on sidebar hover — feel of progressive disclosure */
+.sidebar-nav:hover::-webkit-scrollbar {
+  width: 5px;
+}

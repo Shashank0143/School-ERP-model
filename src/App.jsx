@@ -18,10 +18,29 @@ import FacultyPage from "./pages/FacultyPage";
 import WeeklyTimetablePage from "./pages/WeeklyTimetablePage";
 import ExaminationPage from "./pages/ExaminationPage";
 import SchoolCalendarPage from "./pages/SchoolCalendarPage";
+import FeeDetailsPage from "./pages/FeeDetailsPage";
+import SubjectDetailPage from "./pages/SubjectDetailPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import AchievementsPage from "./pages/AchievementsPage";
+import MentorSupportPage from "./pages/MentorSupportPage";
+import ClubsCommitteesPage from "./pages/ClubsCommitteesPage";
+import TransportPage from "./pages/TransportPage";
 import { formatDate } from "./utils/attendanceHelpers";
-import { LanguageProvider } from "./context/LanguageContext";
-import { ViewModeProvider } from "./context/ViewModeContext";
+import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  
+  return isMobile;
+}
 
 // FIX: compute once at module level — never changes at runtime
 const CURRENT_DATE = formatDate(new Date());
@@ -32,7 +51,7 @@ const ATTENDANCE_WARNINGS = dummyData.attendance.subjects.filter(
 );
 
 // ── Home dashboard ────────────────────────────────────────────────────────────
-function HomePage() {
+function HomePage({ onNavigatePage }) {
   // FIX: use individual refs instead of a plain object literal.
   // A plain object `{ key: useRef() }` is recreated every render, making
   // handleNavigate's closure always capture a fresh (but correct) object.
@@ -100,7 +119,7 @@ function HomePage() {
             overall={dummyData.attendance.overall}
             label="Overall Attendance"
           />
-          <div ref={feeRef} style={glowStyle("section-fee")}>
+          <div ref={feeRef} style={glowStyle("section-fee")} className="h-full">
             <FeeCard
               amount={dummyData.fees.amount}
               currency={dummyData.fees.currency}
@@ -108,6 +127,7 @@ function HomePage() {
               status={dummyData.fees.status}
               amountPaid={dummyData.fees.amountPaid}
               totalAmount={dummyData.fees.totalAmount}
+              onClick={() => onNavigatePage("feeDetails")}
             />
           </div>
         </div>
@@ -122,8 +142,8 @@ function HomePage() {
           ref={timetableRef}
           style={glowStyle("section-timetable")}
         >
-          <div className="lg:col-span-2">
-            <TimetableCard classes={dummyData.timetable.today} />
+          <div className="lg:col-span-2 h-full">
+            <TimetableCard weeklyTimetable={dummyData.weeklyTimetable} />
           </div>
           <div className="flex flex-col gap-4">
             <CredentialsCard {...dummyData.credentials.library} index={0} />
@@ -170,12 +190,13 @@ function HomePage() {
   );
 }
 
-// ── App content ───────────────────────────────────────────────────────────────
 function AppContent() {
-  const { navItems, student, notifications } = dummyData;
+  const { user } = useAuth();
+  const { navItems, notifications } = dummyData;
   const [activePage, setActivePage] = useState("home");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const sidebarOpenRef = useRef(null);
+  const isMobile = useIsMobile();
 
   // FIX: memoize so Sidebar doesn't re-render on every AppContent render
   const handleMenuClick = useCallback(() => {
@@ -187,16 +208,25 @@ function AppContent() {
     setActivePage(item.id);
   }, []);
 
-  // FIX: memoize — only recomputes when activePage changes
+  const { lang, t } = useLanguage();
   const navWithActive = useMemo(
-    () => navItems.map((item) => ({ ...item, active: item.id === activePage })),
-    [navItems, activePage],
+    () => navItems.map((item) => ({ 
+      ...item, 
+      label: t(`nav.${item.id}`),
+      active: item.id === activePage 
+    })),
+    [navItems, activePage, t],
   );
 
   const renderPage = () => {
+    if (activePage.startsWith("subject_")) {
+      const subjectId = activePage.split("_")[1];
+      return <SubjectDetailPage subjectId={subjectId} onBack={() => setActivePage("courses")} />;
+    }
+
     switch (activePage) {
       case "courses":
-        return <CoursesPage courses={dummyData.courses} />;
+        return <CoursesPage courses={dummyData.courses} onNavigatePage={setActivePage} />;
       case "faculty":
         return <FacultyPage faculty={dummyData.faculty} />;
       case "timetable":
@@ -207,8 +237,20 @@ function AppContent() {
         return <ExaminationPage examination={dummyData.examination} />;
       case "calendar":
         return <SchoolCalendarPage schoolCalendar={dummyData.schoolCalendar} />;
+      case "feeDetails":
+        return <FeeDetailsPage feeDetails={dummyData.feeDetails} />;
+      case "documents":
+        return <DocumentsPage />;
+      case "achievements":
+        return <AchievementsPage />;
+      case "mentorSupport":
+        return <MentorSupportPage />;
+      case "clubsCommittees":
+        return <ClubsCommitteesPage />;
+      case "transport":
+        return <TransportPage />;
       default:
-        return <HomePage />;
+        return <HomePage onNavigatePage={setActivePage} />;
     }
   };
 
@@ -216,7 +258,7 @@ function AppContent() {
     <div className="flex min-h-screen bg-[#caf0f8]">
       <Sidebar
         navItems={navWithActive}
-        student={student}
+        student={user}
         openRef={sidebarOpenRef}
         onNavClick={handleNavClick}
         onCollapse={setSidebarCollapsed}
@@ -224,12 +266,12 @@ function AppContent() {
 
       {/* Main content — margin animates in sync with sidebar width */}
       <motion.div
-        animate={{ marginLeft: sidebarCollapsed ? 64 : 240 }}
+        animate={{ marginLeft: isMobile ? 0 : (sidebarCollapsed ? 64 : 240) }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex-1 flex flex-col min-w-0 md:ml-0"
+        className="flex-1 flex flex-col min-w-0"
       >
         <Header
-          student={student}
+          student={user}
           notifications={notifications}
           currentDate={CURRENT_DATE}
           onMenuClick={handleMenuClick}
@@ -255,11 +297,11 @@ function AppContent() {
 
 function App() {
   return (
-    <LanguageProvider>
-      <ViewModeProvider>
+    <AuthProvider>
+      <LanguageProvider>
         <AppContent />
-      </ViewModeProvider>
-    </LanguageProvider>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
 

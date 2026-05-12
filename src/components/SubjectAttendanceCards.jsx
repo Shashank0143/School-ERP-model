@@ -1,4 +1,5 @@
 import React, { useState, memo } from "react";
+import MainCard from "./MainCard";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { getAttendanceStatus } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
 
@@ -73,16 +74,10 @@ const TRAFFIC_COLOR = {
   warning: "#EF4444",
 };
 
-const PARENT_STATUS_LABEL = {
-  excellent: "Doing Great",
-  moderate: "Needs Attention",
-  warning: "Risk Zone",
-};
-
-const PARENT_STATUS_LABEL_HI = {
-  excellent: "बहुत अच्छा",
-  moderate: "ध्यान चाहिए",
-  warning: "जोखिम क्षेत्र",
+const STATUS_LABEL_KEY = {
+  excellent: "attendance.statusExcellent",
+  moderate: "attendance.statusModerate",
+  warning: "attendance.statusWarning",
 };
 
 function TrafficLight({ status }) {
@@ -107,25 +102,17 @@ const SubjectCard = memo(function SubjectCard({
   isParentMode,
   lang,
 }) {
-  const { status, colorClass, bgClass, barClass, message } =
+  const { status, colorClass, bgClass, barClass, messageKey } =
     getAttendanceStatus(percentage);
   const IconComponent = SUBJECT_ICONS[id] ?? BookOpen;
 
-  const parentLabel =
-    lang === "hi"
-      ? PARENT_STATUS_LABEL_HI[status]
-      : PARENT_STATUS_LABEL[status];
+  const { t } = useLanguage();
+  const parentLabel = t(STATUS_LABEL_KEY[status]);
 
   return (
-    <motion.div
+    <MainCard
       variants={cardVariants}
-      // FIX: CSS hover instead of whileHover spring physics.
-      // whileHover on 6 simultaneous cards creates 6 concurrent spring
-      // calculations on every mouse move — replaced with CSS transform
-      // which is GPU-composited and has zero JS cost.
-      className="bg-white rounded-2xl p-5 shadow-md cursor-default select-none flex flex-col gap-3
-                 transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-xl"
-      role="region"
+      className="h-full p-5 flex flex-col gap-3"
       aria-label={`${name}: ${percentage}%`}
     >
       <div
@@ -161,7 +148,7 @@ const SubjectCard = memo(function SubjectCard({
           <span
             className={`text-xs font-semibold px-2.5 py-1 rounded-full ${bgClass} ${colorClass}`}
           >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {t(`status.${status}`)}
           </span>
         )}
       </div>
@@ -178,15 +165,15 @@ const SubjectCard = memo(function SubjectCard({
           aria-label={`${name} attendance`}
         />
       </div>
-      <p className={`text-xs font-semibold ${colorClass}`}>{message}</p>
-    </motion.div>
+      <p className={`text-xs font-semibold ${colorClass}`}>{t(messageKey)}</p>
+    </MainCard>
   );
 });
 
 function SubjectAttendanceCards({ subjects = [] }) {
   const { t } = useLanguage();
   // FIX: read context once here and pass as props — not inside each card
-  const { isParentMode } = useViewMode();
+  const { isParent: isParentMode } = useAuth();
   const { lang } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
 

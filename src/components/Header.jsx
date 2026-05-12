@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, ChevronDown, Menu, GraduationCap, Users } from "lucide-react";
 import { formatDate } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 
 function NotificationBadge({ count }) {
   if (count <= 0) return null;
@@ -24,7 +24,7 @@ function NotificationPanel({ notifications, onClose, t }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.96 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="absolute right-0 top-full mt-3 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+      className="absolute right-0 sm:right-0 -right-4 top-full mt-3 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden"
     >
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <h3 className="font-bold text-gray-800 text-sm">
@@ -80,7 +80,7 @@ function LanguageToggle({ lang, setLang }) {
             className="relative px-3 py-1 rounded-full text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
             style={{ color: isActive ? "#ffffff" : "#03045e", zIndex: 1 }}
             aria-pressed={isActive}
-            aria-label={`Switch to ${option === "en" ? "English" : "Hindi"}`}
+            aria-label={option === "en" ? "English" : "Hindi"}
           >
             {isActive && (
               <motion.span
@@ -141,9 +141,9 @@ function ViewModeToggle({ viewMode, setViewMode, t }) {
 function Header({ student, notifications = [], currentDate, onMenuClick }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const { lang, setLang, t } = useLanguage();
-  const { viewMode, setViewMode } = useViewMode();
+  const { role, login, viewMode, setViewMode } = useAuth();
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const displayDate = currentDate || formatDate(new Date());
+  const displayDate = currentDate || formatDate(new Date(), lang);
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -154,7 +154,7 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
             className="md:hidden w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
             style={{ color: "#03045e" }}
             onClick={onMenuClick}
-            aria-label="Open navigation menu"
+            aria-label={t("sidebar.open")}
           >
             <Menu size={26} />
           </button>
@@ -176,7 +176,7 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
         </div>
 
         {/* Right: date + toggles + bell + avatar */}
-        <div className="flex items-center gap-2 md:gap-3 ml-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 ml-auto">
           {/* Date */}
           <div
             className="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 border"
@@ -221,6 +221,7 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
             <AnimatePresence>
               {showNotifications && (
                 <NotificationPanel
+                  key="notification-panel"
                   notifications={notifications}
                   onClose={() => setShowNotifications(false)}
                   t={t}
@@ -257,7 +258,7 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
               className="hidden sm:block text-sm font-bold whitespace-nowrap"
               style={{ color: "#03045e" }}
             >
-              {student?.name || "Student"}
+              {student?.name || t("common.student")}
             </span>
             <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
           </div>

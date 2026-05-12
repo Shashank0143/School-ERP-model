@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 // ── Inline language toggle ────────────────────────────────────────────────────
-
+// NOTE: No layoutId animation here — layoutId caused Framer Motion lifecycle
+// conflicts when the parent re-rendered during the popup exit animation.
 function PopupLangToggle({ popupLang, setPopupLang }) {
   return (
     <div
@@ -16,25 +17,20 @@ function PopupLangToggle({ popupLang, setPopupLang }) {
       {["en", "hi"].map((opt) => {
         const isActive = popupLang === opt;
         return (
-          <div key={opt} className="relative">
-            {isActive && (
-              <motion.div
-                layoutId="popup-lang-pill"
-                className="absolute inset-0 rounded-full"
-                style={{ backgroundColor: "#03045e" }}
-                transition={{ type: "spring", stiffness: 420, damping: 30 }}
-              />
-            )}
-            <button
-              onClick={() => setPopupLang(opt)}
-              className="relative z-10 px-2.5 py-1 rounded-full text-[11px] font-extrabold transition-colors focus:outline-none"
-              style={{ color: isActive ? "#caf0f8" : "#03045e" }}
-              aria-pressed={isActive}
-              aria-label={opt === "en" ? "English" : "हिन्दी"}
-            >
-              {opt === "en" ? "EN" : "हि"}
-            </button>
-          </div>
+          <button
+            key={opt}
+            onClick={() => setPopupLang(opt)}
+            className="relative px-2.5 py-1 rounded-full text-[11px] font-extrabold transition-colors focus:outline-none"
+            style={{
+              backgroundColor: isActive ? "#03045e" : "transparent",
+              color: isActive ? "#caf0f8" : "#03045e",
+              transition: "background-color 0.18s ease, color 0.18s ease",
+            }}
+            aria-pressed={isActive}
+            aria-label={opt === "en" ? "English" : "हिन्दी"}
+          >
+            {opt === "en" ? "EN" : "हि"}
+          </button>
         );
       })}
     </div>
@@ -42,7 +38,6 @@ function PopupLangToggle({ popupLang, setPopupLang }) {
 }
 
 // ── Mascot SVG ────────────────────────────────────────────────────────────────
-
 function HelperMascot() {
   return (
     <div
@@ -51,15 +46,11 @@ function HelperMascot() {
       aria-hidden="true"
     >
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        {/* Face */}
         <circle cx="14" cy="14" r="12" fill="#caf0f8" />
-        {/* Eyes */}
         <circle cx="10" cy="12" r="2" fill="#03045e" />
         <circle cx="18" cy="12" r="2" fill="#03045e" />
-        {/* Eye shine */}
         <circle cx="11" cy="11" r="0.8" fill="white" />
         <circle cx="19" cy="11" r="0.8" fill="white" />
-        {/* Smile */}
         <path
           d="M9.5 17 Q14 21 18.5 17"
           stroke="#03045e"
@@ -67,7 +58,6 @@ function HelperMascot() {
           strokeLinecap="round"
           fill="none"
         />
-        {/* Graduation cap */}
         <rect x="8" y="5" width="12" height="3" rx="1" fill="#0077b6" />
         <polygon points="14,3 8,5 20,5" fill="#0077b6" />
         <line
@@ -86,7 +76,6 @@ function HelperMascot() {
 }
 
 // ── Color legend row ──────────────────────────────────────────────────────────
-
 function ColorLegend({ items }) {
   if (!items || items.length === 0) return null;
   return (
@@ -111,7 +100,35 @@ function ColorLegend({ items }) {
 }
 
 // ── Main HelperPopup ──────────────────────────────────────────────────────────
-
+//
+// ARCHITECTURE: "Always-mounted + CSS visibility" pattern.
+//
+// ROOT CAUSE OF FREEZE (solved here):
+//   The previous implementation wrapped the modal in <AnimatePresence> with
+//   a motion.div keyed on `titleKey`. When the user switched language inside
+//   the popup, LanguageContext re-created its `t` function → AccordionSection
+//   (the parent) re-rendered → HelperPopup component was unmounted and
+//   remounted as a brand-new instance. AnimatePresence saw the old instance's
+//   exit animation starting at the same time a new instance was mounting.
+//   This race caused the exit animation to never complete, leaving a
+//   `fixed inset-0 z-50` div permanently in the DOM with opacity:0 but
+//   pointer-events:auto — silently intercepting every click on the page.
+//
+// FIX:
+//   1. The modal wrapper is ALWAYS mounted (never conditionally rendered).
+//      Visibility is controlled via CSS opacity + pointer-events, NOT by
+//      mounting/unmounting DOM nodes. This completely eliminates the
+//      AnimatePresence race condition.
+//   2. Framer Motion is removed from the overlay wrapper entirely.
+//      Only the modal card (inner panel) uses a lightweight motion.div
+//      for the slide-up animation — and only when the popup is open.
+//   3. PopupLangToggle no longer uses layoutId. A plain CSS transition
+//      on background-color is used instead. layoutId was causing Framer
+//      Motion's LayoutGroup to throw a "multiple elements with same id"
+//      warning when multiple AccordionSections were on the same page.
+//   4. Internal `popupLang` state is reset via useEffect (on isOpen → true),
+//      so it always defaults to globalLang when opened fresh.
+//
 function HelperPopup({
   isOpen,
   onClose,
@@ -121,13 +138,23 @@ function HelperPopup({
   colorLegend,
 }) {
   const { lang: globalLang, t } = useLanguage();
+  // Stable internal language — independent from globalLang after open
   const [popupLang, setPopupLang] = useState(globalLang);
   const closeButtonRef = useRef(null);
+  // Track whether we've ever been opened (for mount-time CSS transition)
+  const hasOpenedRef = useRef(false);
 
+  // Reset popup language to globalLang each time popup opens
   useEffect(() => {
-    if (isOpen) setPopupLang(globalLang);
-  }, [isOpen, globalLang]);
+    if (isOpen) {
+      setPopupLang(globalLang);
+      hasOpenedRef.current = true;
+    }
+  }, [isOpen]); // NOTE: intentionally NOT depending on globalLang here.
+  // If the user has already switched to HI inside the popup and then the
+  // global lang changes, we don't want to reset their in-popup choice.
 
+  // Keyboard: Escape closes popup
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e) => {
@@ -137,8 +164,11 @@ function HelperPopup({
     return () => document.removeEventListener("keydown", handleKey);
   }, [isOpen, onClose]);
 
+  // Focus management: move focus into popup when opened
   useEffect(() => {
-    if (isOpen && closeButtonRef.current) closeButtonRef.current.focus();
+    if (isOpen && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
   }, [isOpen]);
 
   const title = t(titleKey);
@@ -148,136 +178,148 @@ function HelperPopup({
     label: popupLang === "hi" ? item.labelHi || item.labelEn : item.labelEn,
   }));
 
+  // ── CSS-controlled visibility ─────────────────────────────────────────────
+  // The outer wrapper is always in the DOM. pointer-events:none when closed
+  // guarantees it NEVER intercepts clicks regardless of opacity or animation
+  // state. This is the single source of truth for interactability.
+  const overlayStyle = {
+    position: "fixed",
+    inset: 0,
+    zIndex: 50,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "16px",
+    // CSS transitions — no JS animation involved
+    opacity: isOpen ? 1 : 0,
+    pointerEvents: isOpen ? "auto" : "none",
+    transition: "opacity 0.18s ease",
+  };
+
+  const backdropStyle = {
+    position: "absolute",
+    inset: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    backdropFilter: "blur(4px)",
+    WebkitBackdropFilter: "blur(4px)",
+  };
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
-          role="dialog"
-          aria-modal="true"
-          aria-label={title}
-        >
-          {/* Backdrop */}
-          <motion.div
-            className="absolute inset-0 bg-black/45 backdrop-blur-sm"
-            onClick={onClose}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    <div
+      style={overlayStyle}
+      role={isOpen ? "dialog" : undefined}
+      aria-modal={isOpen ? "true" : undefined}
+      aria-label={isOpen ? title : undefined}
+      aria-hidden={!isOpen}
+    >
+      {/* Backdrop — click to close */}
+      <div
+        style={backdropStyle}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal card — Framer Motion only for the panel slide, not the overlay */}
+      <motion.div
+        className="relative bg-white w-full sm:max-w-sm rounded-3xl shadow-2xl overflow-hidden"
+        style={{ zIndex: 10 }}
+        initial={false}
+        animate={
+          isOpen
+            ? { y: 0, opacity: 1 }
+            : { y: 40, opacity: 0 }
+        }
+        transition={{ type: "spring", stiffness: 320, damping: 30 }}
+      >
+        {/* Top accent bar */}
+        <div
+          className="h-1 w-full"
+          style={{
+            background: "linear-gradient(90deg, #03045e, #0077b6, #00b4d8)",
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="p-5 sm:p-6">
+          {/* Header row */}
+          <div className="flex items-start gap-3 mb-4">
+            <HelperMascot />
+
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
+                style={{ color: "#0077b6" }}
+              >
+                {popupLang === "hi" ? "जानकारी" : "About this section"}
+              </p>
+              <h2
+                className="text-base font-extrabold leading-snug"
+                style={{ color: "#03045e" }}
+              >
+                {title}
+              </h2>
+            </div>
+
+            {/* Language toggle */}
+            <PopupLangToggle
+              popupLang={popupLang}
+              setPopupLang={setPopupLang}
+            />
+
+            {/* Close button */}
+            <button
+              ref={closeButtonRef}
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1"
+              style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
+              aria-label={t("helper.close")}
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div
+            className="h-px mb-4"
+            style={{ backgroundColor: "#caf0f8" }}
             aria-hidden="true"
           />
 
-          {/* Modal card */}
-          <motion.div
-            className="relative bg-white w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl z-10 overflow-hidden"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+          {/* Explanation text */}
+          <p
+            className="text-sm leading-relaxed font-medium mb-4"
+            style={{ color: "#374151" }}
           >
-            {/* Top accent bar */}
-            <div
-              className="h-1 w-full"
-              style={{
-                background: "linear-gradient(90deg, #03045e, #0077b6, #00b4d8)",
-              }}
-              aria-hidden="true"
-            />
+            {content}
+          </p>
 
-            {/* Drag handle (mobile) */}
+          {/* Color legend */}
+          {legend && legend.length > 0 && (
             <div
-              className="flex justify-center pt-3 sm:hidden"
-              aria-hidden="true"
+              className="rounded-2xl p-4 mb-4"
+              style={{ backgroundColor: "#caf0f8" }}
             >
-              <div className="w-10 h-1 rounded-full bg-gray-200" />
-            </div>
-
-            <div className="p-5 sm:p-6">
-              {/* Header row */}
-              <div className="flex items-start gap-3 mb-4">
-                <HelperMascot />
-
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
-                    style={{ color: "#0077b6" }}
-                  >
-                    {popupLang === "hi" ? "जानकारी" : "About this section"}
-                  </p>
-                  <h2
-                    className="text-base font-extrabold leading-snug"
-                    style={{ color: "#03045e" }}
-                  >
-                    {title}
-                  </h2>
-                </div>
-
-                {/* Language toggle */}
-                <PopupLangToggle
-                  popupLang={popupLang}
-                  setPopupLang={setPopupLang}
-                />
-
-                {/* Close button */}
-                <button
-                  ref={closeButtonRef}
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1"
-                  style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
-                  aria-label={t("helper.close")}
-                >
-                  <X size={15} />
-                </button>
-              </div>
-
-              {/* Divider */}
-              <div
-                className="h-px mb-4"
-                style={{ backgroundColor: "#caf0f8" }}
-                aria-hidden="true"
-              />
-
-              {/* Explanation text */}
               <p
-                className="text-sm leading-relaxed font-medium mb-4"
-                style={{ color: "#374151" }}
+                className="text-[11px] font-extrabold uppercase tracking-wide mb-2.5"
+                style={{ color: "#03045e" }}
               >
-                {content}
+                {popupLang === "hi" ? "रंग का अर्थ" : "Color meaning"}
               </p>
-
-              {/* Color legend */}
-              {legend && legend.length > 0 && (
-                <div
-                  className="rounded-2xl p-4 mb-4"
-                  style={{ backgroundColor: "#caf0f8" }}
-                >
-                  <p
-                    className="text-[11px] font-extrabold uppercase tracking-wide mb-2.5"
-                    style={{ color: "#03045e" }}
-                  >
-                    {popupLang === "hi" ? "रंग का अर्थ" : "Color meaning"}
-                  </p>
-                  <ColorLegend items={legend} />
-                </div>
-              )}
-
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="w-full py-3 rounded-2xl text-sm font-extrabold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1"
-                style={{ backgroundColor: "#03045e", color: "#caf0f8" }}
-              >
-                {t("helper.close")}
-              </button>
+              <ColorLegend items={legend} />
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          )}
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-extrabold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1"
+            style={{ backgroundColor: "#03045e", color: "#caf0f8" }}
+          >
+            {t("helper.close")}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 

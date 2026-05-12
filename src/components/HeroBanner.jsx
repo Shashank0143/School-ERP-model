@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useLanguage } from "../context/LanguageContext";
 
 // FIX: variants defined outside component — stable references, never recreated
 const heroVariants = {
@@ -21,6 +22,7 @@ const titleVariants = {
 };
 
 function HeroBanner({ student }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       variants={heroVariants}
@@ -29,9 +31,6 @@ function HeroBanner({ student }) {
       className="relative w-full rounded-3xl overflow-hidden shadow-xl mb-6"
       style={{ minHeight: "90px" }}
     >
-      {/* FIX: removed animate-gradient-x — that class doesn't exist in default
-          Tailwind and caused the browser to repeatedly recalculate styles.
-          Using a static gradient is visually equivalent and has zero CPU cost. */}
       <div
         className="absolute inset-0"
         style={{
@@ -53,23 +52,23 @@ function HeroBanner({ student }) {
 
       {/* Content */}
       <div className="relative z-10 px-6 md:px-10 py-7">
-        <div
-          className="inline-block rounded-2xl px-5 py-4"
-          style={{
-            background: "rgba(255,255,255,0.12)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.22)",
-          }}
+        <motion.div
+          variants={titleVariants}
+          initial="hidden"
+          animate="visible"
         >
-          <motion.h1
-            variants={titleVariants}
-            initial="hidden"
-            animate="visible"
-            className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight"
-          >
-            Welcome back, {student?.name || "Student"}
-          </motion.h1>
-        </div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight">
+            {t("hero.welcome")}, {student?.name || "Student"}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="text-xs md:text-sm font-extrabold text-white/90 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-md">
+              {student?.enrollmentNo}
+            </span>
+            <span className="text-xs md:text-sm font-bold text-white/70">
+              {student?.email}
+            </span>
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );

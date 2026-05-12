@@ -268,16 +268,18 @@ function WeeklyTimetablePage({ weeklyTimetable = {} }) {
           </div>
         </div>
 
-        {/* Desktop grid — hidden on mobile */}
-        <div
-          className="hidden md:grid gap-4"
-          style={{ gridTemplateColumns: "repeat(7, 1fr)" }}
-        >
-          {DAYS.map((day) => (
-            <DayColumn key={day} day={day} classes={weeklyTimetable[day]} />
-          ))}
-          <WeekendCard day="Saturday" />
-          <WeekendCard day="Sunday" />
+        {/* Desktop grid — horizontally scrollable on tablet, hidden on mobile */}
+        <div className="hidden md:block overflow-x-auto pb-4 scrollbar-thin">
+          <div
+            className="grid gap-4 min-w-[900px]"
+            style={{ gridTemplateColumns: "repeat(7, 1fr)" }}
+          >
+            {DAYS.map((day) => (
+              <DayColumn key={day} day={day} classes={weeklyTimetable[day]} />
+            ))}
+            <WeekendCard day="Saturday" />
+            <WeekendCard day="Sunday" />
+          </div>
         </div>
 
         {/* Mobile tab view */}

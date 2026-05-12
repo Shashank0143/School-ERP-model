@@ -1,4 +1,5 @@
-import React, { useState, memo } from "react";
+import React, { useState, memo, useMemo } from "react";
+import MainCard from "./MainCard";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -8,11 +9,17 @@ import {
   CalendarDays,
   Radio,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { useViewMode } from "../context/ViewModeContext";
+import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
+import { AnimatePresence } from "framer-motion";
 
 // All variants at module level — never recreated
 const cardVariants = {
@@ -78,7 +85,7 @@ const STATUS_CONFIG = {
     dimmed: false,
   },
   ended: {
-    cardClass: "opacity-60 grayscale bg-white",
+    cardClass: "opacity-75 grayscale bg-white",
     cardStyle: { outline: "1px solid #e5e7eb" },
     dotStyle: {
       backgroundColor: "#9ca3af",
@@ -86,7 +93,11 @@ const STATUS_CONFIG = {
     },
     accentStyle: { background: "linear-gradient(to bottom, #d1d5db, #9ca3af)" },
     timeStyle: { color: "#9ca3af", fontWeight: 600 },
-    badgeStyle: { backgroundColor: "#f3f4f6", color: "#6b7280" },
+    badgeStyle: { 
+      backgroundColor: "#f1f5f9", 
+      color: "#4b5563", 
+      border: "1px solid #e2e8f0" 
+    },
     badgeLabelKey: "timetable.ended",
     BadgeIcon: CheckCircle,
     dimmed: true,
@@ -125,10 +136,10 @@ const ClassCard = memo(function ClassCard({
 
   const parentDesc =
     status === "live"
-      ? "Your child is in class right now"
+      ? t("timetable.parentDesc.live")
       : status === "ended"
-        ? "Class finished"
-        : `Next class at ${startTime}`;
+        ? t("timetable.parentDesc.ended")
+        : t("timetable.parentDesc.upcoming", { time: startTime });
 
   return (
     <div className="flex gap-4">
@@ -158,7 +169,7 @@ const ClassCard = memo(function ClassCard({
                     ease-out hover:-translate-y-1 hover:shadow-xl ${config.cardClass}`}
         style={config.cardStyle}
         role="article"
-        aria-label={`${subject} — ${status}`}
+        aria-label={`${t(subject)} — ${t(`status.${status}`)}`}
       >
         <div
           className="w-1.5 flex-shrink-0"
@@ -177,7 +188,7 @@ const ClassCard = memo(function ClassCard({
                 className="text-sm font-bold leading-tight"
                 style={{ color: "#03045e" }}
               >
-                {subject}
+                {t(subject)}
               </h3>
             </div>
             <span
@@ -232,69 +243,313 @@ const ClassCard = memo(function ClassCard({
   );
 });
 
-function TimetableCard({ classes = [] }) {
-  // FIX: single context subscription for the whole card tree
-  const { t } = useLanguage();
-  const { isParentMode } = useViewMode();
+// ── Mini Date Picker ──────────────────────────────────────────────────────
+const MiniDatePicker = ({ selectedDate, onSelect, onClose }) => {
+  const [viewDate, setViewDate] = useState(new Date(selectedDate));
+  
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+  const startPadding = firstDay === 0 ? 6 : firstDay - 1; // Start from Monday
+  
+  const days = [];
+  for (let i = 0; i < startPadding; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
+
+  const isToday = (d) => {
+    const today = new Date();
+    return d === today.getDate() && viewDate.getMonth() === today.getMonth() && viewDate.getFullYear() === today.getFullYear();
+  };
+
+  const isSelected = (d) => {
+    return d === selectedDate.getDate() && viewDate.getMonth() === selectedDate.getMonth() && viewDate.getFullYear() === selectedDate.getFullYear();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+      className="absolute top-full right-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-[#caf0f8] p-4 w-64"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-bold text-[#03045e] text-sm">
+          {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
+        </h4>
+        <div className="flex gap-1">
+          <button 
+            onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))}
+            className="p-1 hover:bg-[#caf0f8] rounded-md transition-colors"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button 
+            onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))}
+            className="p-1 hover:bg-[#caf0f8] rounded-md transition-colors"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1 text-center mb-2">
+        {["M", "T", "W", "T", "F", "S", "S"].map(d => (
+          <span key={d} className="text-[10px] font-black text-gray-400">{d}</span>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((d, i) => (
+          <div key={i} className="aspect-square flex items-center justify-center">
+            {d && (
+              <button
+                onClick={() => {
+                  const newDate = new Date(viewDate);
+                  newDate.setDate(d);
+                  onSelect(newDate);
+                }}
+                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all
+                  ${isSelected(d) ? "bg-[#03045e] text-white" : isToday(d) ? "bg-[#00b4d820] text-[#00b4d8] border border-[#00b4d8]" : "hover:bg-[#caf0f8] text-gray-600"}
+                `}
+              >
+                {d}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      
+      <button 
+        onClick={() => onSelect(new Date())}
+        className="mt-4 w-full py-2 text-[11px] font-black uppercase tracking-widest text-[#0077b6] hover:bg-[#caf0f8] rounded-xl transition-colors"
+      >
+        Jump to Today
+      </button>
+    </motion.div>
+  );
+};
+
+function TimetableCard({ weeklyTimetable = {} }) {
+  const { t, lang } = useLanguage();
+  const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const getDayName = (date) => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()];
+  
+  const isSelectedToday = useMemo(() => {
+    const today = new Date();
+    return selectedDate.getDate() === today.getDate() &&
+           selectedDate.getMonth() === today.getMonth() &&
+           selectedDate.getFullYear() === today.getFullYear();
+  }, [selectedDate]);
+
+  const isSelectedTomorrow = useMemo(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return selectedDate.getDate() === tomorrow.getDate() &&
+           selectedDate.getMonth() === tomorrow.getMonth() &&
+           selectedDate.getFullYear() === tomorrow.getFullYear();
+  }, [selectedDate]);
+
+  const classes = useMemo(() => {
+    const dayName = getDayName(selectedDate);
+    const dayClasses = weeklyTimetable[dayName] || [];
+    
+    return dayClasses.map(cls => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      
+      let status = cls.status || "upcoming";
+      
+      if (!cls.status) {
+        if (selectedDateOnly < today) {
+          status = "ended";
+        } else if (selectedDateOnly > today) {
+          status = "upcoming";
+        } else {
+          // Real-time calculation for today
+          const [sh, sm] = cls.startTime.split(":").map(Number);
+          const [eh, em] = cls.endTime.split(":").map(Number);
+          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm);
+          const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eh, em);
+          
+          if (now < start) status = "upcoming";
+          else if (now > end) status = "ended";
+          else status = "live";
+        }
+      }
+      
+      return { ...cls, status };
+    });
+  }, [selectedDate, weeklyTimetable]);
+
+  const handlePrevDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    setSelectedDate(prev);
+  };
+
+  const handleNextDay = () => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    setSelectedDate(next);
+  };
+
+  const headerLabel = useMemo(() => {
+    if (isSelectedToday) return t("timetable.title");
+    if (isSelectedTomorrow) return lang === "hi" ? "कल की कक्षाएं" : "Tomorrow's Classes";
+    
+    // Custom label for other dates
+    const options = { day: "numeric", month: "short" };
+    const dateStr = selectedDate.toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", options);
+    const dayName = selectedDate.toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { weekday: "long" });
+    
+    return lang === "hi" ? `${dateStr} की कक्षाएं` : `${dateStr} — ${dayName}`;
+  }, [selectedDate, isSelectedToday, isSelectedTomorrow, t, lang]);
 
   return (
     <>
-      <motion.div
+      <MainCard
         variants={wrapperVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-white rounded-3xl p-6 shadow-md flex flex-col gap-4 relative"
-        style={{ outline: "1px solid #caf0f8" }}
-        role="region"
-        aria-label={t("timetable.title")}
+        className="p-6 flex flex-col gap-0 relative overflow-visible h-full"
+        aria-label={headerLabel}
       >
-        <HelperButton onClick={() => setShowHelper(true)} />
+        {/* Header Section */}
+        <div className="flex flex-col gap-4 flex-shrink-0 mb-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="p-2.5 rounded-2xl flex-shrink-0"
+                style={{ backgroundColor: "#caf0f8" }}
+              >
+                <CalendarDays
+                  size={28}
+                  style={{ color: "#03045e" }}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <h2 className="text-lg font-extrabold leading-tight truncate" style={{ color: "#03045e" }}>
+                  {headerLabel}
+                </h2>
+                {isSelectedToday && (
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#00b4d8] flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00b4d8] animate-pulse" />
+                    Live Updates
+                  </span>
+                )}
+              </div>
+            </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="p-2 rounded-xl"
-              style={{ backgroundColor: "#caf0f8" }}
-            >
-              <CalendarDays
-                size={26}
-                style={{ color: "#03045e" }}
-                aria-hidden="true"
+            {/* Header Controls Grouped in Single Row */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex bg-[#caf0f8] p-1 rounded-xl">
+                <button 
+                  onClick={handlePrevDay}
+                  className="p-1.5 hover:bg-white rounded-lg transition-all text-[#03045e]"
+                  title="Previous Day"
+                >
+                  <ChevronLeft size={17} />
+                </button>
+                <button 
+                  onClick={handleNextDay}
+                  className="p-1.5 hover:bg-white rounded-lg transition-all text-[#03045e]"
+                  title="Next Day"
+                >
+                  <ChevronRight size={17} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className={`p-2 rounded-xl transition-all ${showDatePicker ? "bg-[#03045e] text-white" : "bg-[#caf0f8] text-[#03045e] hover:bg-[#03045e]/10"}`}
+                  title="Select Date"
+                >
+                  <CalendarIcon size={21} />
+                </button>
+                <AnimatePresence>
+                  {showDatePicker && (
+                    <MiniDatePicker 
+                      selectedDate={selectedDate} 
+                      onSelect={(d) => {
+                        setSelectedDate(d);
+                        setShowDatePicker(false);
+                      }}
+                      onClose={() => setShowDatePicker(false)}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+              
+              <HelperButton 
+                onClick={() => setShowHelper(true)} 
+                className="relative !top-0 !right-0"
               />
             </div>
-            <h2 className="text-lg font-bold" style={{ color: "#03045e" }}>
-              {t("timetable.title")}
-            </h2>
           </div>
-          <span
-            className="text-xs font-semibold text-gray-400 px-3 py-1 rounded-full mr-8"
-            style={{ backgroundColor: "#caf0f8" }}
-          >
-            {classes.length} {t("timetable.classes")}
-          </span>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span
+                className="text-xs font-bold text-[#03045e] px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: "#caf0f8" }}
+              >
+                {classes.length} {t("timetable.classes")}
+              </span>
+              {!isSelectedToday && (
+                <button 
+                  onClick={() => setSelectedDate(new Date())}
+                  className="text-[10px] font-black uppercase tracking-widest text-[#0077b6] hover:underline transition-colors px-2"
+                >
+                  Back to Today
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
-        {classes.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-6">
-            {t("timetable.noClasses")}
-          </p>
-        )}
-        {classes.length > 0 && (
-          <div className="flex flex-col">
-            {classes.map((classItem, index) => (
-              <ClassCard
-                key={classItem.id}
-                classItem={classItem}
-                index={index}
-                isLast={index === classes.length - 1}
-                t={t}
-                isParentMode={isParentMode}
-              />
-            ))}
-          </div>
-        )}
-      </motion.div>
+        {/* Scrollable Classes Section */}
+        <div 
+          className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar"
+          style={{ 
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#caf0f8 transparent'
+          }}
+        >
+          {classes.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#caf0f8] flex items-center justify-center mb-4">
+                <CalendarIcon size={32} className="text-[#9ca3af]" />
+              </div>
+              <p className="text-sm font-semibold text-gray-400">
+                {t("timetable.noClasses")}
+              </p>
+            </div>
+          )}
+          {classes.length > 0 && (
+            <div className="flex flex-col pb-4">
+              {classes.map((classItem, index) => (
+                <ClassCard
+                  key={classItem.id}
+                  classItem={classItem}
+                  index={index}
+                  isLast={index === classes.length - 1}
+                  t={t}
+                  isParentMode={isParentMode}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </MainCard>
 
       <HelperPopup
         isOpen={showHelper}

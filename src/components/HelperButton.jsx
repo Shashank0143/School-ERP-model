@@ -14,7 +14,10 @@ import { motion } from "framer-motion";
 function HelperButton({ onClick, className = "absolute top-4 right-4" }) {
   return (
     <motion.button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
       whileHover={{ scale: 1.12 }}
       whileTap={{ scale: 0.92 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}

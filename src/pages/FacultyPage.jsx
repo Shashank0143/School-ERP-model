@@ -14,6 +14,7 @@ import {
 import { useLanguage } from "../context/LanguageContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
+import MainCard from "../components/MainCard";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -210,21 +211,11 @@ function FacultyCard({ faculty }) {
 
   return (
     <>
-      <motion.div
+      <MainCard
         variants={cardVariants}
-        className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
-        style={{ outline: `1px solid ${LIME}` }}
-        role="article"
+        className="h-full flex flex-col"
         aria-label={`Faculty: ${faculty.name}`}
       >
-        {/* Accent top bar */}
-        <div
-          className="h-1.5 w-full"
-          style={{
-            background: `linear-gradient(90deg, ${faculty.avatarColor}, ${TEAL})`,
-          }}
-          aria-hidden="true"
-        />
 
         <div className="p-5 flex flex-col gap-4 flex-1">
           {/* Avatar + name */}
@@ -315,7 +306,7 @@ function FacultyCard({ faculty }) {
             Give Feedback
           </button>
         </div>
-      </motion.div>
+      </MainCard>
 
       <AnimatePresence>
         {showFeedback && (

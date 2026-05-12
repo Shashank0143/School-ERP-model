@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useLanguage } from "../context/LanguageContext";
+import MainCard from "./MainCard";
 import { Eye, EyeOff, Copy, Check, Lock, BookOpen, Mail } from "lucide-react";
 
 const cardVariants = {
@@ -20,9 +22,9 @@ const accentMap = {
     iconColor: "#00b4d8",
     labelColor: "#0077b6",
     inputRingColor: "#00b4d8",
-    badgeBg: "#00b4d815",
-    badgeColor: "#00b4d8",
-    badgeBorderColor: "#00b4d840",
+    badgeBg: "#0077b615",
+    badgeColor: "#0077b6",
+    badgeBorderColor: "#0077b640",
   },
   blue: {
     borderTop: "border-t-4",
@@ -38,6 +40,7 @@ const accentMap = {
 };
 
 function CopyButton({ value, accent, label }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -75,17 +78,17 @@ function CopyButton({ value, accent, label }) {
               borderColor: "#00b4d840",
             }
       }
-      aria-label={copied ? `${label} copied` : `Copy ${label}`}
+      aria-label={copied ? t("aria.copied", { label: t(label) }) : t("aria.copy", { label: t(label) })}
     >
       {copied ? (
         <>
           <Check size={17} aria-hidden="true" />
-          <span>Copied!</span>
+          <span>{t("btn.copied")}</span>
         </>
       ) : (
         <>
           <Copy size={17} aria-hidden="true" />
-          <span>Copy</span>
+          <span>{t("btn.copy")}</span>
         </>
       )}
     </motion.button>
@@ -93,6 +96,7 @@ function CopyButton({ value, accent, label }) {
 }
 
 function CredentialField({ label, value, isPassword, accent }) {
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -128,7 +132,7 @@ function CredentialField({ label, value, isPassword, accent }) {
               borderColor: "#00b4d840",
               color: "#03045e",
             }}
-            aria-label={showPassword ? `Hide ${label}` : `Show ${label}`}
+            aria-label={showPassword ? t("aria.hide", { label: t(label) }) : t("aria.show", { label: t(label) })}
           >
             {showPassword ? (
               <EyeOff size={21} aria-hidden="true" />
@@ -153,22 +157,16 @@ function CredentialsCard({
   accentColor = "emerald",
   index = 0,
 }) {
+  const { t } = useLanguage();
   const accent = accentMap[accentColor] ?? accentMap.emerald;
   const IconComponent = type === "library" ? BookOpen : Mail;
 
   return (
-    <motion.div
+    <MainCard
       custom={index}
       variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-white rounded-3xl shadow-md overflow-hidden flex flex-col"
-      style={{
-        borderTop: `4px solid ${accent.borderColor}`,
-        outline: "1px solid #caf0f8",
-      }}
-      role="region"
-      aria-label={`${title} credentials`}
+      className="h-full"
+      aria-label={t("aria.credentials", { title: t(title) }) || `${t(title)} credentials`}
     >
       <div className="p-5 flex flex-col gap-4">
         {/* Header */}
@@ -195,7 +193,7 @@ function CredentialsCard({
                 className="text-xs font-semibold"
                 style={{ color: accent.labelColor }}
               >
-                {type === "library" ? "Library Access" : "School Email"}
+                {type === "library" ? t("credentials.library") : t("credentials.email")}
               </span>
             </div>
           </div>
@@ -206,10 +204,10 @@ function CredentialsCard({
               color: accent.badgeColor,
               borderColor: accent.badgeBorderColor,
             }}
-            aria-label="Secure credentials"
+            aria-label={t("aria.secure")}
           >
             <Lock size={16} aria-hidden="true" />
-            <span>Secure</span>
+            <span>{t("status.secure")}</span>
           </div>
         </div>
 
@@ -232,7 +230,7 @@ function CredentialsCard({
           accent={accent}
         />
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 

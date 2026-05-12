@@ -1,17 +1,21 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useMemo, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays,
   BookOpen,
   Trophy,
-  AlertCircle,
-  GraduationCap,
   Users,
+  GraduationCap,
   Star,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  X
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
+import MainCard from "../components/MainCard";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -34,25 +38,117 @@ const TYPE_CONFIG = {
 
 const ALL_TYPES = ["all", "holiday", "exam", "event", "ptm", "academic"];
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.05 } },
-};
-const cardVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.32, ease: "easeOut" },
-  },
+// ── Utils ───────────────────────────────────────────────────────────────────
+const getMonthData = (year, monthIndex) => {
+  const firstDay = new Date(year, monthIndex, 1).getDay();
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const days = [];
+  
+  // Padding for start of month
+  for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+    days.push(null);
+  }
+  
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(i);
+  }
+  
+  return days;
 };
 
-// ── Event row ─────────────────────────────────────────────────────────────────
-function EventRow({ event, index }) {
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
+
+// ── Components ──────────────────────────────────────────────────────────────
+
+function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCurrent }) {
+  const { t } = useLanguage();
+  const days = useMemo(() => getMonthData(year, monthIndex), [year, monthIndex]);
+  const monthName = MONTHS[monthIndex];
+
+  // Map events to day numbers for this month/year
+  const eventsByDay = useMemo(() => {
+    const map = {};
+    events.forEach(e => {
+      const parts = e.date.split(" ");
+      const dDay = parseInt(parts[0]);
+      const dMonth = parts[1];
+      const dYear = parseInt(parts[2]);
+      
+      if (dYear === year && (dMonth.startsWith(monthName.substring(0, 3)) || dMonth === monthName)) {
+        if (!map[dDay]) map[dDay] = [];
+        map[dDay].push(e);
+      }
+    });
+    return map;
+  }, [events, year, monthIndex, monthName]);
+
+  return (
+    <div className={`bg-white rounded-xl p-2 border shadow-sm hover:shadow-md transition-all duration-300
+      ${isCurrent ? "border-[#00b4d8] bg-[#caf0f8]/20 shadow-lg shadow-[#00b4d8]/10" : "border-[#caf0f8]"}
+    `}>
+      <div className="flex items-center justify-between mb-1.5 border-b border-[#caf0f8] pb-1">
+        <h4 className={`text-[10px] font-black uppercase tracking-wider ${isCurrent ? "text-[#0077b6]" : "text-[#03045e]"}`}>
+          {monthName}
+        </h4>
+        {isCurrent && (
+          <span className="text-[7px] font-black bg-[#00b4d8] text-white px-1 rounded-sm uppercase tracking-tighter">Current</span>
+        )}
+      </div>
+      <div className="grid grid-cols-7 gap-0.5">
+        {WEEKDAYS.map((d, i) => (
+          <span key={i} className="text-[7px] font-bold text-gray-400 text-center mb-0.5">
+            {d}
+          </span>
+        ))}
+        {days.map((day, i) => {
+          if (day === null) return <div key={i} />;
+          
+          const dayEvents = eventsByDay[day] || [];
+          const isHovered = dayEvents.some(e => e.id === hoveredEventId);
+          
+          return (
+            <div 
+              key={i} 
+              className={`relative h-6 w-full flex flex-col items-center justify-center rounded-md text-[9px] font-bold transition-all duration-200 pb-1
+                ${dayEvents.length > 0 ? "cursor-pointer" : "text-gray-300"}
+                ${isHovered ? "bg-[#03045e] text-white scale-110 z-10 shadow-lg" : "hover:bg-[#caf0f8]"}
+              `}
+              onClick={() => dayEvents.length > 0 && onDateClick(day, monthName, dayEvents)}
+            >
+              <span className={dayEvents.length > 0 && !isHovered ? "text-[#03045e]" : ""}>
+                {day}
+              </span>
+              
+              {/* Event Indicators - Clearly Visible */}
+              {dayEvents.length > 0 && !isHovered && (
+                <div className="absolute bottom-0.5 flex gap-0.5 justify-center flex-wrap px-0.5">
+                  {dayEvents.slice(0, 4).map((e, idx) => (
+                    <div 
+                      key={idx} 
+                      className="w-1.5 h-1.5 rounded-full ring-1 ring-white" 
+                      style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} 
+                      title={e.title}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function EventRow({ event, index, isHovered, onHover, onClick }) {
   const cfg = TYPE_CONFIG[event.type] ?? TYPE_CONFIG.event;
   const IconComponent = cfg.icon;
 
-  // Parse date for display
   const parts = event.date.split(" ");
   const day = parts[0];
   const month = parts[1];
@@ -60,254 +156,431 @@ function EventRow({ event, index }) {
 
   return (
     <motion.div
-      variants={cardVariants}
-      className="flex items-start gap-4 rounded-2xl px-4 py-3 transition-colors"
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.03 }}
+      onMouseEnter={() => onHover(event.id)}
+      onMouseLeave={() => onHover(null)}
+      onClick={onClick}
+      className={`flex items-start gap-4 rounded-2xl px-4 py-3 cursor-pointer transition-all duration-300
+        ${isHovered ? "bg-[#03045e] text-white scale-[1.02] shadow-lg z-10" : "bg-white hover:bg-[#caf0f8]/30"}
+      `}
       style={{
-        backgroundColor: index % 2 === 0 ? LIME : "white",
-        outline: index % 2 !== 0 ? `1px solid ${LIME}` : "none",
+        outline: !isHovered ? `1px solid ${LIME}` : "none",
+        marginBottom: "8px"
       }}
-      role="listitem"
-      aria-label={`${event.title} on ${event.date}`}
     >
-      {/* Date block */}
-      <div className="flex-shrink-0 w-14 text-center">
-        <p
-          className="text-[10px] font-extrabold uppercase"
-          style={{ color: TEAL }}
-        >
+      <div className="flex-shrink-0 w-12 text-center">
+        <p className={`text-[10px] font-black uppercase ${isHovered ? "text-[#00b4d8]" : "text-[#0077b6]"}`}>
           {month}
         </p>
-        <p className="text-2xl font-black leading-none" style={{ color: NAVY }}>
+        <p className={`text-2xl font-black leading-none ${isHovered ? "text-white" : "text-[#03045e]"}`}>
           {day}
         </p>
-        <p className="text-[10px] text-gray-400">{year}</p>
+        <p className={`text-[9px] font-bold ${isHovered ? "text-white/60" : "text-gray-400"}`}>
+          {year}
+        </p>
       </div>
 
-      {/* Divider */}
-      <div
-        className="w-px self-stretch flex-shrink-0 mt-1"
-        style={{ backgroundColor: TEAL + "30" }}
-        aria-hidden="true"
-      />
+      <div className={`w-px self-stretch flex-shrink-0 mt-1 ${isHovered ? "bg-white/20" : "bg-[#0077b620]"}`} />
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold" style={{ color: NAVY }}>
+        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+          <p className="text-sm font-extrabold truncate">
             {event.title}
           </p>
           <span
-            className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: cfg.bg, color: cfg.color }}
+            className={`inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full flex-shrink-0 uppercase tracking-tighter
+              ${isHovered ? "bg-white/20 text-white" : ""}
+            `}
+            style={!isHovered ? { backgroundColor: cfg.bg, color: cfg.color } : {}}
           >
-            <IconComponent size={12} aria-hidden="true" />
+            <IconComponent size={10} />
             {cfg.label}
           </span>
         </div>
-        {event.description && (
-          <p className="text-xs text-gray-400 mt-0.5 leading-snug">
-            {event.description}
-          </p>
-        )}
+        <p className={`text-[11px] leading-snug line-clamp-1 ${isHovered ? "text-white/80" : "text-gray-500 font-medium"}`}>
+          {event.description}
+        </p>
       </div>
     </motion.div>
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Main Page ───────────────────────────────────────────────────────────────
 function SchoolCalendarPage({ schoolCalendar }) {
   const { t } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [hoveredEventId, setHoveredEventId] = useState(null);
+  const [selectedDayInfo, setSelectedDayInfo] = useState(null);
+  
+  const scrollContainerRef = useRef(null);
+  const popupRef = useRef(null);
+
+  // Close on ESC
+  React.useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setSelectedDayInfo(null);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   if (!schoolCalendar) return null;
 
-  const filtered =
+  // Determine year range (academic year usually spans two years like 2024-25 or 2024–25)
+  const academicYear = schoolCalendar.academicYear || "2024-25";
+  // Handle both hyphen (-) and en-dash (–)
+  const yearParts = academicYear.split(/[–-]/);
+  
+  const startYear = parseInt(yearParts[0]) || new Date().getFullYear();
+  let endYear = startYear;
+  
+  if (yearParts[1]) {
+    const trimmedEnd = yearParts[1].trim();
+    endYear = trimmedEnd.length === 2 ? 2000 + parseInt(trimmedEnd) : parseInt(trimmedEnd);
+  } else {
+    endYear = startYear + 1;
+  }
+
+  // Generate 12 months starting from April of startYear to March of endYear
+  // (Standard Academic Year cycle)
+  const calendarMonths = useMemo(() => {
+    const months = [];
+    // Start from April (index 3)
+    for (let i = 0; i < 12; i++) {
+      const monthIndex = (3 + i) % 12;
+      const year = (3 + i) >= 12 ? endYear : startYear;
+      months.push({ year, month: monthIndex });
+    }
+    return months;
+  }, [startYear, endYear]);
+
+  const now = new Date();
+  const currentMonthIdx = now.getMonth();
+  const currentYearIdx = now.getFullYear();
+
+  const filtered = useMemo(() => 
     activeFilter === "all"
       ? schoolCalendar.events
-      : schoolCalendar.events.filter((e) => e.type === activeFilter);
+      : schoolCalendar.events.filter((e) => e.type === activeFilter),
+    [activeFilter, schoolCalendar.events]
+  );
+
+  const handleDateClick = (day, month, events) => {
+    setSelectedDayInfo({ day, month, events });
+  };
 
   return (
-    <>
-      <div className="relative">
-        {/* Page header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-2xl" style={{ backgroundColor: NAVY }}>
-            <CalendarDays size={31} className="text-white" aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-              School Calendar
-            </h1>
-            <p className="text-sm text-gray-500">
-              Academic Year {schoolCalendar.academicYear}
-            </p>
-          </div>
-          <div className="ml-auto">
-            <HelperButton
-              onClick={() => setShowHelper(true)}
-              className="relative"
-            />
-          </div>
+    <div className="max-w-[1600px] mx-auto">
+      {/* Page header */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3.5 rounded-2xl shadow-lg shadow-[#03045e]/10" style={{ backgroundColor: NAVY }}>
+          <CalendarDays size={32} className="text-white" aria-hidden="true" />
         </div>
-
-        {/* Term pills */}
-        <div className="flex gap-3 mb-6 flex-wrap">
-          {schoolCalendar.terms.map((term) => (
-            <div
-              key={term.id}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl"
-              style={{ backgroundColor: "white", outline: `1px solid ${LIME}` }}
-            >
-              <div
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                style={{
-                  backgroundColor: term.status === "ongoing" ? SAGE : TEAL,
-                }}
-                aria-hidden="true"
-              />
-              <div>
-                <p className="text-xs font-extrabold" style={{ color: NAVY }}>
-                  {term.name}
-                </p>
-                <p className="text-[10px] text-gray-400">{term.period}</p>
-              </div>
-              <span
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-1"
-                style={{
-                  backgroundColor:
-                    term.status === "ongoing" ? SAGE + "25" : TEAL + "20",
-                  color: term.status === "ongoing" ? SAGE : TEAL,
-                }}
-              >
-                {term.status === "ongoing" ? "Ongoing" : "Completed"}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Filter tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-          {ALL_TYPES.map((type) => {
-            const isActive = activeFilter === type;
-            const cfg = TYPE_CONFIG[type];
-            return (
-              <button
-                key={type}
-                onClick={() => setActiveFilter(type)}
-                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all capitalize"
-                style={{
-                  backgroundColor: isActive ? NAVY : LIME,
-                  color: isActive ? LIME : NAVY,
-                }}
-              >
-                {type === "all" ? "All Events" : (cfg?.label ?? type)}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Event count */}
-        <p className="text-xs font-semibold text-gray-400 mb-3">
-          {filtered.length} event{filtered.length !== 1 ? "s" : ""}{" "}
-          {activeFilter !== "all"
-            ? `· ${TYPE_CONFIG[activeFilter]?.label}`
-            : ""}
-        </p>
-
-        {/* Events list */}
-        {filtered.length === 0 ? (
-          <div
-            className="bg-white rounded-2xl p-8 text-center shadow-md"
-            style={{ outline: `1px solid ${LIME}` }}
-          >
-            <p className="text-sm font-bold text-gray-400">
-              No events found for this filter.
-            </p>
-          </div>
-        ) : (
-          <motion.div
-            className="bg-white rounded-2xl shadow-md overflow-hidden"
-            style={{ outline: `1px solid ${LIME}` }}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            role="list"
-            aria-label="School calendar events"
-          >
-            {filtered.map((event, i) => (
-              <EventRow key={event.id} event={event} index={i} />
-            ))}
-          </motion.div>
-        )}
-
-        {/* Legend */}
-        <div
-          className="mt-6 bg-white rounded-2xl p-4 shadow-md"
-          style={{ outline: `1px solid ${LIME}` }}
-        >
-          <p
-            className="text-xs font-extrabold uppercase tracking-wide mb-3"
-            style={{ color: NAVY }}
-          >
-            Event Types
+        <div>
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: NAVY }}>
+            {t("calendar.title") || "Academic Calendar"}
+          </h1>
+          <p className="text-sm font-bold text-gray-400">
+            {t("calendar.academicYear") || "Academic Year"} {schoolCalendar.academicYear}
           </p>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
-              const IconComponent = cfg.icon;
-              return (
-                <div key={key} className="flex items-center gap-1.5">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: cfg.color }}
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs font-semibold text-gray-600">
-                    {cfg.label}
-                  </span>
+        </div>
+        <div className="ml-auto">
+          <HelperButton onClick={() => setShowHelper(true)} />
+        </div>
+      </div>
+
+      {/* Term Quick Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {schoolCalendar.terms.map((term) => (
+          <motion.div
+            key={term.id}
+            whileHover={{ y: -4 }}
+            className="bg-white p-4 rounded-2xl border border-[#caf0f8] shadow-sm flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-2.5 h-2.5 rounded-full ${term.status === "ongoing" ? "bg-[#00b4d8] animate-pulse" : "bg-[#0077b6]"}`} />
+              <div>
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{term.name}</p>
+                <p className="text-sm font-extrabold text-[#03045e]">{term.period}</p>
+              </div>
+            </div>
+            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase
+              ${term.status === "ongoing" ? "bg-[#00b4d8]/10 text-[#00b4d8]" : "bg-gray-100 text-gray-400"}
+            `}>
+              {term.status === "ongoing" ? "Active" : "Done"}
+            </span>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Split Layout Container */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-8 items-start mb-8">
+        
+        {/* LEFT: Event Timeline */}
+        <div className="flex flex-col gap-4 min-w-0">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2">
+              <BookOpen size={20} className="text-[#00b4d8]" />
+              Event Timeline
+            </h2>
+            <span className="text-[11px] font-black text-gray-400 uppercase bg-gray-50 px-2.5 py-1 rounded-full">
+              {filtered.length} Events Listed
+            </span>
+          </div>
+
+          <div 
+            className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
+            style={{ borderTop: "6px solid #00b4d8", maxHeight: "700px", display: "flex", flexDirection: "column" }}
+          >
+            {/* Sticky Filters */}
+            <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md py-4 px-4 border-b border-gray-50 mb-4 overflow-visible">
+              <div className="flex flex-wrap gap-2">
+                {ALL_TYPES.map((type) => {
+                  const isActive = activeFilter === type;
+                  const cfg = TYPE_CONFIG[type];
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setActiveFilter(type)}
+                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all duration-300 capitalize
+                        ${isActive ? "bg-[#03045e] text-white shadow-lg shadow-[#03045e]/20" : "bg-[#caf0f8]/50 text-[#03045e] hover:bg-[#caf0f8]"}
+                      `}
+                    >
+                      {type === "all" ? "All Events" : (cfg?.label ?? type)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Scrollable List */}
+            <div 
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-1"
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-gray-300">
+                  <Star size={48} className="mb-4 opacity-20" />
+                  <p className="font-bold">No events match your filter</p>
                 </div>
-              );
-            })}
+              ) : (
+                filtered.map((event, i) => (
+                  <EventRow 
+                    key={event.id} 
+                    event={event} 
+                    index={i} 
+                    isHovered={hoveredEventId === event.id}
+                    onHover={setHoveredEventId}
+                    onClick={() => {
+                      const parts = event.date.split(" ");
+                      handleDateClick(parseInt(parts[0]), parts[1], [event]);
+                    }}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Scroll Fade Bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none opacity-80" />
+          </div>
+        </div>
+
+        {/* RIGHT: Compact 12-Month Calendar */}
+        <div className="flex flex-col gap-4 min-w-0 h-full">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2">
+              <CalendarDays size={20} className="text-[#00b4d8]" />
+              Academic Planner
+              <span className="ml-2 px-2 py-0.5 rounded-md bg-[#03045e] text-white text-[9px] font-black tracking-widest uppercase">
+                {academicYear}
+              </span>
+            </h2>
+            <div className="flex gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 mr-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00b4d8]" />
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Cycle Active</span>
+              </div>
+              <button className="p-1.5 rounded-lg bg-white border border-[#caf0f8] text-gray-400 hover:text-[#03045e]">
+                <ChevronLeft size={16} />
+              </button>
+              <button className="p-1.5 rounded-lg bg-white border border-[#caf0f8] text-gray-400 hover:text-[#03045e]">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[2rem] p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-full relative overflow-hidden"
+               style={{ borderTop: "6px solid #00b4d8" }}>
+            
+            {/* Calendar Grid (4x3) - Tighter gaps */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {calendarMonths.map((m, idx) => (
+                <MiniMonth 
+                  key={idx}
+                  year={m.year}
+                  monthIndex={m.month}
+                  events={schoolCalendar.events}
+                  hoveredEventId={hoveredEventId}
+                  onDateClick={handleDateClick}
+                  isCurrent={m.year === currentYearIdx && m.month === currentMonthIdx}
+                />
+              ))}
+            </div>
+
           </div>
         </div>
       </div>
 
+      {/* Legend - Full Width Bottom */}
+      <MainCard borderColor="#00b4d8" className="p-6 relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#03045e] mb-1">Schedule Key</h3>
+            <p className="text-[11px] font-bold text-gray-400">Academic & Activity Color Coding</p>
+          </div>
+          <div className="flex flex-wrap gap-x-8 gap-y-4">
+            {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
+              const IconComponent = cfg.icon;
+              return (
+                <div key={key} className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                    style={{ backgroundColor: cfg.bg, color: cfg.color }}
+                  >
+                    <IconComponent size={18} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-[#03045e] leading-none mb-1">{cfg.label}</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">System Code: {key}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hidden xl:flex items-center gap-2 bg-[#caf0f8] px-4 py-2 rounded-2xl">
+            <Info size={16} className="text-[#0077b6]" />
+            <p className="text-[10px] font-bold text-[#0077b6] leading-tight">
+              Calendar reflects official <br/> School Board dates
+            </p>
+          </div>
+        </div>
+      </MainCard>
+
+      {/* Existing Helper Popup */}
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}
         titleKey="calendar.title"
-        contentEn="The School Calendar shows all important dates for the academic year — including exams, holidays, events, and Parent-Teacher Meetings. Use the filter buttons to view specific types of events."
-        contentHi="स्कूल कैलेंडर शैक्षणिक वर्ष की सभी महत्वपूर्ण तिथियां दिखाता है — जिसमें परीक्षाएं, छुट्टियां, कार्यक्रम और अभिभावक-शिक्षक बैठकें शामिल हैं। विशिष्ट प्रकार के कार्यक्रम देखने के लिए फ़िल्टर बटन का उपयोग करें।"
+        contentEn="The Academic Planner provides a dual-view system: a chronological timeline of all school events and a compact 12-month calendar for quick month-over-month planning."
+        contentHi="अकादमिक प्लानर एक दोहरा दृश्य सिस्टम प्रदान करता है: सभी स्कूल कार्यक्रमों की एक कालानुक्रमिक समयरेखा और त्वरित महीने-दर-महीने योजना के लिए एक कॉम्पैक्ट 12-महीने का कैलेंडर।"
         colorLegend={[
-          {
-            color: "#EF4444",
-            labelEn: "Red — School holiday",
-            labelHi: "लाल — स्कूल की छुट्टी",
-          },
-          {
-            color: NAVY,
-            labelEn: "Navy — Examination",
-            labelHi: "नेवी — परीक्षा",
-          },
-          {
-            color: TEAL,
-            labelEn: "Teal — School event",
-            labelHi: "टील — स्कूल कार्यक्रम",
-          },
-          {
-            color: SAGE,
-            labelEn: "Sage — Parent-Teacher Meeting",
-            labelHi: "सेज — अभिभावक-शिक्षक बैठक",
-          },
-          {
-            color: "#F59E0B",
-            labelEn: "Amber — Academic milestone",
-            labelHi: "एम्बर — शैक्षणिक मील का पत्थर",
-          },
+          { color: "#EF4444", labelEn: "Holiday", labelHi: "छुट्टी" },
+          { color: NAVY, labelEn: "Examination", labelHi: "परीक्षा" },
+          { color: TEAL, labelEn: "School Event", labelHi: "स्कूल कार्यक्रम" },
+          { color: SAGE, labelEn: "PTM", labelHi: "PTM" },
+          { color: "#F59E0B", labelEn: "Academic", labelHi: "शैक्षणिक" },
         ]}
       />
-    </>
+
+      {/* Floating Date Preview Popup */}
+      <AnimatePresence>
+        {selectedDayInfo && (
+          <>
+            {/* Click-outside backdrop */}
+            <div 
+              className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px]" 
+              onClick={() => setSelectedDayInfo(null)}
+            />
+            
+            <motion.div 
+              ref={popupRef}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="fixed bottom-8 right-8 w-80 bg-[#03045e] text-white p-5 rounded-[2rem] shadow-2xl z-50 border border-white/10 overflow-hidden"
+            >
+              <button 
+                onClick={() => setSelectedDayInfo(null)}
+                className="absolute top-5 right-5 text-white/40 hover:text-white transition-colors"
+                aria-label="Close preview"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl font-black text-[#00b4d8]">
+                  {selectedDayInfo.day}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00b4d8] leading-none mb-1">
+                    {selectedDayInfo.month}
+                  </p>
+                  <p className="text-sm font-extrabold">
+                    {selectedDayInfo.events.length} Event{selectedDayInfo.events.length > 1 ? "s" : ""}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {selectedDayInfo.events.map((e, idx) => (
+                  <div key={idx} className="flex items-start gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 group hover:bg-white/10 transition-colors">
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.2)]" 
+                      style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} 
+                    />
+                    <div>
+                      <p className="text-xs font-black mb-0.5 group-hover:text-[#00b4d8] transition-colors">{e.title}</p>
+                      <p className="text-[10px] text-white/60 font-medium leading-relaxed">{e.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #caf0f8;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #00b4d8;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </div>
   );
 }
+
+const ChevronDown = ({ size, className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="m6 9 6 6 6-6"/>
+  </svg>
+);
 
 export default SchoolCalendarPage;

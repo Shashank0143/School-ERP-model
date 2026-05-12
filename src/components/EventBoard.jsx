@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import MainCard from "./MainCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Sparkles, Clock, Calendar } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 24 },
@@ -32,6 +34,7 @@ const CATEGORY_COLORS = {
 const TAB_ICONS = { happenings: Sparkles, upcoming: Calendar };
 
 function EventCard({ event, index }) {
+  const { t } = useLanguage();
   const { name, date, category, bgGradient, daysLeft } = event;
   const showCountdown =
     typeof daysLeft === "number" && daysLeft > 0 && daysLeft <= 7;
@@ -44,10 +47,10 @@ function EventCard({ event, index }) {
       animate="visible"
       whileHover={{ scale: 1.03, y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="relative rounded-2xl p-5 text-white shadow-md hover:shadow-xl overflow-hidden cursor-default"
+      className="h-full relative rounded-2xl p-5 text-white shadow-md hover:shadow-xl overflow-hidden cursor-default"
       style={{ background: bgGradient }}
       role="article"
-      aria-label={`Event: ${name} on ${date}`}
+      aria-label={`${t("event.title")}: ${t(name)} on ${date}`}
     >
       <div
         className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/20 blur-xl pointer-events-none"
@@ -57,12 +60,12 @@ function EventCard({ event, index }) {
       {/* Top row: category badge only — full width, never competes with countdown */}
       <div className="mb-3 relative z-10">
         <span className="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-white/25 text-white backdrop-blur-sm">
-          {category}
+          {t(category)}
         </span>
       </div>
 
       <h3 className="text-base font-extrabold leading-snug mb-1.5 relative z-10 line-clamp-2">
-        {name}
+        {t(name)}
       </h3>
 
       {/* Date row */}
@@ -82,7 +85,7 @@ function EventCard({ event, index }) {
             ease: "easeOut",
           }}
           className="mt-3 relative z-10"
-          aria-label={`${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
+          aria-label={daysLeft === 1 ? t("event.dayLeft") : t("event.daysLeft", { count: daysLeft })}
         >
           <span
             className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full"
@@ -94,7 +97,7 @@ function EventCard({ event, index }) {
             }}
           >
             <Clock size={14} aria-hidden="true" />
-            {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+            {daysLeft === 1 ? t("event.dayLeft") : t("event.daysLeft", { count: daysLeft })}
           </span>
         </motion.div>
       )}
@@ -103,23 +106,20 @@ function EventCard({ event, index }) {
 }
 
 function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("happenings");
   const tabs = [
-    { id: "happenings", label: "Happenings", data: happenings },
-    { id: "upcoming", label: "Upcoming", data: upcoming },
+    { id: "happenings", label: t("event.tab.happenings"), data: happenings },
+    { id: "upcoming", label: t("event.tab.upcoming"), data: upcoming },
   ];
   const activeData = tabs.find((t) => t.id === activeTab)?.data ?? [];
 
   return (
-    <motion.div
+    <MainCard
       custom={index}
       variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
-      style={{ outline: "1px solid #caf0f8" }}
-      role="region"
-      aria-label="Event Board"
+      className="h-full flex flex-col"
+      aria-label={t("event.title")}
     >
       {/* Header */}
       <div className="px-6 pt-5 pb-0 flex items-center justify-between">
@@ -139,10 +139,10 @@ function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
               className="text-lg font-extrabold leading-tight"
               style={{ color: "#03045e" }}
             >
-              Event Board
+              {t("event.title")}
             </h2>
             <span className="text-xs font-semibold text-gray-400">
-              Campus life &amp; activities
+              {t("event.subtitle")}
             </span>
           </div>
         </div>
@@ -202,11 +202,11 @@ function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
           >
             {activeData.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-8">
-                No events available.
+                {t("event.empty")}
               </p>
             ) : (
               <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4"
                 aria-label="Event list"
               >
                 {activeData.map((event, i) => (
@@ -217,7 +217,7 @@ function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
           </motion.div>
         </AnimatePresence>
       </div>
-    </motion.div>
+    </MainCard>
   );
 }
 
