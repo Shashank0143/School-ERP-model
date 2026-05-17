@@ -3,6 +3,10 @@ import MainCard from "./MainCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Sparkles, Clock, Calendar } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import HelperButton from "./HelperButton";
+import HelperPopup from "./HelperPopup";
+import ParentInsight from "./ParentInsight";
+import { useAuth } from "../context/AuthContext";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 24 },
@@ -107,7 +111,10 @@ function EventCard({ event, index }) {
 
 function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
   const { t } = useLanguage();
+  const { isParent: isParentMode } = useAuth();
   const [activeTab, setActiveTab] = useState("happenings");
+  const [showHelper, setShowHelper] = useState(false);
+
   const tabs = [
     { id: "happenings", label: t("event.tab.happenings"), data: happenings },
     { id: "upcoming", label: t("event.tab.upcoming"), data: upcoming },
@@ -115,110 +122,134 @@ function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
   const activeData = tabs.find((t) => t.id === activeTab)?.data ?? [];
 
   return (
-    <MainCard
-      custom={index}
-      variants={cardVariants}
-      className="h-full flex flex-col"
-      aria-label={t("event.title")}
-    >
-      {/* Header */}
-      <div className="px-6 pt-5 pb-0 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="p-2.5 rounded-2xl"
-            style={{ backgroundColor: "#0077b615" }}
-          >
-            <Sparkles
-              size={26}
-              style={{ color: "#0077b6" }}
-              aria-hidden="true"
-            />
-          </div>
-          <div>
-            <h2
-              className="text-lg font-extrabold leading-tight"
-              style={{ color: "#03045e" }}
+    <>
+      <MainCard
+        custom={index}
+        variants={cardVariants}
+        className="h-full flex flex-col relative"
+        aria-label={t("event.title")}
+      >
+        <HelperButton onClick={() => setShowHelper(true)} className="absolute top-4 right-4" />
+
+        {/* Header */}
+        <div className="px-6 pt-5 pb-0 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="p-2.5 rounded-2xl"
+              style={{ backgroundColor: "#0077b615" }}
             >
-              {t("event.title")}
-            </h2>
-            <span className="text-xs font-semibold text-gray-400">
-              {t("event.subtitle")}
-            </span>
+              <Sparkles
+                size={26}
+                style={{ color: "#0077b6" }}
+                aria-hidden="true"
+              />
+            </div>
+            <div>
+              <h2
+                className="text-lg font-extrabold leading-tight"
+                style={{ color: "#03045e" }}
+              >
+                {t("event.title")}
+              </h2>
+              <span className="text-xs font-semibold text-gray-400">
+                {t("event.subtitle")}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div
-        className="flex gap-1 px-6 mt-4 border-b border-gray-100"
-        role="tablist"
-        aria-label="Event categories"
-      >
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const TabIcon = TAB_ICONS[tab.id];
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`event-tabpanel-${tab.id}`}
-              id={`event-tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              className="relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold rounded-t-xl transition-colors duration-150 focus:outline-none"
-              style={
-                isActive
-                  ? { color: "#0077b6", backgroundColor: "#0077b612" }
-                  : { color: "#9ca3af" }
-              }
-            >
-              <TabIcon size={18} aria-hidden="true" />
-              {tab.label}
-              {isActive && (
-                <motion.span
-                  layoutId="event-tab-underline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                  style={{ backgroundColor: "#0077b6" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
+        {isParentMode && activeData.length > 0 && (
+          <div className="px-6 mt-4">
+            <ParentInsight 
+              text={t("insight.events", { 
+                category: t(activeData[0].category), 
+                name: t(activeData[0].name),
+                days: activeData[0].daysLeft || 0
+              })} 
+            />
+          </div>
+        )}
 
-      {/* Content */}
-      <div className="flex-1 px-4 py-4">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            variants={tabContentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            role="tabpanel"
-            id={`event-tabpanel-${activeTab}`}
-            aria-labelledby={`event-tab-${activeTab}`}
-          >
-            {activeData.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">
-                {t("event.empty")}
-              </p>
-            ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4"
-                aria-label="Event list"
+        {/* Tabs */}
+        <div
+          className="flex gap-1 px-6 mt-4 border-b border-gray-100"
+          role="tablist"
+          aria-label="Event categories"
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const TabIcon = TAB_ICONS[tab.id];
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`event-tabpanel-${tab.id}`}
+                id={`event-tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold rounded-t-xl transition-colors duration-150 focus:outline-none"
+                style={
+                  isActive
+                    ? { color: "#0077b6", backgroundColor: "#0077b612" }
+                    : { color: "#9ca3af" }
+                }
               >
-                {activeData.map((event, i) => (
-                  <EventCard key={event.id} event={event} index={i} />
-                ))}
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </MainCard>
+                <TabIcon size={18} aria-hidden="true" />
+                {tab.label}
+                {isActive && (
+                  <motion.span
+                    layoutId="event-tab-underline"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                    style={{ backgroundColor: "#0077b6" }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 px-4 py-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              role="tabpanel"
+              id={`event-tabpanel-${activeTab}`}
+              aria-labelledby={`event-tab-${activeTab}`}
+            >
+              {activeData.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">
+                  {t("event.empty")}
+                </p>
+              ) : (
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4"
+                  aria-label="Event list"
+                >
+                  {activeData.map((event, i) => (
+                    <EventCard key={event.id} event={event} index={i} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </MainCard>
+
+      <HelperPopup
+        isOpen={showHelper}
+        onClose={() => setShowHelper(false)}
+        titleKey="event.title"
+        contentEn="The Event Board shows ongoing ('Happenings') and upcoming school activities. 'Happenings' include current workshops, festivals, or competitions, while 'Upcoming' shows events scheduled for the future."
+        contentHi="इवेंट बोर्ड वर्तमान ('Happenings') और आगामी स्कूली गतिविधियों को दिखाता है। 'Happenings' में वर्तमान कार्यशालाएं, त्यौहार या प्रतियोगिताएं शामिल हैं, जबकि 'आगामी' भविष्य के लिए निर्धारित कार्यक्रमों को दिखाता है।"
+      />
+    </>
   );
 }
 
-export default EventBoard;
+export default React.memo(EventBoard);

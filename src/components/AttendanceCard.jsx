@@ -68,15 +68,15 @@ function StatusIcon({ status }) {
         height="20"
         viewBox="0 0 24 24"
         fill="none"
+        stroke="#00b4d8"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         aria-hidden="true"
       >
-        <path
-          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-          stroke="#00b4d8"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
       </svg>
     );
   }
@@ -178,8 +178,12 @@ function AttendanceCard({ overall, label }) {
   const [showHelper, setShowHelper] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
 
+  const percentage = (() => {
+    const val = typeof overall === 'object' ? overall?.percentage : overall;
+    return isNaN(val) || val === undefined || val === null ? 0 : val;
+  })();
   const { status, colorClass, bgClass, strokeColor, messageKey } =
-    getAttendanceStatus(overall);
+    getAttendanceStatus(percentage);
 
   const glowMap = {
     excellent: "2px solid #00b4d8",
@@ -212,10 +216,10 @@ function AttendanceCard({ overall, label }) {
       <MainCard
         variants={cardVariants}
         className="h-full p-6 items-center gap-4 cursor-default select-none relative"
-        aria-label={`${cardLabel}: ${overall}%`}
+        aria-label={`${cardLabel}: ${percentage}%`}
       >
         {/* Helper button */}
-        <HelperButton onClick={() => setShowHelper(true)} />
+        <HelperButton onClick={() => setShowHelper(true)} className="absolute top-4 right-4" />
 
         {/* Heading */}
         <div className="flex items-center gap-2 self-start">
@@ -231,7 +235,7 @@ function AttendanceCard({ overall, label }) {
 
         {/* Ring */}
         <div className="relative flex items-center justify-center">
-          <CircularRing percentage={overall} strokeColor={strokeColor} />
+          <CircularRing percentage={percentage} strokeColor={strokeColor} />
           <div className="absolute flex flex-col items-center justify-center gap-1.5">
             <motion.span
               className={`text-4xl font-black ${colorClass}`}
@@ -239,7 +243,7 @@ function AttendanceCard({ overall, label }) {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
             >
-              {overall}%
+              {percentage}%
             </motion.span>
             
             {/* Interactive Status Icon with Micro Legend */}
@@ -275,9 +279,9 @@ function AttendanceCard({ overall, label }) {
                       
                       <div className="space-y-2.5">
                         {[
-                          { color: "#00b4d8", label: "Green (85%+)", desc: "Attendance is good" },
-                          { color: "#F59E0B", label: "Yellow (75-84%)", desc: "Needs improvement" },
-                          { color: "#EF4444", label: "Red (<75%)", desc: "Attendance is low" }
+                          { color: "#00b4d8", label: "Green (85%+)", desc: "Safe Attendance" },
+                          { color: "#F59E0B", label: "Yellow (75-84%)", desc: "Warning Zone" },
+                          { color: "#EF4444", label: "Red (<75%)", desc: "Critical Attendance" }
                         ].map((item, idx) => (
                           <div key={idx} className="flex items-start gap-2">
                             <div className="w-2.5 h-2.5 rounded-full mt-0.5 flex-shrink-0" style={{ backgroundColor: item.color }} />
@@ -306,42 +310,7 @@ function AttendanceCard({ overall, label }) {
           {t(`status.${status}`)}
         </motion.div>
 
-        {/* Message — student or parent */}
-        {isParentMode ? (
-          <motion.div
-            className="w-full flex flex-col gap-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 1.0 }}
-          >
-            {/* Traffic light + status label */}
-            <div className="flex items-center gap-2">
-              <TrafficLight status={status} />
-              <span
-                className="text-sm font-bold"
-                style={{ color: trafficColor[status] }}
-              >
-                {t(statusLabelKey[status])}
-              </span>
-            </div>
-            {/* Parent-friendly summary */}
-            <p
-              className="text-sm font-semibold leading-snug rounded-2xl px-4 py-2"
-              style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
-            >
-              {t(parentMessageKey[status])}
-            </p>
-          </motion.div>
-        ) : (
-          <motion.p
-            className={`text-sm font-semibold text-center ${colorClass}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 1.0 }}
-          >
-            {t(messageKey)}
-          </motion.p>
-        )}
+
       </MainCard>
 
       <HelperPopup

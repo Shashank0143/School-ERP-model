@@ -3,6 +3,7 @@ import { homepage } from "./homepage";
 import { mentorTranslations } from "./mentor";
 import { examTranslations } from "./exam";
 import { newSectionsTranslations } from "./newSections";
+import { curriculumTranslations } from "./curriculum";
 
 export const translations = {
   en: {
@@ -11,6 +12,7 @@ export const translations = {
     ...mentorTranslations.en,
     ...examTranslations.en,
     ...newSectionsTranslations.en,
+    ...curriculumTranslations.en,
   },
   hi: {
     ...common.hi,
@@ -18,5 +20,6 @@ export const translations = {
     ...mentorTranslations.hi,
     ...examTranslations.hi,
     ...newSectionsTranslations.hi,
+    ...curriculumTranslations.hi,
   }
 };

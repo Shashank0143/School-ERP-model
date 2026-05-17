@@ -39,10 +39,15 @@ const SUBJECT_ICONS = {
   cs: Monitor,
   eng: Globe,
   pe: Dumbbell,
-  ai: Cpu,
-  dbms: Database,
-  cn: Network,
-  os: Monitor,
+  bio: FlaskConical,
+  acc: BookOpen,
+  bst: BookOpen,
+  eco: Globe,
+  his: BookOpen,
+  pol: BookOpen,
+  geo: Globe,
+  soc: BookOpen,
+  hs: BookOpen,
 };
 
 const HELPER_CONTENT_EN =
@@ -101,12 +106,12 @@ const SubjectCard = memo(function SubjectCard({
   percentage,
   isParentMode,
   lang,
+  t,
 }) {
   const { status, colorClass, bgClass, barClass, messageKey } =
     getAttendanceStatus(percentage);
   const IconComponent = SUBJECT_ICONS[id] ?? BookOpen;
 
-  const { t } = useLanguage();
   const parentLabel = t(STATUS_LABEL_KEY[status]);
 
   return (
@@ -204,6 +209,7 @@ function SubjectAttendanceCards({ subjects = [] }) {
               percentage={subject.percentage}
               isParentMode={isParentMode}
               lang={lang}
+              t={t}
             />
           ))}
         </motion.div>

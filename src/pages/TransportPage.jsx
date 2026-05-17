@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 import {
   Bus,
   MapPin,
@@ -8,15 +7,22 @@ import {
   ShieldCheck,
   AlertCircle,
   Navigation,
-  Info,
-  ChevronRight,
-  Phone,
-  Calendar,
   Zap,
-  Map
+  Map,
+  Phone,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { transportService } from "../services/transportService";
+import { 
+  getTransportSummary, 
+  getVehicleDetails, 
+  getPersonnelInfo, 
+  getRouteTimeline, 
+  getTransportNotices, 
+  getSafetyGuidelines 
+} from "../services/transportService";
+import { useService } from "../hooks/useService";
+import { useStudent } from "../context/StudentContext";
+import ChildScopeSwitcher from "../components/parent/ChildScopeSwitcher";
 import MainCard from "../components/MainCard";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
@@ -26,7 +32,6 @@ const TEAL = "#0077b6";
 const CYAN = "#00b4d8";
 const LIME = "#caf0f8";
 
-/* ── Reusable section header (matches FacultyPage / Achievements) ── */
 function SectionHeader({ icon, title, aside }) {
   return (
     <div className="flex items-center justify-between mb-4 px-1">
@@ -41,7 +46,6 @@ function SectionHeader({ icon, title, aside }) {
   );
 }
 
-/* ── Metadata row (label + value) used inside cards ── */
 function MetaRow({ label, value, valueClass = "" }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
@@ -57,40 +61,17 @@ function MetaRow({ label, value, valueClass = "" }) {
 
 export default function TransportPage() {
   const { t } = useLanguage();
-  const [loading, setLoading] = useState(true);
+  const { activeStudentId } = useStudent();
   const [showHelper, setShowHelper] = useState(false);
-  const [summary, setSummary] = useState(null);
-  const [vehicle, setVehicle] = useState(null);
-  const [personnel, setPersonnel] = useState(null);
-  const [route, setRoute] = useState([]);
-  const [notices, setNotices] = useState([]);
-  const [guidelines, setGuidelines] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [s, v, p, r, n, g] = await Promise.all([
-          transportService.getTransportSummary(),
-          transportService.getVehicleDetails(),
-          transportService.getPersonnelInfo(),
-          transportService.getRouteTimeline(),
-          transportService.getTransportNotices(),
-          transportService.getSafetyGuidelines(),
-        ]);
-        setSummary(s);
-        setVehicle(v);
-        setPersonnel(p);
-        setRoute(r);
-        setNotices(n);
-        setGuidelines(g);
-      } catch (err) {
-        console.error("Failed to fetch transport data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { data: summary, loading: sLoading } = useService(getTransportSummary, [activeStudentId], [activeStudentId]);
+  const { data: vehicle, loading: vLoading } = useService(getVehicleDetails, [activeStudentId], [activeStudentId]);
+  const { data: personnel, loading: pLoading } = useService(getPersonnelInfo, [activeStudentId], [activeStudentId]);
+  const { data: route, loading: rLoading } = useService(getRouteTimeline, [activeStudentId], [activeStudentId]);
+  const { data: notices, loading: nLoading } = useService(getTransportNotices, [activeStudentId], [activeStudentId]);
+  const { data: guidelines, loading: gLoading } = useService(getSafetyGuidelines, [activeStudentId], [activeStudentId]);
+
+  const loading = sLoading || vLoading || pLoading || rLoading || nLoading || gLoading;
 
   if (loading) return (
     <div className="flex items-center justify-center h-[60vh]">
@@ -98,47 +79,43 @@ export default function TransportPage() {
     </div>
   );
 
-  const currentIdx = route.findIndex(item => item.current);
-  const progressPct = route.length > 1
-    ? (currentIdx / (route.length - 1)) * 100
+  const routeList = route || [];
+  const currentIdx = routeList.findIndex(item => item.current);
+  const progressPct = routeList.length > 1
+    ? (currentIdx / (routeList.length - 1)) * 100
     : 0;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-12 px-2 sm:px-0">
+      <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: NAVY }}>
+            <Bus size={28} className="text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black truncate" style={{ color: NAVY }}>
+              {t("transport.title") || "Student Transport"}
+            </h1>
+            <p className="text-sm text-gray-500 truncate">{t("transport.subtitle") || "Track your route, vehicle, and personnel details."}</p>
+          </div>
+        </div>
 
-      {/* ── Page Header (matches FacultyPage exactly) ── */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: NAVY }}>
-          <Bus size={28} className="text-white" aria-hidden="true" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-            {t("transport.title")}
-          </h1>
-          <p className="text-sm text-gray-500">{t("transport.subtitle")}</p>
-        </div>
-        <div className="ml-auto">
+        <div className="flex-shrink-0 ml-auto">
           <HelperButton onClick={() => setShowHelper(true)} />
         </div>
       </div>
 
-      {/* ── Dashboard Grid ── */}
       <div className="space-y-10">
-
-        {/* ROW 1 ── Assigned Route + Vehicle Details */}
         <div className="grid grid-cols-12 gap-6 items-stretch">
-
-          {/* LEFT 65% – Assigned Route */}
           <div className="col-span-12 lg:col-span-8">
             <SectionHeader
               icon={<Map size={16} />}
-              title={t("transport.assigned_route")}
+              title={t("transport.assigned_route") || "Assigned Route"}
             />
             <MainCard
               className="p-6 flex flex-col gap-5 h-[calc(100%-3.25rem)]"
               borderColor={CYAN}
             >
-              {/* Hero row */}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#00b4d8] mb-1">
@@ -151,7 +128,7 @@ export default function TransportPage() {
                 <div className="flex gap-6">
                   <div className="text-right">
                     <p className="text-[9px] font-black uppercase tracking-wide text-gray-400 mb-1">
-                      {t("transport.pickup")}
+                      {t("transport.pickup") || "Pickup Stop"}
                     </p>
                     <p className="text-sm font-bold" style={{ color: NAVY }}>
                       {summary?.pickupStop}
@@ -159,7 +136,7 @@ export default function TransportPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-black uppercase tracking-wide text-gray-400 mb-1">
-                      {t("transport.departure")}
+                      {t("transport.departure") || "Pickup Time"}
                     </p>
                     <p className="text-sm font-bold" style={{ color: NAVY }}>
                       {summary?.pickupTime}
@@ -168,12 +145,11 @@ export default function TransportPage() {
                 </div>
               </div>
 
-              {/* Meta chips */}
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Vehicle No", value: summary?.vehicleNo },
                   { label: "Pass ID",    value: summary?.passId,    accent: true },
-                  { label: "Status",     value: "Active • On Track", green: true },
+                  { label: "Status",     value: summary?.status,    green: true },
                 ].map(({ label, value, accent, green }) => (
                   <div
                     key={label}
@@ -190,8 +166,7 @@ export default function TransportPage() {
                 ))}
               </div>
 
-              {/* Status strip */}
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
+              <div className="pt-4 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3 mt-auto">
                 <div className="flex gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wide">
                     <Zap size={10} /> GPS Active
@@ -202,7 +177,7 @@ export default function TransportPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gray-400">
-                    Next: <span className="font-black" style={{ color: NAVY }}>Main Gate</span>
+                    Next: <span className="font-black" style={{ color: NAVY }}>{summary?.nextStop || "Main Gate"}</span>
                   </span>
                   <button
                     className="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest opacity-60"
@@ -215,9 +190,8 @@ export default function TransportPage() {
             </MainCard>
           </div>
 
-          {/* RIGHT 35% – Vehicle Details */}
           <div className="col-span-12 lg:col-span-4">
-            <SectionHeader icon={<Bus size={16} />} title={t("transport.details")} />
+            <SectionHeader icon={<Bus size={16} />} title={t("transport.details") || "Vehicle Details"} />
             <MainCard borderColor={CYAN} className="p-6 flex flex-col gap-4 h-[calc(100%-3.25rem)]">
               <div className="flex items-start justify-between">
                 <div>
@@ -227,23 +201,23 @@ export default function TransportPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-[9px] font-black uppercase tracking-wide text-gray-400 mb-0.5">Capacity</p>
-                  <p className="text-sm font-black" style={{ color: NAVY }}>52 Seats</p>
+                  <p className="text-sm font-black" style={{ color: NAVY }}>{vehicle?.capacity}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-wide text-gray-400 mb-0.5">Fuel Type</p>
-                  <p className="text-xs font-bold" style={{ color: NAVY }}>Electric (EV)</p>
+                  <p className="text-xs font-bold" style={{ color: NAVY }}>{vehicle?.fuelType}</p>
                 </div>
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-wide text-gray-400 mb-0.5">Route Zone</p>
-                  <p className="text-xs font-bold" style={{ color: NAVY }}>North Campus</p>
+                  <p className="text-xs font-bold" style={{ color: NAVY }}>{vehicle?.zone}</p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                {vehicle?.features.map((f, i) => (
+                {(vehicle?.features || []).map((f, i) => (
                   <span
                     key={i}
                     className="text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider"
@@ -267,14 +241,11 @@ export default function TransportPage() {
           </div>
         </div>
 
-        {/* ROW 2 ── Route Timeline + Driver Info */}
         <div className="grid grid-cols-12 gap-6 items-stretch">
-
-          {/* LEFT 65% – Route Timeline */}
           <div className="col-span-12 lg:col-span-8">
             <SectionHeader
               icon={<Map size={16} />}
-              title={t("transport.timeline")}
+              title={t("transport.timeline") || "Route Timeline"}
               aside={
                 <span
                   className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg"
@@ -285,24 +256,19 @@ export default function TransportPage() {
               }
             />
             <MainCard borderColor={TEAL} className="p-6 h-[calc(100%-3.25rem)] flex flex-col justify-center">
-              {/* ── Horizontal metro-line tracker ── */}
               <div className="relative w-full">
-                {/* Connector base */}
                 <div className="absolute top-5 left-0 right-0 h-[2px] bg-gray-100 rounded-full" />
-                {/* Active progress */}
                 <div
                   className="absolute top-5 left-0 h-[2px] bg-[#00b4d8] rounded-full transition-all duration-700"
                   style={{ width: `${progressPct}%` }}
                 />
 
-                {/* Stops grid – equal columns, no overflow */}
                 <div
                   className="relative z-10 grid w-full"
-                  style={{ gridTemplateColumns: `repeat(${route.length}, 1fr)` }}
+                  style={{ gridTemplateColumns: `repeat(${routeList.length}, 1fr)` }}
                 >
-                  {route.map((item, idx) => (
+                  {routeList.map((item, idx) => (
                     <div key={idx} className="flex flex-col items-center">
-                      {/* Node */}
                       <div className="h-10 flex items-center justify-center">
                         <div
                           className={[
@@ -333,7 +299,6 @@ export default function TransportPage() {
                         </div>
                       </div>
 
-                      {/* Label */}
                       <p
                         className="text-center text-xs font-bold leading-tight mt-3 px-1 line-clamp-2"
                         style={{ color: item.current ? TEAL : NAVY, opacity: item.current ? 1 : 0.75 }}
@@ -350,21 +315,19 @@ export default function TransportPage() {
             </MainCard>
           </div>
 
-          {/* RIGHT 35% – Driver Info */}
           <div className="col-span-12 lg:col-span-4">
-            <SectionHeader icon={<User size={16} />} title={t("transport.driver")} />
+            <SectionHeader icon={<User size={16} />} title={t("transport.driver") || "Driver Info"} />
             <MainCard borderColor={CYAN} className="p-6 flex flex-col gap-5 h-[calc(100%-3.25rem)]">
-              {/* Driver identity */}
               <div className="flex items-center gap-4">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md flex-shrink-0"
                   style={{ backgroundColor: NAVY }}
                 >
-                  {personnel?.driver.name[0]}
+                  {personnel?.driver?.name?.[0]}
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-base font-black truncate" style={{ color: NAVY }}>
-                    {personnel?.driver.name}
+                    {personnel?.driver?.name}
                   </h4>
                   <p className="text-xs text-gray-400 font-bold flex items-center gap-1 mt-0.5">
                     <Zap size={10} className="text-emerald-500" />
@@ -373,25 +336,22 @@ export default function TransportPage() {
                 </div>
               </div>
 
-              {/* Metadata rows */}
               <div className="flex flex-col gap-0">
-                <MetaRow label="Emergency" value="+91 98765 43210" />
+                <MetaRow label="Emergency" value={personnel?.driver?.contact} />
                 <MetaRow label="License Valid" value="Dec 2028" />
-                <MetaRow label="Experience" value={personnel?.driver.experience} />
+                <MetaRow label="Experience" value={personnel?.driver?.experience} />
               </div>
 
-              {/* Attendant footer */}
               <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-wide text-gray-400">Attendant</p>
                   <p className="text-xs font-bold mt-0.5" style={{ color: NAVY }}>
-                    {personnel?.attendant.name}
+                    {personnel?.attendant?.name}
                   </p>
                 </div>
                 <button
                   className="p-2 rounded-xl transition-colors hover:opacity-90"
                   style={{ backgroundColor: LIME, color: TEAL }}
-                  aria-label="Call attendant"
                 >
                   <Phone size={14} />
                 </button>
@@ -400,12 +360,9 @@ export default function TransportPage() {
           </div>
         </div>
 
-        {/* ROW 3 ── Safety + Alerts */}
         <div className="grid grid-cols-12 gap-6 items-stretch">
-
-          {/* LEFT 65% – Safety First */}
           <div className="col-span-12 lg:col-span-8">
-            <SectionHeader icon={<ShieldCheck size={16} />} title={t("transport.safety")} />
+            <SectionHeader icon={<ShieldCheck size={16} />} title={t("transport.safety") || "Safety First"} />
             <div
               className="rounded-3xl p-7 text-white shadow-xl relative overflow-hidden h-[calc(100%-3.25rem)]"
               style={{ backgroundColor: NAVY }}
@@ -418,7 +375,7 @@ export default function TransportPage() {
                   Security Protocol Checklist
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                  {guidelines.map((g) => (
+                  {(guidelines || []).map((g) => (
                     <div key={g.id} className="flex gap-3 items-start text-xs font-semibold leading-relaxed text-white/75">
                       <div
                         className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -434,12 +391,11 @@ export default function TransportPage() {
             </div>
           </div>
 
-          {/* RIGHT 35% – Transport Alerts */}
           <div className="col-span-12 lg:col-span-4">
-            <SectionHeader icon={<AlertCircle size={16} />} title={t("transport.alerts")} />
+            <SectionHeader icon={<AlertCircle size={16} />} title={t("transport.alerts") || "Transport Alerts"} />
             <MainCard borderColor={CYAN} className="p-6 flex flex-col h-[calc(100%-3.25rem)]">
               <div className="flex-1 space-y-0">
-                {notices.map((n) => (
+                {(notices || []).map((n) => (
                   <div
                     key={n.id}
                     className="flex gap-3 items-start py-3 border-b border-gray-50 last:border-0"
@@ -469,15 +425,14 @@ export default function TransportPage() {
             </MainCard>
           </div>
         </div>
-
-      </div>{/* end space-y-10 */}
+      </div>
 
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}
         titleKey="Student Transport"
-        contentEn="The Student Transport dashboard provides real-time information regarding your assigned route, vehicle, and personnel. Monitor pickup timings, track the route timeline, and stay updated with safety guidelines and service alerts."
-        contentHi="छात्र परिवहन डैशबोर्ड आपके असाइन किए गए मार्ग, वाहन और कर्मियों के संबंध में वास्तविक समय की जानकारी प्रदान करता है। पिकअप समय की निगरानी करें, मार्ग समयरेखा को ट्रैक करें और सुरक्षा दिशानिर्देशों और सेवा अलर्ट के साथ अपडेट रहें।"
+        contentEn="The Student Transport dashboard provides real-time information regarding your assigned route, vehicle, and personnel."
+        contentHi="छात्र परिवहन डैशबोर्ड आपके असाइन किए गए मार्ग, वाहन और कर्मियों के संबंध में वास्तविक समय की जानकारी प्रदान करता है।"
       />
     </div>
   );

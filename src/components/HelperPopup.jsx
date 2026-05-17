@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
+import { ROLES } from "../auth/roles";
 
 // ── Inline language toggle ────────────────────────────────────────────────────
 // NOTE: No layoutId animation here — layoutId caused Framer Motion lifecycle
@@ -129,7 +131,7 @@ function ColorLegend({ items }) {
 //   4. Internal `popupLang` state is reset via useEffect (on isOpen → true),
 //      so it always defaults to globalLang when opened fresh.
 //
-function HelperPopup({
+const HelperPopup = React.memo(function HelperPopup({
   isOpen,
   onClose,
   titleKey,
@@ -138,21 +140,22 @@ function HelperPopup({
   colorLegend,
 }) {
   const { lang: globalLang, t } = useLanguage();
+  const { role } = useAuth();
+  
   // Stable internal language — independent from globalLang after open
   const [popupLang, setPopupLang] = useState(globalLang);
   const closeButtonRef = useRef(null);
-  // Track whether we've ever been opened (for mount-time CSS transition)
-  const hasOpenedRef = useRef(false);
+  
+  // Track whether we've ever been opened to avoid mounting logic on initial page load
+  const [hasEverBeenOpened, setHasEverBeenOpened] = useState(false);
 
   // Reset popup language to globalLang each time popup opens
   useEffect(() => {
     if (isOpen) {
       setPopupLang(globalLang);
-      hasOpenedRef.current = true;
+      setHasEverBeenOpened(true);
     }
-  }, [isOpen]); // NOTE: intentionally NOT depending on globalLang here.
-  // If the user has already switched to HI inside the popup and then the
-  // global lang changes, we don't want to reset their in-popup choice.
+  }, [isOpen, globalLang]);
 
   // Keyboard: Escape closes popup
   useEffect(() => {
@@ -178,19 +181,17 @@ function HelperPopup({
     label: popupLang === "hi" ? item.labelHi || item.labelEn : item.labelEn,
   }));
 
+  const isParent = role === ROLES.PARENT;
+
   // ── CSS-controlled visibility ─────────────────────────────────────────────
-  // The outer wrapper is always in the DOM. pointer-events:none when closed
-  // guarantees it NEVER intercepts clicks regardless of opacity or animation
-  // state. This is the single source of truth for interactability.
   const overlayStyle = {
     position: "fixed",
     inset: 0,
-    zIndex: 50,
+    zIndex: 100,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "16px",
-    // CSS transitions — no JS animation involved
     opacity: isOpen ? 1 : 0,
     pointerEvents: isOpen ? "auto" : "none",
     transition: "opacity 0.18s ease",
@@ -203,6 +204,9 @@ function HelperPopup({
     backdropFilter: "blur(4px)",
     WebkitBackdropFilter: "blur(4px)",
   };
+
+  // If never opened, don't even render the overlay container to keep DOM light
+  if (!hasEverBeenOpened && !isOpen) return null;
 
   return (
     <div
@@ -219,7 +223,7 @@ function HelperPopup({
         aria-hidden="true"
       />
 
-      {/* Modal card — Framer Motion only for the panel slide, not the overlay */}
+      {/* Modal card */}
       <motion.div
         className="relative bg-white w-full sm:max-w-sm rounded-3xl shadow-2xl overflow-hidden"
         style={{ zIndex: 10 }}
@@ -260,11 +264,13 @@ function HelperPopup({
               </h2>
             </div>
 
-            {/* Language toggle */}
-            <PopupLangToggle
-              popupLang={popupLang}
-              setPopupLang={setPopupLang}
-            />
+            {/* Language toggle - ONLY for Parent Role */}
+            {isParent && (
+              <PopupLangToggle
+                popupLang={popupLang}
+                setPopupLang={setPopupLang}
+              />
+            )}
 
             {/* Close button */}
             <button
@@ -321,6 +327,6 @@ function HelperPopup({
       </motion.div>
     </div>
   );
-}
+});
 
 export default HelperPopup;

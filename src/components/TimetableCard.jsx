@@ -20,6 +20,7 @@ import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
 import { AnimatePresence } from "framer-motion";
+import ParentInsight from "./ParentInsight";
 
 // All variants at module level — never recreated
 const cardVariants = {
@@ -515,6 +516,15 @@ function TimetableCard({ weeklyTimetable = {} }) {
             </div>
           </div>
         </div>
+
+        {/* Parent Insight */}
+        {isParentMode && classes.length > 0 && (
+          <div className="mb-6 px-1">
+            <ParentInsight 
+              text={t("insight.timetable", { count: classes.length, time: classes[0].startTime })} 
+            />
+          </div>
+        )}
 
         {/* Scrollable Classes Section */}
         <div 

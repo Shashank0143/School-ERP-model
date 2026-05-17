@@ -7,6 +7,7 @@ import {
   CheckCircle,
   AlertOctagon,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
 import { getFeeStatusStyle, getFeeProgress } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
@@ -24,36 +25,37 @@ const cardVariants = {
 };
 
 const HELPER_CONTENT_EN =
-  "This section shows the fee payment status for the semester. Fees must be paid by the due date to avoid penalties or academic holds.";
+  "This section shows the mathematically consistent fee status. Outstanding Balance = Total Fees - Total Paid. This reflects all verified invoices and receipts.";
 const HELPER_CONTENT_HI =
-  "यह अनुभाग सेमेस्टर की फीस भुगतान स्थिति दिखाता है। जुर्माने या शैक्षणिक रोक से बचने के लिए नियत तारीख तक फीस का भुगतान करना आवश्यक है।";
+  "यह अनुभाग गणितीय रूप से सुसंगत फीस स्थिति दिखाता है। बकाया शेष = कुल फीस - कुल भुगतान।";
 
 const FEE_COLOR_LEGEND = [
   {
-    color: "#00b4d8",
-    labelEn: "Green — Fees have been paid. No action needed.",
-    labelHi: "हरा — फीस का भुगतान हो गया है। कोई कार्रवाई आवश्यक नहीं।",
+    color: "#059669",
+    labelEn: "Green — All currently due fees have been fully paid.",
+    labelHi: "हरा — वर्तमान में देय सभी फीस का पूर्ण भुगतान हो गया है।",
   },
   {
-    color: "#F59E0B",
-    labelEn: "Yellow — Fees are pending. Please pay before the due date.",
-    labelHi: "पीला — फीस बकाया है। कृपया नियत तारीख से पहले भुगतान करें।",
+    color: "#D97706",
+    labelEn: "Yellow — Fees are partially paid or pending.",
+    labelHi: "पीला — फीस का आंशिक भुगतान हुआ है या बकाया है।",
   },
   {
-    color: "#EF4444",
-    labelEn: "Red — Fees are overdue. Immediate payment required.",
-    labelHi: "लाल — फीस की अंतिम तिथि निकल गई है। तुरंत भुगतान आवश्यक है।",
+    color: "#DC2626",
+    labelEn: "Red — Fees are overdue. Immediate attention required.",
+    labelHi: "लाल — फीस की देय तिथि निकल गई है। तुरंत ध्यान दें।",
   },
 ];
 
 const TRAFFIC_COLOR = {
-  paid: "#00b4d8",
-  unpaid: "#F59E0B",
-  overdue: "#EF4444",
+  Paid: "#059669",
+  "Partially Paid": "#D97706",
+  Pending: "#0077b6",
+  Overdue: "#DC2626",
 };
 
 function TrafficLight({ status }) {
-  const color = TRAFFIC_COLOR[status] ?? TRAFFIC_COLOR.unpaid;
+  const color = TRAFFIC_COLOR[status] ?? TRAFFIC_COLOR.Pending;
   return (
     <div
       className="w-4 h-4 rounded-full flex-shrink-0"
@@ -63,25 +65,34 @@ function TrafficLight({ status }) {
   );
 }
 
-const getFeeStatus = (status) => {
+const getFeeStatusDetails = (status) => {
   const map = {
-    unpaid: {
+    "Pending": {
+      color: "text-[#0077b6]",
+      bg: "bg-[#caf0f8]",
+      messageKey: "fees.parentUnpaid",
+      icon: Clock
+    },
+    "Partially Paid": {
       color: "text-orange-500",
       bg: "bg-orange-50",
       messageKey: "fees.parentUnpaid",
+      icon: Clock
     },
-    paid: {
-      color: "text-green-500",
-      bg: "bg-green-50",
+    "Paid": {
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
       messageKey: "fees.parentPaid",
+      icon: CheckCircle
     },
-    overdue: {
+    "Overdue": {
       color: "text-red-500",
       bg: "bg-red-50",
       messageKey: "fees.parentOverdue",
+      icon: AlertOctagon
     },
   };
-  return map[status] || map.unpaid;
+  return map[status] || map.Pending;
 };
 
 function FeeCard({
@@ -99,37 +110,20 @@ function FeeCard({
 
   const { bgClass, textClass } = getFeeStatusStyle(status);
   const progress = getFeeProgress(amountPaid, totalAmount);
-  const isPaid = status === "paid";
-  const feeStatus = getFeeStatus(status);
+  const isPaid = status === "Paid";
+  const details = getFeeStatusDetails(status);
 
-  const formattedAmount = amount.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
-  const formattedPaid = amountPaid.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
-  const formattedTotal = totalAmount.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
+  const formattedAmount = (amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
+  const formattedPaid = (amountPaid || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
+  const formattedTotal = (totalAmount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN");
 
-  const amountColorMap = {
-    paid: "text-[#00b4d8]",
-    unpaid: "text-[#0077b6]",
-    overdue: "text-red-500",
-  };
-  const amountColor = amountColorMap[status] ?? "text-[#0077b6]";
-
-  const barColorMap = {
-    paid: "bg-[#00b4d8]",
-    unpaid: "bg-[#0077b6]",
-    overdue: "bg-red-400",
-  };
-  const barColor = barColorMap[status] ?? "bg-[#0077b6]";
-
-  const StatusIcon = isPaid
-    ? CheckCircle
-    : status === "overdue"
-      ? AlertOctagon
-      : AlertTriangle;
+  const StatusIcon = details.icon;
 
   const parentStatusLabel = {
-    paid: t("fees.paid"),
-    unpaid: t("fees.actionNeeded"),
-    overdue: t("fees.actionNeeded"),
+    Paid: t("fees.paid"),
+    "Partially Paid": t("fees.actionNeeded"),
+    Pending: t("fees.actionNeeded"),
+    Overdue: t("fees.actionNeeded"),
   };
 
   return (
@@ -138,9 +132,8 @@ function FeeCard({
         variants={cardVariants}
         onClick={onClick}
         className={`h-full p-7 flex flex-col select-none relative overflow-hidden ${onClick ? "cursor-pointer" : "cursor-default"}`}
-        aria-label={`Fee status: ${status}. Amount due: ${currency}${formattedAmount}`}
+        aria-label={`Fee status: ${status}. Outstanding: ${currency}${formattedAmount}`}
       >
-        {/* Header Row: Title on Left, Helper on Right */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div
@@ -156,27 +149,25 @@ function FeeCard({
           <HelperButton onClick={(e) => { e.stopPropagation(); setShowHelper(true); }} />
         </div>
 
-        {/* Status Row (Action Needed Indicator) */}
         {!isPaid && (
           <div
             className="flex items-center gap-2 mb-6 ml-1"
             aria-label="Payment pending status"
           >
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${status === "Overdue" ? "bg-red-400" : "bg-orange-400"}`} />
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${status === "Overdue" ? "bg-red-500" : "bg-orange-500"}`} />
             </span>
-            <span className="text-[11px] font-black uppercase tracking-widest text-red-500/80">
+            <span className={`text-[11px] font-black uppercase tracking-widest ${status === "Overdue" ? "text-red-500" : "text-orange-500"}`}>
               {t("fees.actionNeeded")}
             </span>
           </div>
         )}
 
-        {/* Amount Section (PRIMARY) */}
         <div className="flex flex-col gap-1 mb-6">
           <div className="flex items-baseline gap-2">
             <motion.span
-              className={`text-5xl font-black ${amountColor} tracking-tight leading-none`}
+              className={`text-5xl font-black tracking-tight leading-none ${isPaid ? "text-emerald-600" : status === "Overdue" ? "text-red-600" : "text-[#03045e]"}`}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
@@ -186,11 +177,10 @@ function FeeCard({
             </motion.span>
           </div>
           <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">
-            {t("fees.outstanding")}
+            Outstanding Balance
           </span>
         </div>
 
-        {/* Metadata Row: Due Date + Badge */}
         <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
             <Calendar size={18} className="text-[#0077b6]" aria-hidden="true" />
@@ -206,7 +196,7 @@ function FeeCard({
             transition={{ duration: 0.4, delay: 0.4 }}
           >
             <StatusIcon size={14} aria-hidden="true" />
-            {t(`status.${status}`)}
+            {status}
           </motion.div>
         </div>
 
@@ -230,19 +220,18 @@ function FeeCard({
               className="text-xs font-bold leading-relaxed rounded-2xl px-4 py-3 border border-[#00b4d8]/20"
               style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
             >
-              {t(feeStatus.messageKey)}
+              {t(details.messageKey)}
             </p>
           </motion.div>
         )}
 
-        {/* Progress Area */}
         <div className="space-y-3 mt-auto pt-4 border-t border-gray-50">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 {t("fees.paid")}
               </p>
-              <p className="text-base font-black text-[#03045e]">
+              <p className="text-base font-black text-emerald-600">
                 {currency}{formattedPaid}
               </p>
             </div>
@@ -259,14 +248,14 @@ function FeeCard({
           <div className="relative">
             <div
               className="w-full h-3 rounded-full overflow-hidden"
-              style={{ backgroundColor: "#caf0f8" }}
+              style={{ backgroundColor: "#f1f5f9" }}
               role="progressbar"
               aria-valuenow={progress}
               aria-valuemin={0}
               aria-valuemax={100}
             >
               <motion.div
-                className={`h-full rounded-full shadow-sm ${barColor}`}
+                className={`h-full rounded-full shadow-sm ${isPaid ? "bg-emerald-500" : "bg-[#03045e]"}`}
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 1.2, ease: "easeOut", delay: 0.6 }}
@@ -294,4 +283,4 @@ function FeeCard({
   );
 }
 
-export default FeeCard;
+export default React.memo(FeeCard);

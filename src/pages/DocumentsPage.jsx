@@ -23,12 +23,14 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
+import { getDocuments, getDocumentCategories } from "../services/studentService";
+import { useService } from "../hooks/useService";
+import { useStudent } from "../context/StudentContext";
+import ChildScopeSwitcher from "../components/parent/ChildScopeSwitcher";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
-import { MOCK_DOCUMENTS, DOCUMENT_CATEGORIES } from "../data/documentsData";
 
-// ── Icon map ──────────────────────────────────────────────────────────────────
 const ICON_MAP = {
   IdCard: BadgeCheck,
   FileText,
@@ -40,7 +42,6 @@ const ICON_MAP = {
   HeartPulse: Activity,
 };
 
-// ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   verified: {
     labelEn: "Verified",
@@ -51,8 +52,8 @@ const STATUS_CONFIG = {
     border: "#a7f3d0",
   },
   pending: {
-    labelEn: "Pending",
-    labelHi: "लंबित",
+    labelEn: "Pending Verification",
+    labelHi: "सत्यापन लंबित",
     icon: Clock,
     color: "#d97706",
     bg: "#fef3c7",
@@ -66,9 +67,24 @@ const STATUS_CONFIG = {
     bg: "#fee2e2",
     border: "#fca5a5",
   },
+  uploaded: {
+    labelEn: "Uploaded",
+    labelHi: "अपलोड किया गया",
+    icon: Clock,
+    color: "#2563eb",
+    bg: "#dbeafe",
+    border: "#bfdbfe",
+  },
+  rejected: {
+    labelEn: "Rejected",
+    labelHi: "अस्वीकृत",
+    icon: AlertTriangle,
+    color: "#ea580c",
+    bg: "#ffedd5",
+    border: "#fed7aa",
+  },
 };
 
-// ── Animation variants ────────────────────────────────────────────────────────
 const pageVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
@@ -82,7 +98,6 @@ const cardVariants = {
   }),
 };
 
-// ── Helper content ────────────────────────────────────────────────────────────
 const HELPER_EN =
   "This section stores all important school-related documents. Verified documents (green) have been confirmed by the school administration. Pending documents (yellow) are under review. Missing documents (red) need to be uploaded soon.";
 const HELPER_HI =
@@ -94,7 +109,6 @@ const HELPER_LEGEND = [
   { color: "#dc2626", labelEn: "Red — Missing. Upload required immediately.", labelHi: "लाल — अनुपस्थित। तुरंत अपलोड आवश्यक।" },
 ];
 
-// ── Document Preview Modal (CSS-visibility, no AnimatePresence) ───────────────
 function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
   const overlayStyle = {
     position: "fixed",
@@ -125,7 +139,6 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
       aria-label={isOpen ? title : undefined}
       aria-hidden={!isOpen}
     >
-      {/* Backdrop */}
       <div
         style={{
           position: "absolute",
@@ -144,7 +157,6 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
         animate={isOpen ? { y: 0, opacity: 1 } : { y: 40, opacity: 0 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
       >
-        {/* Top accent */}
         <div
           className="h-1 w-full"
           style={{ background: "linear-gradient(90deg, #03045e, #0077b6, #00b4d8)" }}
@@ -152,7 +164,6 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
         />
 
         <div className="p-6">
-          {/* Header */}
           <div className="flex items-start gap-4 mb-5">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
@@ -182,7 +193,6 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
             </button>
           </div>
 
-          {/* Status banner */}
           <div
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-4"
             style={{ backgroundColor: status.bg, border: `1px solid ${status.border}` }}
@@ -198,19 +208,16 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
             )}
           </div>
 
-          {/* Description */}
           <p className="text-sm leading-relaxed font-medium text-gray-600 mb-5">
             {description}
           </p>
 
-          {/* Actions */}
           <div className="flex gap-3">
             {doc.status !== "missing" ? (
               <>
                 <button
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-colors"
                   style={{ backgroundColor: "#caf0f8", color: "#03045e" }}
-                  aria-label={lang === "hi" ? "डाउनलोड करें" : "Download document"}
                 >
                   <Download size={16} />
                   {lang === "hi" ? "डाउनलोड" : "Download"}
@@ -218,7 +225,6 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
                 <button
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold text-white transition-colors"
                   style={{ backgroundColor: "#0077b6" }}
-                  aria-label={lang === "hi" ? "बदलें" : "Replace document"}
                 >
                   <Upload size={16} />
                   {lang === "hi" ? "बदलें" : "Replace"}
@@ -228,27 +234,18 @@ function DocumentPreviewModal({ doc, isOpen, onClose, lang }) {
               <button
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold text-white transition-colors"
                 style={{ backgroundColor: "#03045e" }}
-                aria-label={lang === "hi" ? "दस्तावेज़ अपलोड करें" : "Upload document"}
               >
                 <Upload size={16} />
                 {lang === "hi" ? "दस्तावेज़ अपलोड करें" : "Upload Document"}
               </button>
             )}
           </div>
-
-          {/* Mock upload notice */}
-          <p className="text-[10px] text-gray-400 text-center mt-3 font-medium">
-            {lang === "hi"
-              ? "📋 अपलोड/डाउनलोड — बैकएंड तैयार होने पर सक्रिय होगा"
-              : "📋 Upload/download will be active once backend is connected"}
-          </p>
         </div>
       </motion.div>
     </div>
   );
 }
 
-// ── Single Document Card ──────────────────────────────────────────────────────
 function DocumentCard({ doc, index, onPreview, lang }) {
   const IconComponent = ICON_MAP[doc.icon] || FileText;
   const status = STATUS_CONFIG[doc.status];
@@ -262,14 +259,11 @@ function DocumentCard({ doc, index, onPreview, lang }) {
       className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg"
       aria-label={title}
     >
-
       <div className="p-5 flex flex-col gap-4 flex-1">
-        {/* Icon + Title */}
         <div className="flex items-center gap-3">
           <div
             className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
             style={{ backgroundColor: "#caf0f8" }}
-            aria-hidden="true"
           >
             <IconComponent size={24} style={{ color: "#03045e" }} />
           </div>
@@ -292,26 +286,17 @@ function DocumentCard({ doc, index, onPreview, lang }) {
           </div>
         </div>
 
-        {/* Status + Info Section */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-1.5">
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
               style={{ backgroundColor: status.bg }}
             >
-              <StatusIcon size={14} style={{ color: status.color }} aria-hidden="true" />
+              <StatusIcon size={14} style={{ color: status.color }} />
               <span className="text-[11px] font-extrabold uppercase tracking-wide" style={{ color: status.color }}>
                 {lang === "hi" ? status.labelHi : status.labelEn}
               </span>
             </div>
-            {doc.status === "verified" && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ backgroundColor: "#d1fae5" }}>
-                <ShieldCheck size={14} className="text-[#059669]" aria-hidden="true" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wide text-[#059669]">
-                  {lang === "hi" ? "सत्यापित" : "Verified"}
-                </span>
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -328,7 +313,6 @@ function DocumentCard({ doc, index, onPreview, lang }) {
           </div>
         </div>
 
-        {/* Action buttons */}
         <div className="flex gap-2 mt-auto pt-2">
           <button
             onClick={() => onPreview(doc)}
@@ -338,32 +322,21 @@ function DocumentCard({ doc, index, onPreview, lang }) {
             <Eye size={16} />
             {lang === "hi" ? "देखें" : "Preview"}
           </button>
-          {doc.status !== "missing" ? (
-            <button
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition-all hover:opacity-90 shadow-sm"
-              style={{ backgroundColor: "#03045e", color: "white" }}
-            >
-              <Download size={16} />
-              {lang === "hi" ? "डाउनलोड" : "Download"}
-            </button>
-          ) : (
-            <button
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition-all hover:opacity-90 shadow-sm"
-              style={{ backgroundColor: "#dc2626", color: "white" }}
-            >
-              <Upload size={16} />
-              {lang === "hi" ? "अपलोड" : "Upload"}
-            </button>
-          )}
+          <button
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition-all hover:opacity-90 shadow-sm ${doc.status === "missing" ? "bg-[#dc2626]" : "bg-[#03045e]"} text-white`}
+          >
+            {doc.status === "missing" ? <Upload size={16} /> : <Download size={16} />}
+            {doc.status === "missing" ? (lang === "hi" ? "अपलोड" : "Upload") : (lang === "hi" ? "डाउनलोड" : "Download")}
+          </button>
         </div>
       </div>
     </MainCard>
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function DocumentsPage() {
   const { lang, t } = useLanguage();
+  const { activeStudentId } = useStudent();
   const { isParent: isParentMode } = useAuth();
 
   const [activeCategory, setActiveCategory] = useState("all");
@@ -372,6 +345,9 @@ export default function DocumentsPage() {
   const [previewDoc, setPreviewDoc] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
+  const { data: MOCK_DOCUMENTS, loading: dLoading } = useService(getDocuments, [activeStudentId], [activeStudentId]);
+  const { data: DOCUMENT_CATEGORIES, loading: cLoading } = useService(getDocumentCategories, [activeStudentId], [activeStudentId]);
+
   const handlePreview = useCallback((doc) => {
     setPreviewDoc(doc);
     setIsPreviewOpen(true);
@@ -379,12 +355,11 @@ export default function DocumentsPage() {
 
   const handleClosePreview = useCallback(() => {
     setIsPreviewOpen(false);
-    // Keep previewDoc in state until animation ends, then clear
     setTimeout(() => setPreviewDoc(null), 300);
   }, []);
 
   const filtered = useMemo(() => {
-    return MOCK_DOCUMENTS.filter((doc) => {
+    return (MOCK_DOCUMENTS || []).filter((doc) => {
       const matchCat = activeCategory === "all" || doc.category === activeCategory;
       const searchTitle = lang === "hi" ? doc.titleHi : doc.titleEn;
       const matchSearch =
@@ -392,14 +367,19 @@ export default function DocumentsPage() {
         searchTitle.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [activeCategory, searchQuery, lang]);
+  }, [activeCategory, searchQuery, lang, MOCK_DOCUMENTS]);
 
-  // Summary counts
   const counts = useMemo(() => ({
-    verified: MOCK_DOCUMENTS.filter((d) => d.status === "verified").length,
-    pending: MOCK_DOCUMENTS.filter((d) => d.status === "pending").length,
-    missing: MOCK_DOCUMENTS.filter((d) => d.status === "missing").length,
-  }), []);
+    verified: (MOCK_DOCUMENTS || []).filter((d) => d.status === "verified").length,
+    pending: (MOCK_DOCUMENTS || []).filter((d) => d.status === "pending").length,
+    missing: (MOCK_DOCUMENTS || []).filter((d) => d.status === "missing").length,
+  }), [MOCK_DOCUMENTS]);
+
+  if (dLoading || cLoading) return (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00b4d8]"></div>
+    </div>
+  );
 
   return (
     <>
@@ -409,31 +389,28 @@ export default function DocumentsPage() {
         animate="visible"
         className="space-y-6"
       >
-        {/* ── Page Header ── */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: "#03045e" }}>
-            <FolderOpen size={31} className="text-white" aria-hidden="true" />
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: "#03045e" }}>
+              <FolderOpen size={31} className="text-white" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-black truncate" style={{ color: "#03045e" }}>
+                {lang === "hi" ? t("docs.title") : "Student Documents"}
+              </h1>
+              <p className="text-sm text-gray-500 truncate">
+                {isParentMode
+                  ? (lang === "hi" ? t("docs.desc.parent") : "View and manage your child's official school documents.")
+                  : (lang === "hi" ? t("docs.desc.student") : "Access, preview, and manage your official school documents securely.")}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-black" style={{ color: "#03045e" }}>
-              {lang === "hi" ? t("docs.title") : "Student Documents"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {isParentMode
-                ? lang === "hi"
-                  ? t("docs.desc.parent")
-                  : "View and manage your child's official school documents."
-                : lang === "hi"
-                ? t("docs.desc.student")
-                : "Access, preview, and manage your official school documents securely."}
-            </p>
-          </div>
-          <div className="ml-auto">
+
+          <div className="flex-shrink-0 ml-auto">
             <HelperButton onClick={() => setShowHelper(true)} />
           </div>
         </div>
 
-        {/* ── Summary stats ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
             { count: counts.verified, labelEn: "Verified", labelHi: "सत्यापित", color: "#059669", bg: "#d1fae5", icon: CheckCircle },
@@ -458,14 +435,11 @@ export default function DocumentsPage() {
           ))}
         </div>
 
-        {/* ── Search + Filters ── */}
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
           <div className="relative flex-1">
             <Search
               size={16}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              aria-hidden="true"
             />
             <input
               type="text"
@@ -474,13 +448,11 @@ export default function DocumentsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm font-medium bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00b4d8]"
               style={{ border: "1px solid #caf0f8", color: "#03045e" }}
-              aria-label="Search documents"
             />
           </div>
 
-          {/* Category chips */}
           <div className="flex gap-2 flex-wrap">
-            {DOCUMENT_CATEGORIES.map((cat) => {
+            {(DOCUMENT_CATEGORIES || []).map((cat) => {
               const isActive = activeCategory === cat.id;
               return (
                 <button
@@ -492,8 +464,6 @@ export default function DocumentsPage() {
                       ? { backgroundColor: "#03045e", color: "#caf0f8" }
                       : { backgroundColor: "white", color: "#6b7280", border: "1px solid #e5e7eb" }
                   }
-                  aria-pressed={isActive}
-                  aria-label={lang === "hi" ? cat.labelHi : cat.labelEn}
                 >
                   {lang === "hi" ? cat.labelHi : cat.labelEn}
                 </button>
@@ -502,10 +472,9 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* ── Document Grid ── */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 bg-white rounded-2xl" style={{ border: "1px solid #caf0f8" }}>
-            <FileQuestion size={48} className="text-gray-300" aria-hidden="true" />
+            <FileQuestion size={48} className="text-gray-300" />
             <p className="text-sm font-bold text-gray-400">
               {lang === "hi" ? "कोई दस्तावेज़ नहीं मिला।" : "No documents found."}
             </p>
@@ -524,7 +493,6 @@ export default function DocumentsPage() {
           </div>
         )}
 
-        {/* ── Upload area placeholder ── */}
         <div
           className="border-2 border-dashed rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderColor: "#00b4d8", backgroundColor: "#f0f9ff" }}
@@ -534,16 +502,14 @@ export default function DocumentsPage() {
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: "#caf0f8" }}
             >
-              <Upload size={20} style={{ color: "#0077b6" }} aria-hidden="true" />
+              <Upload size={20} style={{ color: "#0077b6" }} />
             </div>
             <div>
               <p className="text-sm font-extrabold" style={{ color: "#03045e" }}>
                 {lang === "hi" ? "नया दस्तावेज़ अपलोड करें" : "Upload a New Document"}
               </p>
               <p className="text-xs text-gray-500 font-medium mt-0.5">
-                {lang === "hi"
-                  ? "PDF, JPG, PNG — बैकएंड तैयार होने पर सक्रिय होगा"
-                  : "PDF, JPG, PNG accepted · Active once backend is connected"}
+                {lang === "hi" ? "PDF, JPG, PNG — बैकएंड तैयार होने पर सक्रिय होगा" : "PDF, JPG, PNG accepted · Active once backend is connected"}
               </p>
             </div>
           </div>
@@ -551,14 +517,12 @@ export default function DocumentsPage() {
             className="px-5 py-2.5 rounded-xl text-sm font-bold text-white flex-shrink-0 transition-opacity opacity-60 cursor-not-allowed"
             style={{ backgroundColor: "#0077b6" }}
             disabled
-            aria-label="Upload document (coming soon)"
           >
             {lang === "hi" ? "अपलोड (जल्द आएगा)" : "Upload (Coming Soon)"}
           </button>
         </div>
       </motion.div>
 
-      {/* ── Helper Popup — always mounted (stable CSS-visibility architecture) ── */}
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}
@@ -568,7 +532,6 @@ export default function DocumentsPage() {
         colorLegend={HELPER_LEGEND}
       />
 
-      {/* ── Document Preview Modal — always mounted ── */}
       <DocumentPreviewModal
         doc={previewDoc}
         isOpen={isPreviewOpen}

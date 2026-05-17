@@ -11,13 +11,14 @@ import {
   Calendar,
   Award,
   ChevronRight,
-  UserCheck,
   Mail,
   Clock,
   ExternalLink
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { clubService } from "../services/clubService";
+import { getStats, getJoinedClubs, getAvailableClubs, getUpcomingActivities, getCoordinators } from "../services/clubService";
+import { useService } from "../hooks/useService";
+import { useStudent } from "../context/StudentContext";
 import MainCard from "../components/MainCard";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
@@ -33,43 +34,20 @@ const logoMap = {
 };
 
 const NAVY = "#03045e";
-const CYAN = "#00b4d8";
 
 export default function ClubsCommitteesPage() {
   const { t } = useLanguage();
-  const [loading, setLoading] = useState(true);
   const [showHelper, setShowHelper] = useState(false);
   const [showAllActivities, setShowAllActivities] = useState(false);
+  const { activeStudentId } = useStudent();
   
-  const [stats, setStats] = useState(null);
-  const [joinedClubs, setJoinedClubs] = useState([]);
-  const [availableClubs, setAvailableClubs] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [coordinators, setCoordinators] = useState([]);
+  const { data: stats, loading: sLoading } = useService(getStats, [activeStudentId], [activeStudentId]);
+  const { data: joinedClubs, loading: jLoading } = useService(getJoinedClubs, [activeStudentId], [activeStudentId]);
+  const { data: availableClubs, loading: aLoading } = useService(getAvailableClubs, [activeStudentId], [activeStudentId]);
+  const { data: activities, loading: actLoading } = useService(getUpcomingActivities, [activeStudentId], [activeStudentId]);
+  const { data: coordinators, loading: cLoading } = useService(getCoordinators, [activeStudentId], [activeStudentId]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [s, j, a, act, c] = await Promise.all([
-          clubService.getStats(),
-          clubService.getJoinedClubs(),
-          clubService.getAvailableClubs(),
-          clubService.getUpcomingActivities(),
-          clubService.getCoordinators(),
-        ]);
-        setStats(s);
-        setJoinedClubs(j);
-        setAvailableClubs(a);
-        setActivities(act);
-        setCoordinators(c);
-      } catch (err) {
-        console.error("Failed to fetch clubs data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const loading = sLoading || jLoading || aLoading || actLoading || cLoading;
 
   if (loading) return (
     <div className="flex items-center justify-center h-[60vh]">
@@ -79,17 +57,16 @@ export default function ClubsCommitteesPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-12 px-4 sm:px-0">
-      {/* Standard EduDash Page Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: NAVY }}>
           <Users size={31} className="text-white" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-            {t("clubs.title")}
+            {t("clubs.title") || "Clubs & Committees"}
           </h1>
           <p className="text-sm text-gray-500">
-            {t("clubs.subtitle")}
+            {t("clubs.subtitle") || "Discover, join, and manage your extracurricular life."}
           </p>
         </div>
         <div className="ml-auto">
@@ -98,22 +75,19 @@ export default function ClubsCommitteesPage() {
       </div>
 
       <div className="grid grid-cols-12 gap-6 items-start">
-        {/* Left Column: Primary Content (68%) */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
-          
-          {/* Section: My Joined Clubs */}
           <section>
             <div className="flex items-center justify-between mb-4 px-1">
               <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
                   <Award size={16} />
                 </div>
-                {t("clubs.memberships")}
+                {t("clubs.memberships") || "My Memberships"}
               </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {joinedClubs.map((club) => {
+              {(joinedClubs || []).map((club) => {
                 const Icon = logoMap[club.logo] || Award;
                 return (
                   <MainCard key={club.id} className="p-5 hover:translate-y-[-4px] transition-all duration-300 flex flex-col h-full">
@@ -145,7 +119,7 @@ export default function ClubsCommitteesPage() {
                         <span className="text-[9px] font-black text-gray-400 uppercase">Next Session</span>
                         <div className="flex items-center gap-1.5">
                           <Clock size={10} className="text-[#00b4d8]" />
-                          <span className="text-[10px] font-bold text-gray-700 truncate">{club.nextMeeting.split(',')[0]}</span>
+                          <span className="text-[10px] font-bold text-gray-700 truncate">{club.nextMeeting?.split(',')[0]}</span>
                         </div>
                       </div>
                     </div>
@@ -155,19 +129,18 @@ export default function ClubsCommitteesPage() {
             </div>
           </section>
 
-          {/* Section: Available Clubs */}
           <section className="pt-2">
             <div className="flex items-center justify-between mb-4 px-1">
               <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
                   <ExternalLink size={16} />
                 </div>
-                {t("clubs.discover")}
+                {t("clubs.discover") || "Discover Clubs"}
               </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {availableClubs.map((club) => {
+              {(availableClubs || []).map((club) => {
                 const Icon = logoMap[club.logo] || ChevronRight;
                 return (
                   <div key={club.id} className="bg-white border border-[#caf0f8] rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all group">
@@ -194,22 +167,19 @@ export default function ClubsCommitteesPage() {
           </section>
         </div>
 
-        {/* Right Column: Activities & Faculty (32%) */}
         <div className="col-span-12 lg:col-span-4 space-y-8">
-          
-          {/* Section: Upcoming Activities */}
           <section>
             <div className="flex items-center gap-2.5 mb-4 px-1">
               <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
                 <Calendar size={16} />
               </div>
               <h2 className="text-lg font-black text-[#03045e]">
-                {t("clubs.activities")}
+                {t("clubs.activities") || "Upcoming Activities"}
               </h2>
             </div>
             <MainCard borderColor="#0077b6" className="p-6">
               <div className="space-y-5">
-                {(showAllActivities ? [...activities, ...activities] : activities).map((act, idx) => (
+                {(activities || []).map((act, idx) => (
                   <div key={`${act.id}-${idx}`} className="relative pl-5 border-l-2 border-[#caf0f8] pb-1 last:pb-0">
                     <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-[#00b4d8]" />
                     <div className="mb-1.5 flex items-center justify-between">
@@ -225,11 +195,6 @@ export default function ClubsCommitteesPage() {
                     </div>
                   </div>
                 ))}
-                {showAllActivities && (
-                  <p className="text-[10px] font-bold text-gray-400 italic text-center pt-2">
-                    No more activities scheduled for this month.
-                  </p>
-                )}
               </div>
               <button 
                 onClick={() => setShowAllActivities(!showAllActivities)}
@@ -240,14 +205,13 @@ export default function ClubsCommitteesPage() {
             </MainCard>
           </section>
 
-          {/* Section: Faculty Coordinators */}
           <section>
             <div className="flex items-center gap-2 mb-3 px-2">
               <Users size={16} className="text-[#00b4d8]" />
-              <h2 className="text-md font-black text-[#03045e]">{t("clubs.coordinators")}</h2>
+              <h2 className="text-md font-black text-[#03045e]">{t("clubs.coordinators") || "Faculty Coordinators"}</h2>
             </div>
             <div className="space-y-3">
-              {coordinators.map((fac) => (
+              {(coordinators || []).map((fac) => (
                 <div key={fac.id} className="bg-white border border-[#caf0f8] rounded-[1.25rem] p-3.5 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-[#03045e] flex items-center justify-center text-white font-black text-md shadow-md shadow-[#03045e]/20 flex-shrink-0">
@@ -282,9 +246,9 @@ export default function ClubsCommitteesPage() {
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}
-        titleKey="Clubs & Committees"
-        contentEn="The Clubs & Committees section provides a central hub for all your extracurricular engagements. Monitor your active memberships, discover new interest groups, and stay updated with upcoming events and faculty office hours."
-        contentHi="क्लब और समितियाँ अनुभाग आपकी सभी पाठ्येतर व्यस्तताओं के लिए एक केंद्रीय केंद्र प्रदान करता है। अपनी सक्रिय सदस्यताओं की निगरानी करें, नए रुचि समूहों की खोज करें और आगामी कार्यक्रमों और संकाय कार्यालय घंटों के साथ अपडेट रहें।"
+        titleKey="clubs.title"
+        contentEn="The Clubs & Committees section provides a central hub for all your extracurricular engagements."
+        contentHi="क्लब और समितियाँ अनुभाग आपकी सभी पाठ्येतर व्यस्तताओं के लिए एक केंद्रीय केंद्र प्रदान करता है।"
       />
     </div>
   );

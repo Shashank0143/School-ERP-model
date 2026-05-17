@@ -13,6 +13,8 @@ import {
   X
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { getSchoolCalendar } from "../services/sharedService";
+import { useService } from "../hooks/useService";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
@@ -20,9 +22,7 @@ import MainCard from "../components/MainCard";
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
 const SAGE = "#00b4d8";
-const LIME = "#caf0f8";
 
-// ── Event type config ─────────────────────────────────────────────────────────
 const TYPE_CONFIG = {
   holiday: { label: "Holiday", bg: "#EF444420", color: "#EF4444", icon: Star },
   exam: { label: "Exam", bg: NAVY + "18", color: NAVY, icon: BookOpen },
@@ -38,21 +38,16 @@ const TYPE_CONFIG = {
 
 const ALL_TYPES = ["all", "holiday", "exam", "event", "ptm", "academic"];
 
-// ── Utils ───────────────────────────────────────────────────────────────────
 const getMonthData = (year, monthIndex) => {
   const firstDay = new Date(year, monthIndex, 1).getDay();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const days = [];
-  
-  // Padding for start of month
   for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
     days.push(null);
   }
-  
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(i);
   }
-  
   return days;
 };
 
@@ -63,22 +58,17 @@ const MONTHS = [
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-// ── Components ──────────────────────────────────────────────────────────────
-
 function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCurrent }) {
-  const { t } = useLanguage();
   const days = useMemo(() => getMonthData(year, monthIndex), [year, monthIndex]);
   const monthName = MONTHS[monthIndex];
 
-  // Map events to day numbers for this month/year
   const eventsByDay = useMemo(() => {
     const map = {};
-    events.forEach(e => {
+    (events || []).forEach(e => {
       const parts = e.date.split(" ");
       const dDay = parseInt(parts[0]);
       const dMonth = parts[1];
       const dYear = parseInt(parts[2]);
-      
       if (dYear === year && (dMonth.startsWith(monthName.substring(0, 3)) || dMonth === monthName)) {
         if (!map[dDay]) map[dDay] = [];
         map[dDay].push(e);
@@ -107,10 +97,8 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
         ))}
         {days.map((day, i) => {
           if (day === null) return <div key={i} />;
-          
           const dayEvents = eventsByDay[day] || [];
           const isHovered = dayEvents.some(e => e.id === hoveredEventId);
-          
           return (
             <div 
               key={i} 
@@ -123,8 +111,6 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
               <span className={dayEvents.length > 0 && !isHovered ? "text-[#03045e]" : ""}>
                 {day}
               </span>
-              
-              {/* Event Indicators - Clearly Visible */}
               {dayEvents.length > 0 && !isHovered && (
                 <div className="absolute bottom-0.5 flex gap-0.5 justify-center flex-wrap px-0.5">
                   {dayEvents.slice(0, 4).map((e, idx) => (
@@ -132,7 +118,6 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
                       key={idx} 
                       className="w-1.5 h-1.5 rounded-full ring-1 ring-white" 
                       style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} 
-                      title={e.title}
                     />
                   ))}
                 </div>
@@ -148,7 +133,6 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
 function EventRow({ event, index, isHovered, onHover, onClick }) {
   const cfg = TYPE_CONFIG[event.type] ?? TYPE_CONFIG.event;
   const IconComponent = cfg.icon;
-
   const parts = event.date.split(" ");
   const day = parts[0];
   const month = parts[1];
@@ -166,7 +150,7 @@ function EventRow({ event, index, isHovered, onHover, onClick }) {
         ${isHovered ? "bg-[#03045e] text-white scale-[1.02] shadow-lg z-10" : "bg-white hover:bg-[#caf0f8]/30"}
       `}
       style={{
-        outline: !isHovered ? `1px solid ${LIME}` : "none",
+        outline: !isHovered ? "1px solid #caf0f8" : "none",
         marginBottom: "8px"
       }}
     >
@@ -181,9 +165,7 @@ function EventRow({ event, index, isHovered, onHover, onClick }) {
           {year}
         </p>
       </div>
-
       <div className={`w-px self-stretch flex-shrink-0 mt-1 ${isHovered ? "bg-white/20" : "bg-[#0077b620]"}`} />
-
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
           <p className="text-sm font-extrabold truncate">
@@ -207,48 +189,23 @@ function EventRow({ event, index, isHovered, onHover, onClick }) {
   );
 }
 
-// ── Main Page ───────────────────────────────────────────────────────────────
-function SchoolCalendarPage({ schoolCalendar }) {
+function SchoolCalendarPage() {
   const { t } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [hoveredEventId, setHoveredEventId] = useState(null);
   const [selectedDayInfo, setSelectedDayInfo] = useState(null);
-  
   const scrollContainerRef = useRef(null);
-  const popupRef = useRef(null);
 
-  // Close on ESC
-  React.useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setSelectedDayInfo(null);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
+  const { data: schoolCalendar, loading } = useService(getSchoolCalendar);
 
-  if (!schoolCalendar) return null;
-
-  // Determine year range (academic year usually spans two years like 2024-25 or 2024–25)
-  const academicYear = schoolCalendar.academicYear || "2024-25";
-  // Handle both hyphen (-) and en-dash (–)
+  const academicYear = schoolCalendar?.academicYear || "2024-25";
   const yearParts = academicYear.split(/[–-]/);
-  
   const startYear = parseInt(yearParts[0]) || new Date().getFullYear();
-  let endYear = startYear;
-  
-  if (yearParts[1]) {
-    const trimmedEnd = yearParts[1].trim();
-    endYear = trimmedEnd.length === 2 ? 2000 + parseInt(trimmedEnd) : parseInt(trimmedEnd);
-  } else {
-    endYear = startYear + 1;
-  }
+  let endYear = yearParts[1] ? (yearParts[1].trim().length === 2 ? 2000 + parseInt(yearParts[1].trim()) : parseInt(yearParts[1].trim())) : startYear + 1;
 
-  // Generate 12 months starting from April of startYear to March of endYear
-  // (Standard Academic Year cycle)
   const calendarMonths = useMemo(() => {
     const months = [];
-    // Start from April (index 3)
     for (let i = 0; i < 12; i++) {
       const monthIndex = (3 + i) % 12;
       const year = (3 + i) >= 12 ? endYear : startYear;
@@ -263,38 +220,46 @@ function SchoolCalendarPage({ schoolCalendar }) {
 
   const filtered = useMemo(() => 
     activeFilter === "all"
-      ? schoolCalendar.events
-      : schoolCalendar.events.filter((e) => e.type === activeFilter),
-    [activeFilter, schoolCalendar.events]
+      ? (schoolCalendar?.events || [])
+      : (schoolCalendar?.events || []).filter((e) => e.type === activeFilter),
+    [activeFilter, schoolCalendar?.events]
   );
 
   const handleDateClick = (day, month, events) => {
     setSelectedDayInfo({ day, month, events });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!schoolCalendar) return null;
+
   return (
     <div className="max-w-[1600px] mx-auto">
-      {/* Page header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="p-3.5 rounded-2xl shadow-lg shadow-[#03045e]/10" style={{ backgroundColor: NAVY }}>
           <CalendarDays size={32} className="text-white" aria-hidden="true" />
         </div>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: NAVY }}>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-black tracking-tight truncate" style={{ color: NAVY }}>
             {t("calendar.title") || "Academic Calendar"}
           </h1>
-          <p className="text-sm font-bold text-gray-400">
+          <p className="text-sm font-bold text-gray-400 truncate">
             {t("calendar.academicYear") || "Academic Year"} {schoolCalendar.academicYear}
           </p>
         </div>
-        <div className="ml-auto">
+        <div className="flex-shrink-0">
           <HelperButton onClick={() => setShowHelper(true)} />
         </div>
       </div>
 
-      {/* Term Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {schoolCalendar.terms.map((term) => (
+        {(schoolCalendar.terms || []).map((term) => (
           <motion.div
             key={term.id}
             whileHover={{ y: -4 }}
@@ -316,10 +281,7 @@ function SchoolCalendarPage({ schoolCalendar }) {
         ))}
       </div>
 
-      {/* Split Layout Container */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-8 items-start mb-8">
-        
-        {/* LEFT: Event Timeline */}
         <div className="flex flex-col gap-4 min-w-0">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2">
@@ -335,7 +297,6 @@ function SchoolCalendarPage({ schoolCalendar }) {
             className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
             style={{ borderTop: "6px solid #00b4d8", maxHeight: "700px", display: "flex", flexDirection: "column" }}
           >
-            {/* Sticky Filters */}
             <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md py-4 px-4 border-b border-gray-50 mb-4 overflow-visible">
               <div className="flex flex-wrap gap-2">
                 {ALL_TYPES.map((type) => {
@@ -356,7 +317,6 @@ function SchoolCalendarPage({ schoolCalendar }) {
               </div>
             </div>
 
-            {/* Scrollable List */}
             <div 
               ref={scrollContainerRef}
               className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-1"
@@ -383,13 +343,10 @@ function SchoolCalendarPage({ schoolCalendar }) {
                 ))
               )}
             </div>
-
-            {/* Scroll Fade Bottom */}
             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none opacity-80" />
           </div>
         </div>
 
-        {/* RIGHT: Compact 12-Month Calendar */}
         <div className="flex flex-col gap-4 min-w-0 h-full">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2">
@@ -400,10 +357,6 @@ function SchoolCalendarPage({ schoolCalendar }) {
               </span>
             </h2>
             <div className="flex gap-2">
-              <div className="hidden sm:flex items-center gap-1.5 mr-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00b4d8]" />
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Cycle Active</span>
-              </div>
               <button className="p-1.5 rounded-lg bg-white border border-[#caf0f8] text-gray-400 hover:text-[#03045e]">
                 <ChevronLeft size={16} />
               </button>
@@ -415,8 +368,6 @@ function SchoolCalendarPage({ schoolCalendar }) {
 
           <div className="bg-white rounded-[2rem] p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-full relative overflow-hidden"
                style={{ borderTop: "6px solid #00b4d8" }}>
-            
-            {/* Calendar Grid (4x3) - Tighter gaps */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {calendarMonths.map((m, idx) => (
                 <MiniMonth 
@@ -430,12 +381,10 @@ function SchoolCalendarPage({ schoolCalendar }) {
                 />
               ))}
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* Legend - Full Width Bottom */}
       <MainCard borderColor="#00b4d8" className="p-6 relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -470,72 +419,37 @@ function SchoolCalendarPage({ schoolCalendar }) {
         </div>
       </MainCard>
 
-      {/* Existing Helper Popup */}
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}
         titleKey="calendar.title"
-        contentEn="The Academic Planner provides a dual-view system: a chronological timeline of all school events and a compact 12-month calendar for quick month-over-month planning."
-        contentHi="अकादमिक प्लानर एक दोहरा दृश्य सिस्टम प्रदान करता है: सभी स्कूल कार्यक्रमों की एक कालानुक्रमिक समयरेखा और त्वरित महीने-दर-महीने योजना के लिए एक कॉम्पैक्ट 12-महीने का कैलेंडर।"
-        colorLegend={[
-          { color: "#EF4444", labelEn: "Holiday", labelHi: "छुट्टी" },
-          { color: NAVY, labelEn: "Examination", labelHi: "परीक्षा" },
-          { color: TEAL, labelEn: "School Event", labelHi: "स्कूल कार्यक्रम" },
-          { color: SAGE, labelEn: "PTM", labelHi: "PTM" },
-          { color: "#F59E0B", labelEn: "Academic", labelHi: "शैक्षणिक" },
-        ]}
+        contentEn="The Academic Planner provides a chronological timeline of all school events and a compact 12-month calendar."
+        contentHi="अकादमिक प्लानर स्कूल के सभी कार्यक्रमों और 12 महीने के कैलेंडर की समयरेखा प्रदान करता है।"
       />
 
-      {/* Floating Date Preview Popup */}
       <AnimatePresence>
         {selectedDayInfo && (
           <>
-            {/* Click-outside backdrop */}
-            <div 
-              className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px]" 
-              onClick={() => setSelectedDayInfo(null)}
-            />
-            
+            <div className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px]" onClick={() => setSelectedDayInfo(null)} />
             <motion.div 
-              ref={popupRef}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               className="fixed bottom-8 right-8 w-80 bg-[#03045e] text-white p-5 rounded-[2rem] shadow-2xl z-50 border border-white/10 overflow-hidden"
             >
-              <button 
-                onClick={() => setSelectedDayInfo(null)}
-                className="absolute top-5 right-5 text-white/40 hover:text-white transition-colors"
-                aria-label="Close preview"
-              >
-                <X size={20} />
-              </button>
-              
+              <button onClick={() => setSelectedDayInfo(null)} className="absolute top-5 right-5 text-white/40 hover:text-white"><X size={20} /></button>
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl font-black text-[#00b4d8]">
-                  {selectedDayInfo.day}
-                </div>
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl font-black text-[#00b4d8]">{selectedDayInfo.day}</div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00b4d8] leading-none mb-1">
-                    {selectedDayInfo.month}
-                  </p>
-                  <p className="text-sm font-extrabold">
-                    {selectedDayInfo.events.length} Event{selectedDayInfo.events.length > 1 ? "s" : ""}
-                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00b4d8] leading-none mb-1">{selectedDayInfo.month}</p>
+                  <p className="text-sm font-extrabold">{selectedDayInfo.events.length} Event{selectedDayInfo.events.length > 1 ? "s" : ""}</p>
                 </div>
               </div>
-
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {selectedDayInfo.events.map((e, idx) => (
                   <div key={idx} className="flex items-start gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 group hover:bg-white/10 transition-colors">
-                    <div 
-                      className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.2)]" 
-                      style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} 
-                    />
-                    <div>
-                      <p className="text-xs font-black mb-0.5 group-hover:text-[#00b4d8] transition-colors">{e.title}</p>
-                      <p className="text-[10px] text-white/60 font-medium leading-relaxed">{e.description}</p>
-                    </div>
+                    <div className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} />
+                    <div><p className="text-xs font-black mb-0.5 group-hover:text-[#00b4d8] transition-colors">{e.title}</p><p className="text-[10px] text-white/60 font-medium leading-relaxed">{e.description}</p></div>
                   </div>
                 ))}
               </div>
@@ -544,43 +458,14 @@ function SchoolCalendarPage({ schoolCalendar }) {
         )}
       </AnimatePresence>
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #caf0f8;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #00b4d8;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #caf0f8; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #00b4d8; }
+      `}} />
     </div>
   );
 }
-
-const ChevronDown = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="m6 9 6 6 6-6"/>
-  </svg>
-);
 
 export default SchoolCalendarPage;

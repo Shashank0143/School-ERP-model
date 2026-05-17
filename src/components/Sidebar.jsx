@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home,
+  LayoutDashboard,
   Calendar,
   BookOpen,
   ClipboardList,
@@ -15,15 +15,25 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  FolderOpen,
-  Medal,
+  Folder,
+  Award,
   LifeBuoy,
   Bus,
+  CheckSquare,
+  FileEdit,
+  BarChart2,
+  Settings,
+  Megaphone,
+  Wallet,
+  MessageSquare,
+  CalendarDays,
+  User,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 
 const iconMap = {
-  Home,
+  LayoutDashboard,
   Calendar,
   BookOpen,
   ClipboardList,
@@ -33,10 +43,19 @@ const iconMap = {
   FileText,
   Briefcase,
   LogOut,
-  FolderOpen,
-  Medal,
+  Folder,
+  Award,
   LifeBuoy,
   Bus,
+  CheckSquare,
+  FileEdit,
+  BarChart2,
+  Settings,
+  Megaphone,
+  Wallet,
+  MessageSquare,
+  CalendarDays,
+  User,
 };
 
 const backdropVariants = {
@@ -49,9 +68,9 @@ const drawerVariants = {
 };
 
 // ── Single nav item ───────────────────────────────────────────────────────────
-function NavItem({ item, onClick, isCollapsed }) {
+const NavItem = React.memo(function NavItem({ item, onClick, isCollapsed }) {
   const { t } = useLanguage();
-  const IconComponent = iconMap[item.icon] || Home;
+  const IconComponent = iconMap[item.icon] || LayoutDashboard;
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -90,7 +109,7 @@ function NavItem({ item, onClick, isCollapsed }) {
               transition={{ duration: 0.18, ease: "easeOut" }}
               className="truncate overflow-hidden whitespace-nowrap"
             >
-              {t(item.labelKey, item.label)}
+              {item.label}
             </motion.span>
           )}
         </AnimatePresence>
@@ -115,17 +134,17 @@ function NavItem({ item, onClick, isCollapsed }) {
                 border: "1px solid rgba(202,240,248,0.2)",
               }}
             >
-              {t(item.labelKey, item.label)}
+              {item.label}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-}
+});
 
 // ── Shared sidebar content ────────────────────────────────────────────────────
-function SidebarContent({
+const SidebarContent = React.memo(function SidebarContent({
   navItems,
   onNavClick,
   isCollapsed,
@@ -204,15 +223,18 @@ function SidebarContent({
           />
         ))}
       </nav>
+
     </div>
   );
-}
+});
+
 
 // ── Main Sidebar component ────────────────────────────────────────────────────
 function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { t } = useLanguage();
+  const { logout } = useAuth();
 
   React.useEffect(() => {
     if (openRef) openRef.current = () => setIsMobileOpen(true);
@@ -220,6 +242,10 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
 
   const handleNavClick = (item) => {
     setIsMobileOpen(false);
+    if (item.id === "logout") {
+      logout();
+      return;
+    }
     if (onNavClick) onNavClick(item);
   };
 

@@ -1,0 +1,60 @@
+import { ROLES } from "./roles";
+
+/**
+ * Enterprise navigation mapping by role.
+ */
+export const ROLE_NAVIGATION = {
+  [ROLES.STUDENT]: [
+    { id: "home", icon: "LayoutDashboard" },
+    { id: "assignments", icon: "ClipboardList" },
+    { id: "courses", icon: "BookOpen" },
+    { id: "timetable", icon: "Calendar" },
+    { id: "examination", icon: "GraduationCap" },
+    { id: "feeDetails", icon: "Wallet" },
+    { id: "transport", icon: "Bus" },
+    { id: "clubsCommittees", icon: "Users" },
+    { id: "mentorSupport", icon: "MessageSquare" },
+    { id: "documents", icon: "Folder" },
+    { id: "achievements", icon: "Award" },
+    { id: "calendar", icon: "CalendarDays" },
+    { id: "profile", icon: "User" },
+    { id: "logout", icon: "LogOut" },
+  ],
+  [ROLES.PARENT]: [
+    { id: "home", icon: "LayoutDashboard" },
+    { id: "assignments", icon: "ClipboardList" },
+    { id: "courses", icon: "BookOpen" },
+    { id: "timetable", icon: "Calendar" },
+    { id: "examination", icon: "GraduationCap" },
+    { id: "feeDetails", icon: "Wallet" },
+    { id: "transport", icon: "Bus" },
+    { id: "mentorSupport", icon: "MessageSquare" },
+    { id: "documents", icon: "Folder" },
+    { id: "achievements", icon: "Award" },
+    { id: "profile", icon: "User" },
+    { id: "logout", icon: "LogOut" },
+  ],
+  [ROLES.TEACHER]: [
+    { id: "teacher_home", icon: "LayoutDashboard" },
+    { id: "attendance_mgmt", icon: "CheckSquare" },
+    { id: "assignments_mgmt", icon: "ClipboardList" },
+    { id: "marks_exams", icon: "FileEdit" },
+    { id: "class_timetable", icon: "Calendar" },
+    { id: "student_perf", icon: "BarChart2" },
+    { id: "announcements", icon: "Megaphone" },
+    { id: "mentorship_mgmt", icon: "MessageSquare" },
+    { id: "clubs_activities", icon: "Users" },
+    { id: "reports_analytics", icon: "BarChart2" },
+    { id: "profile_settings", icon: "Settings" },
+    { id: "logout", icon: "LogOut" },
+  ],
+  [ROLES.ADMIN]: [
+    { id: "home", icon: "LayoutDashboard" },
+    { id: "fee_mgmt", icon: "Wallet" },
+    { id: "transport_mgmt", icon: "Bus" },
+    { id: "announcements", icon: "Megaphone" },
+    { id: "administration", icon: "Settings" },
+    { id: "profile", icon: "User" },
+    { id: "logout", icon: "LogOut" },
+  ],
+};

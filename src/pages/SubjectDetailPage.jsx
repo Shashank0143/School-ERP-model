@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
-import { subjectCurriculumData } from "../data/subjectCurriculumData";
+import { getSubjectCurriculum } from "../services/academicsService";
+import { useService } from "../hooks/useService";
 import {
   ArrowLeft,
   BookOpen,
@@ -22,7 +24,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-// Subject icon map keyed by subject id
 const SUBJECT_ICONS = {
   phy: FlaskConical,
   chem: FlaskConical,
@@ -30,6 +31,15 @@ const SUBJECT_ICONS = {
   cs: Monitor,
   eng: Globe,
   pe: Dumbbell,
+  bio: FlaskConical,
+  acc: BookOpen,
+  bst: BookOpen,
+  eco: Globe,
+  his: BookOpen,
+  pol: BookOpen,
+  geo: Globe,
+  soc: BookOpen,
+  hs: BookOpen,
 };
 
 const pageVariants = {
@@ -37,10 +47,6 @@ const pageVariants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
-// ── AccordionSection ─────────────────────────────────────────────────────────
-// IMPORTANT: No HelperPopup is rendered inside this component anymore.
-// Popup state is hoisted to SubjectDetailPage to prevent re-render cascades
-// from triggering AnimatePresence exit race conditions.
 function AccordionSection({ titleKey, children, defaultOpen = false, onHelpClick }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { t } = useLanguage();
@@ -49,8 +55,8 @@ function AccordionSection({ titleKey, children, defaultOpen = false, onHelpClick
   return (
     <MainCard 
       className="mb-5"
-      whileHover={{ y: 0 }} // Disable lifting for accordion
-      initial="visible" // No animation for sub-sections
+      whileHover={{ y: 0 }}
+      initial="visible"
     >
       <div
         className="flex items-center justify-between w-full px-5 py-5 cursor-pointer select-none hover:bg-gray-50 transition-colors"
@@ -99,8 +105,6 @@ function AccordionSection({ titleKey, children, defaultOpen = false, onHelpClick
   );
 }
 
-// ── Helper content registry ──────────────────────────────────────────────────
-// Keyed by titleKey so the shared popup knows what content to show.
 const HELPER_CONTENT = {
   "curriculum.syllabus": {
     en: "This section shows the topics and chapters covered in this subject during the academic session.",
@@ -116,23 +120,21 @@ const HELPER_CONTENT = {
   },
 };
 
-// ── SubjectDetailPage ────────────────────────────────────────────────────────
 export default function SubjectDetailPage({ subjectId, onBack }) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const { role } = useAuth();
+
+  const resolvedSubjectId = subjectId || params.subjectId;
+  const resolvedOnBack = onBack || (() => navigate(`/${role?.toLowerCase()}/subjects`));
+
   const { lang, t } = useLanguage();
-  // eslint-disable-next-line no-unused-vars
   const { isParent: isParentMode } = useAuth();
+  const { data, loading, error } = useService(getSubjectCurriculum, [resolvedSubjectId], [resolvedSubjectId]);
 
-  const data = subjectCurriculumData[subjectId];
-  if (!data) return null;
+  if (error) throw error;
 
-  const Icon = SUBJECT_ICONS[subjectId] ?? BookOpen;
-
-  // ── Single shared popup state (hoisted to page level) ──────────────────────
-  // Only ONE HelperPopup is ever in the DOM for this page.
-  // AccordionSections signal which section was clicked via `activeHelper`.
-  // This completely prevents parent re-renders from interfering with popup
-  // open/close/animation lifecycle.
-  const [activeHelper, setActiveHelper] = useState(null); // titleKey or null
+  const [activeHelper, setActiveHelper] = useState(null);
 
   const handleHelpClick = useCallback((titleKey) => {
     setActiveHelper(titleKey);
@@ -144,6 +146,18 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
 
   const activeHelperContent = activeHelper ? HELPER_CONTENT[activeHelper] : null;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const Icon = SUBJECT_ICONS[resolvedSubjectId] ?? BookOpen;
+
   return (
     <motion.div
       variants={pageVariants}
@@ -151,10 +165,9 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
       animate="visible"
       className="w-full"
     >
-      {/* ── Page Header ── */}
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={onBack}
+          onClick={resolvedOnBack}
           className="p-3 rounded-2xl shadow-sm flex-shrink-0 transition-all hover:bg-gray-50 bg-white border border-[#caf0f8]"
           aria-label="Go back"
         >
@@ -173,7 +186,6 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
         </div>
       </div>
 
-      {/* ── Summary Stats ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           { labelKey: "curriculum.code", value: data.code, icon: Hash, color: "#0077b6", bg: "#caf0f8" },
@@ -200,7 +212,6 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
       </p>
 
       <div className="space-y-4">
-        {/* Info Card — no help button */}
         <AccordionSection titleKey="curriculum.info" defaultOpen={true}>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
@@ -230,10 +241,9 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
           </div>
         </AccordionSection>
 
-        {/* Objectives — no help button */}
         <AccordionSection titleKey="curriculum.objectives" defaultOpen={true}>
           <ul className="space-y-3">
-            {data.objectives.map((obj, i) => (
+            {(data.objectives || []).map((obj, i) => (
               <li key={i} className="flex items-start gap-3">
                 <CheckCircle2 size={20} className="text-[#00b4d8] shrink-0 mt-0.5" />
                 <span className="font-semibold text-gray-700">{obj}</span>
@@ -242,13 +252,11 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
           </ul>
         </AccordionSection>
 
-        {/* Syllabus — has help button */}
         <AccordionSection
           titleKey="curriculum.syllabus"
           defaultOpen={true}
           onHelpClick={handleHelpClick}
         >
-          {/* Desktop Table */}
           <div className="hidden md:block overflow-hidden rounded-xl border border-gray-200">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -265,7 +273,7 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {data.curriculum.map((item, i) => (
+                {(data.curriculum || []).map((item, i) => (
                   <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-4 px-4 text-center font-bold text-gray-400">{i + 1}</td>
                     <td className="py-4 px-4 font-bold text-[#03045e]">{item.unit}</td>
@@ -277,9 +285,8 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
               </tbody>
             </table>
           </div>
-          {/* Mobile Stacked Cards */}
           <div className="md:hidden space-y-4">
-            {data.curriculum.map((item, i) => (
+            {(data.curriculum || []).map((item, i) => (
               <div
                 key={i}
                 className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex gap-4"
@@ -296,13 +303,12 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
           </div>
         </AccordionSection>
 
-        {/* Learning Outcomes — has help button */}
         <AccordionSection
           titleKey="curriculum.outcomes"
           onHelpClick={handleHelpClick}
         >
           <ul className="space-y-3">
-            {data.outcomes.map((obj, i) => (
+            {(data.outcomes || []).map((obj, i) => (
               <li key={i} className="flex items-start gap-3">
                 <CheckCircle2 size={20} className="text-[#00b4d8] shrink-0 mt-0.5" />
                 <span className="font-semibold text-gray-700">{obj}</span>
@@ -311,13 +317,12 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
           </ul>
         </AccordionSection>
 
-        {/* Textbooks & References — has help button */}
         <AccordionSection
           titleKey="curriculum.textbooks"
           onHelpClick={handleHelpClick}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {data.textbooks.map((book, i) => (
+            {(data.textbooks || []).map((book, i) => (
               <div
                 key={i}
                 className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 shadow-sm"
@@ -341,12 +346,6 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
         </AccordionSection>
       </div>
 
-      {/* ── Single shared HelperPopup — hoisted to page level ─────────────────
-          This is the critical architectural fix. One popup instance lives here,
-          outside all AccordionSections. Language switching inside the popup
-          only re-renders HelperPopup itself — it cannot cascade upward to
-          AccordionSection components and cannot trigger any unmount/remount
-          of the popup's own parent. */}
       <HelperPopup
         isOpen={activeHelper !== null}
         onClose={handleHelperClose}

@@ -1,29 +1,61 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { translations } from "../translations";
 import { useAuth } from "./AuthContext";
+import { ROLES } from "../auth/roles";
 
 const LanguageContext = createContext();
 
+const LANG_STORAGE_KEY = "edudash_lang_pref";
+
 export function LanguageProvider({ children }) {
-  const { user } = useAuth();
+  const { role } = useAuth();
+  
+  // Initialize state
   const [lang, setLang] = useState("en");
 
-  const handleSetLang = useCallback((newLang) => {
-    // Future-ready: check permissions
-    if (user?.role === 'student' && newLang === 'hi') {
-      console.warn("Student role primarily uses English. Translation enabled for Parent only in future production.");
+  // 1. Force English for non-parent roles, Restore for parents
+  useEffect(() => {
+    if (role) {
+      if (role !== ROLES.PARENT) {
+        if (lang !== "en") setLang("en");
+      } else {
+        // Restore parent's saved preference on role switch/init
+        const saved = localStorage.getItem(LANG_STORAGE_KEY);
+        if (saved && saved !== lang) {
+          setLang(saved);
+        }
+      }
     }
-    setLang(newLang);
-  }, [user]);
+  }, [role]);
+
+  // 2. Persist parent preference only
+  useEffect(() => {
+    if (role === ROLES.PARENT) {
+      localStorage.setItem(LANG_STORAGE_KEY, lang);
+    }
+  }, [lang, role]);
+
+  const handleSetLang = useCallback((newLang) => {
+    if (role === ROLES.PARENT) {
+      setLang(newLang);
+    }
+  }, [role]);
 
   const t = useCallback(
     (key, params = {}) => {
+      if (!key) return "";
+      
       let text = translations[lang]?.[key] || key;
       
-      // Simple interpolation: replace {name} with params.name
-      Object.keys(params).forEach((paramKey) => {
-        text = text.replace(new RegExp(`\\{${paramKey}\\}`, "g"), params[paramKey]);
-      });
+      // Ensure text is a string before calling replace
+      if (typeof text !== "string") text = String(text);
+
+      // Only iterate if params is a non-null object
+      if (params && typeof params === "object" && !Array.isArray(params)) {
+        Object.keys(params).forEach((paramKey) => {
+          text = text.replace(new RegExp(`\\{${paramKey}\\}`, "g"), params[paramKey]);
+        });
+      }
       
       return text;
     },

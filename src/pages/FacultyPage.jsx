@@ -15,6 +15,8 @@ import { useLanguage } from "../context/LanguageContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
+import { getFaculty } from "../services/teacherService";
+import { useService } from "../hooks/useService";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -30,7 +32,6 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-// ── Feedback Modal ────────────────────────────────────────────────────────────
 function FeedbackModal({ faculty, onClose }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -52,7 +53,6 @@ function FeedbackModal({ faculty, onClose }) {
       aria-modal="true"
       aria-label={`Feedback for ${faculty.name}`}
     >
-      {/* Backdrop */}
       <motion.div
         className="absolute inset-0 bg-black/45 backdrop-blur-sm"
         onClick={onClose}
@@ -69,7 +69,6 @@ function FeedbackModal({ faculty, onClose }) {
         exit={{ opacity: 0, y: 40 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
       >
-        {/* Accent bar */}
         <div
           className="h-1 w-full"
           style={{
@@ -78,9 +77,8 @@ function FeedbackModal({ faculty, onClose }) {
           aria-hidden="true"
         />
 
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 sm:hidden" aria-hidden="true">
-          <div className="w-10 h-1 rounded-full bg-gray-200" />
+          <div className="w-10 h-10 rounded-full bg-gray-200" />
         </div>
 
         <div className="p-6">
@@ -105,7 +103,6 @@ function FeedbackModal({ faculty, onClose }) {
             </motion.div>
           ) : (
             <>
-              {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div
@@ -138,7 +135,6 @@ function FeedbackModal({ faculty, onClose }) {
               </div>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                {/* Star rating */}
                 <div>
                   <p
                     className="text-xs font-extrabold uppercase tracking-wide mb-2"
@@ -165,7 +161,6 @@ function FeedbackModal({ faculty, onClose }) {
                   </div>
                 </div>
 
-                {/* Comment */}
                 <div>
                   <p
                     className="text-xs font-extrabold uppercase tracking-wide mb-2"
@@ -205,7 +200,6 @@ function FeedbackModal({ faculty, onClose }) {
   );
 }
 
-// ── Faculty card ──────────────────────────────────────────────────────────────
 function FacultyCard({ faculty }) {
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -216,9 +210,7 @@ function FacultyCard({ faculty }) {
         className="h-full flex flex-col"
         aria-label={`Faculty: ${faculty.name}`}
       >
-
         <div className="p-5 flex flex-col gap-4 flex-1">
-          {/* Avatar + name */}
           <div className="flex items-center gap-3">
             <div
               className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg shadow-md flex-shrink-0"
@@ -241,7 +233,6 @@ function FacultyCard({ faculty }) {
             </div>
           </div>
 
-          {/* Subject tags */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <BookOpen size={16} style={{ color: TEAL }} aria-hidden="true" />
@@ -265,7 +256,6 @@ function FacultyCard({ faculty }) {
             </div>
           </div>
 
-          {/* Contact info */}
           <div className="flex flex-col gap-2">
             <a
               href={`mailto:${faculty.email}`}
@@ -295,7 +285,6 @@ function FacultyCard({ faculty }) {
             </div>
           </div>
 
-          {/* Feedback button */}
           <button
             onClick={() => setShowFeedback(true)}
             className="mt-auto flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition-all hover:opacity-90"
@@ -320,15 +309,22 @@ function FacultyCard({ faculty }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-function FacultyPage({ faculty = [] }) {
+function FacultyPage() {
   const { t } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
+  const { data: faculty, loading } = useService(getFaculty);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="relative">
-        {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-2xl" style={{ backgroundColor: NAVY }}>
             <Users size={31} className="text-white" aria-hidden="true" />
@@ -349,15 +345,13 @@ function FacultyPage({ faculty = [] }) {
           </div>
         </div>
 
-        {/* Summary */}
-        {/* Teachers grid */}
         <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {faculty.map((f) => (
+          {(faculty || []).map((f) => (
             <FacultyCard key={f.id} faculty={f} />
           ))}
         </motion.div>

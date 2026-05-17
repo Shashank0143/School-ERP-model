@@ -33,12 +33,14 @@ export function getAttendanceStatus(percentage) {
 }
 
 export function getFeeStatusStyle(status) {
+  const normalized = (status || "").toLowerCase();
   const map = {
-    paid: { bgClass: "bg-[#00b4d8]/20", textClass: "text-[#00b4d8]" },
-    unpaid: { bgClass: "bg-[#0077b6]/20", textClass: "text-[#0077b6]" },
+    paid: { bgClass: "bg-[#d1fae5]", textClass: "text-[#059669]" },
+    "partially paid": { bgClass: "bg-[#fef3c7]", textClass: "text-[#d97706]" },
+    pending: { bgClass: "bg-[#caf0f8]", textClass: "text-[#0077b6]" },
     overdue: { bgClass: "bg-red-100", textClass: "text-red-600" },
   };
-  return map[status] ?? map.unpaid;
+  return map[normalized] ?? map.pending;
 }
 
 export function getNoticePriorityStyle(priority) {

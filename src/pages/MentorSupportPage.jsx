@@ -10,9 +10,8 @@ import { useAuth } from "../context/AuthContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
-import {
-  MENTOR_PROFILE, SUPPORT_CATEGORIES, QUICK_RESOURCES, SESSION_HISTORY,
-} from "../data/mentorData";
+import { getMentors, getMentorResources, getMentorSessions } from "../services/teacherService";
+import { useService } from "../hooks/useService";
 
 const ICON_MAP = {
   BookOpen, Brain, Calendar, ScrollText, MessageSquare: MessageCircle, Target, Smile, Shield, Users, Send
@@ -20,22 +19,28 @@ const ICON_MAP = {
 
 const fade = { hidden: { opacity: 0, y: 14 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.3, ease: "easeOut" } }) };
 
-const HELPER_EN = "Mentor Support is a safe, confidential space where students can seek academic guidance, discuss personal concerns, and connect with their assigned school mentor. All conversations are handled with care and privacy.";
+const HELPER_EN = "Mentor Support is a safe, confidential space where students can seek academic guidance, discuss personal concerns, and connect with their assigned school mentor.";
 const HELPER_HI = "मेंटर सपोर्ट एक सुरक्षित, गोपनीय स्थान है जहाँ छात्र शैक्षणिक मार्गदर्शन ले सकते हैं, व्यक्तिगत चिंताओं पर चर्चा कर सकते हैं और अपने नियुक्त स्कूल मेंटर से जुड़ सकते हैं।";
 
 const BLANK = { category: "Academic Guidance", title: "", message: "", contact: "email", urgency: "normal", anonymous: false };
 
-// ── Mentor Card ───────────────────────────────────────────────────────────────
+const SUPPORT_CATEGORIES = [
+  { id: "academic", titleEn: "Academic Guidance", titleHi: "शैक्षणिक मार्गदर्शन", icon: "BookOpen", color: "#0077b6", colorBg: "#caf0f8", descEn: "Subjects, study plans, or goals.", descHi: "विषय, अध्ययन योजना, या लक्ष्य।" },
+  { id: "personal", titleEn: "Personal Support", titleHi: "व्यक्तिगत सहायता", icon: "Smile", color: "#6d28d9", colorBg: "#f5f3ff", descEn: "Stress, balance, or mental health.", descHi: "तनाव, संतुलन, या मानसिक स्वास्थ्य।" },
+  { id: "career", titleEn: "Career Advice", titleHi: "करियर सलाह", icon: "Target", color: "#059669", colorBg: "#ecfdf5", descEn: "Future path and entrance exams.", descHi: "भविष्य का रास्ता और प्रवेश परीक्षाएं।" },
+  { id: "social", titleEn: "Peer Interaction", titleHi: "सहकर्मी संवाद", icon: "Users", color: "#dc2626", colorBg: "#fef2f2", descEn: "School life and social challenges.", descHi: "स्कूल जीवन और सामाजिक चुनौतियां।" },
+  { id: "other", titleEn: "Other Concerns", titleHi: "अन्य चिंताएं", icon: "MessageSquare", color: "#d97706", colorBg: "#fffbeb", descEn: "Anything else you need help with.", descHi: "कुछ भी जिसमें आपको सहायता चाहिए।" },
+];
+
 function MentorCard({ mentor }) {
   const { t, lang } = useLanguage();
+  if (!mentor) return null;
   const statusKey = `status.${mentor.status}`;
   
   return (
-    <MainCard variants={fade}
-      className="overflow-hidden flex flex-col transition-shadow duration-200 hover:shadow-lg">
+    <MainCard variants={fade} className="overflow-hidden flex flex-col transition-shadow duration-200 hover:shadow-lg">
       <div className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row gap-5">
-          {/* Avatar */}
           <div className="flex-shrink-0 flex flex-col items-center gap-2">
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-md"
               style={{ backgroundColor: mentor.avatarColor }}>
@@ -43,10 +48,9 @@ function MentorCard({ mentor }) {
             </div>
             <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-700" 
               style={mentor.status === 'available' ? {backgroundColor: '#d1fae5', color: '#059669'} : mentor.status === 'busy' ? {backgroundColor: '#fef3c7', color: '#d97706'} : {}}>
-              {t(statusKey)}
+              {t(statusKey) || mentor.status}
             </span>
           </div>
-          {/* Info */}
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-extrabold" style={{ color: "#03045e" }}>{mentor.name}</h2>
             <p className="text-sm font-semibold" style={{ color: "#0077b6" }}>{mentor.designation}</p>
@@ -66,22 +70,17 @@ function MentorCard({ mentor }) {
             </div>
           </div>
         </div>
-        {/* Actions */}
         <div className="flex flex-wrap gap-3 mt-5 pt-4 border-t border-gray-100">
-          <button
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80 bg-[#03045e] text-white"
-            aria-label={t("mentor.requestMeeting")}>
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80 bg-[#03045e] text-white">
             <Calendar size={15} />
-            {t("mentor.requestMeeting")}
+            {t("mentor.requestMeeting") || "Request Meeting"}
           </button>
-          <button
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80 bg-[#caf0f8] text-[#03045e]"
-            aria-label={t("mentor.sendMessage")}>
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80 bg-[#caf0f8] text-[#03045e]">
             <MessageCircle size={15} />
-            {t("mentor.sendMessage")}
+            {t("mentor.sendMessage") || "Send Message"}
           </button>
           <p className="w-full text-[10px] text-gray-400 font-medium mt-1">
-            {t("mentor.backendNote")}
+            {t("mentor.backendNote") || "Note: This is a prototype interface."}
           </p>
         </div>
       </div>
@@ -89,7 +88,6 @@ function MentorCard({ mentor }) {
   );
 }
 
-// ── Support Category Grid ─────────────────────────────────────────────────────
 function CategoryGrid({ onSelect }) {
   const { lang } = useLanguage();
   return (
@@ -101,8 +99,7 @@ function CategoryGrid({ onSelect }) {
           <motion.button key={cat.id} custom={i} variants={fade} initial="hidden" animate="visible"
             onClick={() => onSelect(title)}
             className="flex flex-col gap-3 p-5 rounded-2xl text-left transition-all hover:shadow-md bg-white"
-            style={{ outline: `1px solid ${cat.color}20` }}
-            aria-label={title}>
+            style={{ outline: `1px solid ${cat.color}20` }}>
             <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: cat.colorBg }}>
               <Icon size={24} style={{ color: cat.color }} />
             </div>
@@ -121,10 +118,9 @@ function CategoryGrid({ onSelect }) {
   );
 }
 
-// ── Request Form (inline — no overlay modal, max stability) ───────────────────
 function RequestForm({ prefillCategory }) {
   const { t, lang } = useLanguage();
-  const [form, setForm] = useState({ ...BLANK, category: prefillCategory || (lang === 'hi' ? "Academic Guidance" : "Academic Guidance") });
+  const [form, setForm] = useState({ ...BLANK, category: prefillCategory || "Academic Guidance" });
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -149,15 +145,15 @@ function RequestForm({ prefillCategory }) {
         </div>
         <div>
           <p className="text-lg font-extrabold" style={{ color: "#03045e" }}>
-            {t("mentor.form.success")}
+            {t("mentor.form.success") || "Request Submitted"}
           </p>
           <p className="text-sm text-gray-500 font-medium mt-1">
-            {t("mentor.form.successDetail")}
+            {t("mentor.form.successDetail") || "Your mentor will be notified."}
           </p>
         </div>
         <button onClick={() => { setSubmitted(false); setForm(BLANK); }}
           className="px-6 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: "#0077b6" }}>
-          {t("mentor.form.submitAnother")}
+          {t("mentor.form.submitAnother") || "Submit Another"}
         </button>
       </motion.div>
     );
@@ -177,7 +173,7 @@ function RequestForm({ prefillCategory }) {
   
   const label = (key) => (
     <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#0077b6" }}>
-      {t(key)}
+      {t(key) || key}
     </span>
   );
 
@@ -185,12 +181,11 @@ function RequestForm({ prefillCategory }) {
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm space-y-4"
       style={{ border: "1px solid #caf0f8" }} noValidate>
 
-      {/* Anonymous toggle */}
       <div className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: "#f0f9ff" }}>
         <div className="flex items-center gap-2">
           {form.anonymous ? <EyeOff size={16} style={{ color: "#0077b6" }} /> : <Eye size={16} style={{ color: "#0077b6" }} />}
           <span className="text-sm font-bold" style={{ color: "#03045e" }}>
-            {t("mentor.form.anonymous")}
+            {t("mentor.form.anonymous") || "Anonymous Mode"}
           </span>
         </div>
         <button type="button" role="switch" aria-checked={form.anonymous}
@@ -203,11 +198,10 @@ function RequestForm({ prefillCategory }) {
       </div>
       {form.anonymous && (
         <p className="text-xs font-medium text-gray-500 -mt-2 px-1">
-          🔒 {t("mentor.form.anonymousHint")}
+          🔒 {t("mentor.form.anonymousHint") || "Identity hidden from mentor."}
         </p>
       )}
 
-      {/* Category */}
       <div className="flex flex-col gap-1.5">
         {label("mentor.form.category")}
         <select value={form.category} onChange={e => set("category", e.target.value)} style={inputStyle(false)}>
@@ -219,7 +213,6 @@ function RequestForm({ prefillCategory }) {
         </select>
       </div>
 
-      {/* Title */}
       <div className="flex flex-col gap-1.5">
         {label("mentor.form.title")}
         <input type="text" value={form.title}
@@ -229,7 +222,6 @@ function RequestForm({ prefillCategory }) {
         {errors.title && <span className="text-[10px] text-red-500 font-semibold">{t("mentor.form.required")}</span>}
       </div>
 
-      {/* Message */}
       <div className="flex flex-col gap-1.5">
         {label("mentor.form.message")}
         <textarea rows={4} value={form.message}
@@ -239,22 +231,21 @@ function RequestForm({ prefillCategory }) {
         {errors.message && <span className="text-[10px] text-red-500 font-semibold">{t("mentor.form.required")}</span>}
       </div>
 
-      {/* Contact + Urgency row */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           {label("mentor.form.contact")}
           <select value={form.contact} onChange={e => set("contact", e.target.value)} style={inputStyle(false)}>
-            <option value="email">{t("contact.email")}</option>
-            <option value="meeting">{t("contact.meeting")}</option>
-            <option value="phone">{t("contact.phone")}</option>
+            <option value="email">{t("contact.email") || "Email"}</option>
+            <option value="meeting">{t("contact.meeting") || "Meeting"}</option>
+            <option value="phone">{t("contact.phone") || "Phone"}</option>
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
           {label("mentor.form.urgency")}
           <select value={form.urgency} onChange={e => set("urgency", e.target.value)} style={inputStyle(false)}>
-            <option value="normal">{t("priority.normal")}</option>
-            <option value="soon">{t("priority.soon")}</option>
-            <option value="urgent">{t("priority.urgent")}</option>
+            <option value="normal">{t("priority.normal") || "Normal"}</option>
+            <option value="soon">{t("priority.soon") || "Soon"}</option>
+            <option value="urgent">{t("priority.urgent") || "Urgent"}</option>
           </select>
         </div>
       </div>
@@ -263,18 +254,17 @@ function RequestForm({ prefillCategory }) {
         className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-extrabold text-white transition-opacity hover:opacity-90"
         style={{ backgroundColor: "#03045e" }}>
         <Send size={16} />
-        {t("mentor.form.submit")}
+        {t("mentor.form.submit") || "Send Request"}
       </button>
     </form>
   );
 }
 
-// ── Session History ───────────────────────────────────────────────────────────
-function SessionHistory() {
+function SessionHistory({ sessions }) {
   const { t, lang } = useLanguage();
   return (
     <div className="flex flex-col gap-3">
-      {SESSION_HISTORY.map((s, i) => {
+      {(sessions || []).map((s, i) => {
         const Icon = ICON_MAP[s.icon] || MessageCircle;
         return (
           <motion.div key={s.id} custom={i} variants={fade} initial="hidden" animate="visible"
@@ -298,7 +288,7 @@ function SessionHistory() {
             </div>
             <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wide"
               style={{ backgroundColor: "#d1fae5", color: "#059669" }}>
-              {t("session.completed")}
+              {t("session.completed") || "Completed"}
             </span>
           </motion.div>
         );
@@ -307,13 +297,16 @@ function SessionHistory() {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function MentorSupportPage() {
   const { lang, t } = useLanguage();
   const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
-  const [activeSection, setActiveSection] = useState(null); // "request" | "history"
+  const [activeSection, setActiveSection] = useState(null);
   const [prefillCategory, setPrefillCategory] = useState(null);
+
+  const { data: mentors, loading: mLoading } = useService(getMentors);
+  const { data: resources, loading: rLoading } = useService(getMentorResources);
+  const { data: sessions, loading: sLoading } = useService(getMentorSessions);
 
   const handleCategorySelect = useCallback((catName) => {
     setPrefillCategory(catName);
@@ -326,81 +319,85 @@ export default function MentorSupportPage() {
   const SectionToggle = ({ id, labelKey, icon: Icon }) => (
     <button onClick={() => toggleSection(id)}
       className="w-full flex items-center justify-between px-5 py-4 bg-white rounded-2xl shadow-sm transition-colors hover:bg-gray-50"
-      style={{ border: "1px solid #caf0f8" }} aria-expanded={activeSection === id}>
+      style={{ border: "1px solid #caf0f8" }}>
       <div className="flex items-center gap-3">
         <Icon size={18} style={{ color: "#0077b6" }} />
         <span className="text-sm font-extrabold" style={{ color: "#03045e" }}>
-          {t(labelKey)}
+          {t(labelKey) || labelKey}
         </span>
       </div>
       {activeSection === id ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
     </button>
   );
 
+  if (mLoading || rLoading || sLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const mentorProfile = mentors?.[0]; // Assume first mentor for now
+
   return (
     <>
       <motion.div variants={fade} initial="hidden" animate="visible" className="space-y-5">
-
-        {/* ── Page Header ── */}
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: "#03045e" }}>
             <MessageCircle size={31} className="text-white" aria-hidden="true" />
           </div>
-          <div>
-            <h1 className="text-2xl font-black" style={{ color: "#03045e" }}>
-              {t("mentor.title")}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-black truncate" style={{ color: "#03045e" }}>
+              {t("mentor.title") || "Mentor Support"}
             </h1>
-            <p className="text-sm text-gray-500">
-              {isParentMode ? t("mentor.subtitle.parent") : t("mentor.subtitle.student")}
+            <p className="text-sm text-gray-500 truncate">
+              {isParentMode ? (t("mentor.subtitle.parent") || "Academic and personal guidance for your child.") : (t("mentor.subtitle.student") || "Seek guidance from your assigned school mentor.")}
             </p>
           </div>
-          <div className="ml-auto">
+          <div className="flex-shrink-0">
             <HelperButton onClick={() => setShowHelper(true)} />
           </div>
         </div>
 
-        {/* Privacy banner */}
         <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ backgroundColor: "#f0fdf4", outline: "1px solid #bbf7d0" }}>
           <Shield size={20} style={{ color: "#059669" }} className="flex-shrink-0" />
           <p className="text-xs font-bold leading-relaxed" style={{ color: "#065f46" }}>
-            {t("mentor.privacyBanner")}
+            {t("mentor.privacyBanner") || "Your privacy is our priority. All conversations are confidential."}
           </p>
         </div>
 
-        {/* ── Assigned Mentor ── */}
         <div>
           <p className="text-xs font-extrabold uppercase tracking-widest mb-2 px-1" style={{ color: "#0077b6" }}>
-            {t("mentor.assignedMentor")}
+            {t("mentor.assignedMentor") || "Assigned Mentor"}
           </p>
-          <MentorCard mentor={MENTOR_PROFILE} />
+          <MentorCard mentor={mentors} />
         </div>
 
-        {/* ── Support Categories ── */}
         <div>
           <p className="text-xs font-extrabold uppercase tracking-widest mb-3 px-1" style={{ color: "#0077b6" }}>
-            {t("mentor.supportCategories")}
+            {t("mentor.supportCategories") || "Support Categories"}
           </p>
           <CategoryGrid onSelect={handleCategorySelect} />
         </div>
 
-        {/* ── Quick Resources ── */}
         <div>
           <p className="text-xs font-extrabold uppercase tracking-widest mb-3 px-1" style={{ color: "#0077b6" }}>
-            {t("mentor.quickGuidance")}
+            {t("mentor.quickGuidance") || "Quick Resources"}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {QUICK_RESOURCES.map((r, i) => {
+            {(resources || []).map((r, i) => {
               const Icon = ICON_MAP[r.icon] || MessageCircle;
               const title = lang === 'hi' ? r.titleHi : r.titleEn;
               const tip = lang === 'hi' ? r.tipHi : r.tipEn;
               return (
                 <motion.div key={r.id} custom={i} variants={fade} initial="hidden" animate="visible"
                   className="p-5 rounded-2xl flex flex-col gap-3 bg-white shadow-sm border border-[#caf0f8]">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: r.colorBg }}>
-                    <Icon size={24} style={{ color: r.color }} />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: r.colorBg || "#f3f4f6" }}>
+                    <Icon size={24} style={{ color: r.color || "#4b5563" }} />
                   </div>
                   <div>
-                    <p className="text-base font-extrabold" style={{ color: r.color }}>
+                    <p className="text-base font-extrabold" style={{ color: r.color || "#03045e" }}>
                       {title}
                     </p>
                     <p className="text-[11px] font-semibold text-gray-400 mt-1 leading-relaxed">
@@ -413,7 +410,6 @@ export default function MentorSupportPage() {
           </div>
         </div>
 
-        {/* ── Request Support (collapsible) ── */}
         <div id="mentor-request-section">
           <SectionToggle id="request" labelKey="mentor.requestSupport" icon={Send} />
           {activeSection === "request" && (
@@ -423,19 +419,17 @@ export default function MentorSupportPage() {
           )}
         </div>
 
-        {/* ── Session History (collapsible) ── */}
         {!isParentMode && (
           <div>
             <SectionToggle id="history" labelKey="mentor.mySessions" icon={Users} />
             {activeSection === "history" && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="mt-3">
-                <SessionHistory />
+                <SessionHistory sessions={sessions} />
               </motion.div>
             )}
           </div>
         )}
 
-        {/* ── Motivational footer ── */}
         <div className="flex items-center gap-5 p-6 rounded-2xl shadow-sm"
           style={{ background: "linear-gradient(135deg,#03045e,#0077b6)" }}>
           <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-sm">
@@ -443,10 +437,10 @@ export default function MentorSupportPage() {
           </div>
           <div>
             <p className="text-lg font-black text-white">
-              {t("mentor.youAreNotAlone")}
+              {t("mentor.youAreNotAlone") || "You're Not Alone"}
             </p>
             <p className="text-sm text-white/70 font-semibold mt-0.5">
-              {t("mentor.mentorIsHere")}
+              {t("mentor.mentorIsHere") || "Your mentor is here to help you navigate through challenges."}
             </p>
           </div>
         </div>

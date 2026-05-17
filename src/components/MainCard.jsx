@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
  * - Soft premium shadow
  * - Standardized hover elevation
  */
-const MainCard = ({
+const MainCard = React.memo(({
   children,
   className = "",
   borderColor = "#00b4d8", // Standardized ERP Card Border Color (Cyan/Teal-Blue)
@@ -53,6 +53,6 @@ const MainCard = ({
       {children}
     </Component>
   );
-};
+});
 
 export default MainCard;

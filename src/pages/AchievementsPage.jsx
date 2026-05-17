@@ -2,16 +2,26 @@ import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Trophy, Star, Medal, Plus, X, ChevronDown, ChevronUp,
-  Award, Sparkles, Calendar, Building2, FileCheck, Filter,
+  Award, Sparkles, Calendar, Building2, FileCheck,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
-import { MOCK_ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES } from "../data/achievementsData";
+import { getAchievements } from "../services/studentService";
+import { useService } from "../hooks/useService";
+import { useStudent } from "../context/StudentContext";
+import ChildScopeSwitcher from "../components/parent/ChildScopeSwitcher";
 
-// ── Animation variants ────────────────────────────────────────────────────────
+const ACHIEVEMENT_CATEGORIES = [
+  { id: "all", labelEn: "All", labelHi: "सभी", color: "#03045e" },
+  { id: "academic", labelEn: "Academic", labelHi: "शैक्षणिक", color: "#0077b6" },
+  { id: "sports", labelEn: "Sports", labelHi: "खेल", color: "#059669" },
+  { id: "cultural", labelEn: "Cultural", labelHi: "सांस्कृतिक", color: "#6d28d9" },
+  { id: "technical", labelEn: "Technical", labelHi: "तकनीकी", color: "#dc2626" },
+];
+
 const pageVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
@@ -24,7 +34,6 @@ const cardVariants = {
   }),
 };
 
-// ── Rank badge config ─────────────────────────────────────────────────────────
 const RANK_CONFIG = {
   gold:          { icon: Trophy,  bg: "#fef3c7", border: "#fde68a", text: "#b45309", labelEn: "Gold", labelHi: "स्वर्ण" },
   silver:        { icon: Medal,   bg: "#f1f5f9", border: "#cbd5e1", text: "#475569", labelEn: "Silver", labelHi: "रजत" },
@@ -33,11 +42,9 @@ const RANK_CONFIG = {
   certificate:   { icon: FileCheck, bg: "#d1fae5", border: "#a7f3d0", text: "#065f46", labelEn: "Certified", labelHi: "प्रमाणित" },
 };
 
-// ── Helper content ────────────────────────────────────────────────────────────
-const HELPER_EN = "This section showcases all your academic, sports, cultural, technical, and competition achievements. Each card represents a verified accomplishment. You can filter by category and add new achievements as you earn them.";
+const HELPER_EN = "This section showcases all your academic, sports, cultural, technical, and competition achievements. Each card represents a verified accomplishment.";
 const HELPER_HI = "यह अनुभाग आपकी सभी शैक्षणिक, खेल, सांस्कृतिक, तकनीकी और प्रतियोगिता उपलब्धियों को दर्शाता है। प्रत्येक कार्ड एक सत्यापित उपलब्धि को दर्शाता है।";
 
-// ── Add Achievement Modal (CSS-visibility, stable) ────────────────────────────
 const BLANK_FORM = { title: "", category: "academic", date: "", organization: "", description: "" };
 
 function AddAchievementModal({ isOpen, onClose, onAdd, lang }) {
@@ -134,10 +141,6 @@ function AddAchievementModal({ isOpen, onClose, onAdd, lang }) {
                 style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", color: "#03045e" }}
               />
             </div>
-            <div className="flex flex-col gap-2 p-3 rounded-xl border border-dashed" style={{ borderColor: "#00b4d8", backgroundColor: "#f0f9ff" }}>
-              <p className="text-xs font-bold" style={{ color: "#0077b6" }}>{lang === "hi" ? "प्रमाणपत्र अपलोड (जल्द)" : "Certificate Upload (Coming Soon)"}</p>
-              <p className="text-[10px] text-gray-400 font-medium">{lang === "hi" ? "बैकएंड तैयार होने पर सक्रिय होगा।" : "Will be active once backend is connected."}</p>
-            </div>
             <button type="submit" className="w-full py-3 rounded-2xl text-sm font-extrabold text-white transition-colors" style={{ backgroundColor: "#03045e" }}>
               {lang === "hi" ? "उपलब्धि सहेजें" : "Save Achievement"}
             </button>
@@ -148,15 +151,14 @@ function AddAchievementModal({ isOpen, onClose, onAdd, lang }) {
   );
 }
 
-// ── Single Achievement Card ───────────────────────────────────────────────────
 function AchievementCard({ ach, index, lang }) {
   const [expanded, setExpanded] = useState(false);
   const rank = RANK_CONFIG[ach.rank] || RANK_CONFIG.certificate;
   const RankIcon = rank.icon;
   const cat = ACHIEVEMENT_CATEGORIES.find(c => c.id === ach.category);
-  const title = lang === "hi" ? ach.titleHi : ach.titleEn;
-  const description = lang === "hi" ? ach.descriptionHi : ach.descriptionEn;
-  const org = lang === "hi" ? ach.organizationHi : ach.organizationEn;
+  const title = lang === "hi" ? (ach.titleHi || ach.titleEn || ach.title) : (ach.titleEn || ach.title);
+  const description = lang === "hi" ? (ach.descriptionHi || ach.descriptionEn || ach.description) : (ach.descriptionEn || ach.description);
+  const org = lang === "hi" ? (ach.organizationHi || ach.organizationEn || ach.organization) : (ach.organizationEn || ach.organization);
 
   return (
     <MainCard
@@ -165,21 +167,18 @@ function AchievementCard({ ach, index, lang }) {
       className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg"
       aria-label={title}
     >
-
       <div className="p-5 flex flex-col gap-4 flex-1">
-        {/* Icon + Title row */}
         <div className="flex items-center gap-3">
           <div
             className="w-14 h-14 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
-            style={{ backgroundColor: ach.colorBg }}
+            style={{ backgroundColor: ach.colorBg || "#f3f4f6" }}
             aria-hidden="true"
           >
-            <RankIcon size={24} style={{ color: ach.color }} />
+            <RankIcon size={24} style={{ color: ach.color || "#4b5563" }} />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-extrabold leading-tight line-clamp-1" style={{ color: "#03045e" }}>{title}</h3>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {/* Category badge */}
               {cat && (
                 <span
                   className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wide"
@@ -188,7 +187,6 @@ function AchievementCard({ ach, index, lang }) {
                   {lang === "hi" ? cat.labelHi : cat.labelEn}
                 </span>
               )}
-              {/* Rank badge */}
               <div
                 className="flex items-center gap-1 px-2.5 py-0.5 rounded-full border"
                 style={{ backgroundColor: rank.bg, color: rank.text, borderColor: rank.border }}
@@ -202,7 +200,6 @@ function AchievementCard({ ach, index, lang }) {
           </div>
         </div>
 
-        {/* Meta info */}
         <div className="flex flex-col gap-2 mt-1">
           <div className="flex items-center gap-2">
             <div className="p-1 rounded-lg" style={{ backgroundColor: "#caf0f8" }}>
@@ -218,13 +215,11 @@ function AchievementCard({ ach, index, lang }) {
           </div>
         </div>
 
-        {/* Expandable description */}
         <button
           onClick={() => setExpanded(v => !v)}
           className="flex items-center gap-1 text-[11px] font-bold transition-colors"
           style={{ color: "#0077b6" }}
           aria-expanded={expanded}
-          aria-label={expanded ? "Show less" : "Show more"}
         >
           {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           {expanded
@@ -238,7 +233,6 @@ function AchievementCard({ ach, index, lang }) {
           </p>
         )}
 
-        {/* Certificate badge */}
         {ach.hasCertificate && (
           <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl mt-auto" style={{ backgroundColor: "#d1fae5" }}>
             <FileCheck size={13} className="text-[#059669]" aria-hidden="true" />
@@ -252,9 +246,9 @@ function AchievementCard({ ach, index, lang }) {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AchievementsPage() {
   const { lang, t } = useLanguage();
+  const { activeStudentId } = useStudent();
   const { isParent: isParentMode } = useAuth();
 
   const [activeCategory, setActiveCategory] = useState("all");
@@ -262,55 +256,63 @@ export default function AchievementsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [extraAchievements, setExtraAchievements] = useState([]);
 
+  const { data: MOCK_ACHIEVEMENTS, loading } = useService(getAchievements, [activeStudentId], [activeStudentId]);
+
   const handleAdd = useCallback((newAch) => {
-    setExtraAchievements(prev => [
-      { ...newAch, titleEn: newAch.title, titleHi: newAch.title, descriptionEn: newAch.description, descriptionHi: newAch.description, organizationEn: newAch.organization, organizationHi: newAch.organization },
-      ...prev,
-    ]);
+    setExtraAchievements(prev => [newAch, ...prev]);
   }, []);
 
-  const allAchievements = useMemo(() => [...extraAchievements, ...MOCK_ACHIEVEMENTS], [extraAchievements]);
+  const allAchievements = useMemo(() => [...extraAchievements, ...(MOCK_ACHIEVEMENTS || [])], [extraAchievements, MOCK_ACHIEVEMENTS]);
 
   const filtered = useMemo(() => {
     if (activeCategory === "all") return allAchievements;
     return allAchievements.filter(a => a.category === activeCategory);
   }, [activeCategory, allAchievements]);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <>
       <motion.div variants={pageVariants} initial="hidden" animate="visible" className="space-y-6">
-        {/* ── Page Header ── */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: "#03045e" }}>
-            <Trophy size={31} className="text-white" aria-hidden="true" />
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: "#03045e" }}>
+              <Trophy size={31} className="text-white" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-black truncate" style={{ color: "#03045e" }}>
+                {lang === "hi" ? "उपलब्धियां" : "Achievements"}
+              </h1>
+              <p className="text-sm text-gray-500 truncate">
+                {isParentMode
+                  ? (lang === "hi" ? "आपके बच्चे की शैक्षणिक और पाठ्येतर उपलब्धियां।" : "Academic and extracurricular achievements of your child.")
+                  : (lang === "hi" ? "आपकी सभी उपलब्धियां और पुरस्कार यहां हैं।" : "Your awards, medals & milestones — all in one place.")}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-black" style={{ color: "#03045e" }}>
-              {lang === "hi" ? t("achievements.title") : "Achievements"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {isParentMode
-                ? (lang === "hi" ? "आपके बच्चे की शैक्षणिक और पाठ्येतर उपलब्धियां।" : "Academic and extracurricular achievements of your child.")
-                : (lang === "hi" ? "आपकी सभी उपलब्धियां और पुरस्कार यहां हैं।" : "Your awards, medals & milestones — all in one place.")}
-            </p>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <HelperButton onClick={() => setShowHelper(true)} />
+
+
+          <div className="flex-shrink-0 flex items-center gap-2">
             {!isParentMode && (
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
                 style={{ backgroundColor: "#03045e" }}
-                aria-label={lang === "hi" ? "उपलब्धि जोड़ें" : "Add Achievement"}
               >
                 <Plus size={16} />
                 {lang === "hi" ? "जोड़ें" : "Add"}
               </button>
             )}
+            <HelperButton onClick={() => setShowHelper(true)} />
           </div>
         </div>
 
-        {/* ── Summary counts ── */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
           {[
             { id: "gold", count: allAchievements.filter(a => a.rank === "gold").length, labelEn: "Gold", labelHi: "स्वर्ण", color: "#b45309", bg: "#fef3c7", icon: Trophy },
@@ -335,7 +337,6 @@ export default function AchievementsPage() {
           ))}
         </div>
 
-        {/* ── Category Filter Chips ── */}
         <div className="flex gap-2 flex-wrap" role="group" aria-label="Filter by category">
           {ACHIEVEMENT_CATEGORIES.map(cat => {
             const isActive = activeCategory === cat.id;
@@ -347,7 +348,6 @@ export default function AchievementsPage() {
                 style={isActive
                   ? { backgroundColor: cat.color, color: "white" }
                   : { backgroundColor: "white", color: "#6b7280", border: "1px solid #e5e7eb" }}
-                aria-pressed={isActive}
               >
                 {lang === "hi" ? cat.labelHi : cat.labelEn}
               </button>
@@ -355,7 +355,6 @@ export default function AchievementsPage() {
           })}
         </div>
 
-        {/* ── Achievement Grid ── */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 bg-white rounded-2xl" style={{ border: "1px solid #caf0f8" }}>
             <Star size={48} className="text-gray-300" aria-hidden="true" />
@@ -371,7 +370,6 @@ export default function AchievementsPage() {
           </div>
         )}
 
-        {/* ── Motivational footer ── */}
         <div
           className="flex items-center gap-4 p-5 rounded-2xl"
           style={{ background: "linear-gradient(135deg, #03045e, #0077b6)" }}
@@ -390,7 +388,6 @@ export default function AchievementsPage() {
         </div>
       </motion.div>
 
-      {/* ── Popups — always mounted (stable CSS-visibility) ── */}
       <HelperPopup
         isOpen={showHelper}
         onClose={() => setShowHelper(false)}

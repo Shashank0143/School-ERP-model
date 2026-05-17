@@ -17,6 +17,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import HelperPopup from "./HelperPopup";
 import HelperButton from "./HelperButton";
+import ParentInsight from "./ParentInsight";
 
 const ICON_MAP = {
   FileText,
@@ -120,16 +121,12 @@ function NoticeItem({ notice, index, isParentMode }) {
 function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
   const { t } = useLanguage();
   const { isParent: isParentMode } = useAuth();
-  const [activeTab, setActiveTab] = useState("notices");
   const [showHelper, setShowHelper] = useState(false);
 
-  const tabs = [
-    { id: "notices", label: t("notice.tab.notices"), data: notices },
-    { id: "exam", label: t("notice.tab.exam"), data: examNotices },
-  ];
-  const activeData = tabs.find((tab) => tab.id === activeTab)?.data ?? [];
-
-  const TAB_ICONS = { notices: ClipboardList, exam: FileText };
+  const combinedData = React.useMemo(() => {
+    const combined = [...notices, ...examNotices];
+    return combined.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [notices, examNotices]);
 
   return (
     <>
@@ -139,7 +136,7 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
         className="h-full flex flex-col relative"
         aria-label={t("notice.title")}
       >
-        <HelperButton onClick={() => setShowHelper(true)} />
+        <HelperButton onClick={() => setShowHelper(true)} className="absolute top-4 right-4" />
 
         <div className="px-6 pt-5 pb-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -163,74 +160,31 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
           </div>
         </div>
 
-        <div
-          className="flex gap-1 px-6 mt-4 border-b border-gray-100"
-          role="tablist"
-          aria-label={t("notice.title")}
-        >
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const TabIcon = TAB_ICONS[tab.id];
-            return (
-              <button
-                key={tab.id}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`tabpanel-${tab.id}`}
-                id={`tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
-                className="relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold rounded-t-xl transition-colors duration-150 focus:outline-none"
-                style={
-                  isActive
-                    ? { color: "#03045e", backgroundColor: "#caf0f8" }
-                    : { color: "#9ca3af" }
-                }
-              >
-                <TabIcon size={18} aria-hidden="true" />
-                {tab.label}
-                {isActive && (
-                  <motion.span
-                    layoutId="notice-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                    style={{ backgroundColor: "#03045e" }}
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {isParentMode && combinedData.length > 0 && (
+          <div className="px-6 mt-4">
+            <ParentInsight 
+              text={t("insight.notices", { count: combinedData.length })} 
+            />
+          </div>
+        )}
 
-        <div className="flex-1 px-4 py-3 min-h-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              variants={tabContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              role="tabpanel"
-              id={`tabpanel-${activeTab}`}
-              aria-labelledby={`tab-${activeTab}`}
-            >
-              {activeData.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">
-                  {t("notice.empty")}
-                </p>
-              ) : (
-                <ul className="space-y-1" aria-label={t("notice.list")}>
-                  {activeData.map((notice, i) => (
-                    <NoticeItem
-                      key={notice.id}
-                      notice={notice}
-                      index={i}
-                      isParentMode={isParentMode}
-                    />
-                  ))}
-                </ul>
-              )}
-            </motion.div>
-          </AnimatePresence>
+        <div className="flex-1 px-4 py-3 min-h-0 mt-2">
+          {combinedData.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">
+              {t("notice.empty")}
+            </p>
+          ) : (
+            <ul className="space-y-1" aria-label={t("notice.list")}>
+              {combinedData.map((notice, i) => (
+                <NoticeItem
+                  key={notice.id}
+                  notice={notice}
+                  index={i}
+                  isParentMode={isParentMode}
+                />
+              ))}
+            </ul>
+          )}
         </div>
       </MainCard>
 
@@ -246,4 +200,4 @@ function NoticeBoard({ notices = [], examNotices = [], index = 0 }) {
   );
 }
 
-export default NoticeBoard;
+export default React.memo(NoticeBoard);

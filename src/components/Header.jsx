@@ -1,23 +1,25 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ChevronDown, Menu, GraduationCap, Users } from "lucide-react";
+import { Bell, ChevronDown, Menu, GraduationCap, User, LogOut } from "lucide-react";
 import { formatDate } from "../utils/attendanceHelpers";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
+import { useStudent } from "../context/StudentContext";
+import ChildScopeSwitcher from "./parent/ChildScopeSwitcher";
+import { ROLES } from "../auth/roles";
 
-function NotificationBadge({ count }) {
+const NotificationBadge = React.memo(function NotificationBadge({ count }) {
   if (count <= 0) return null;
   return (
     <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center">
-      {/* FIX: removed animate-ping — it runs forever and accumulates RAF callbacks */}
       <span className="relative inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
         {count > 9 ? "9+" : count}
       </span>
     </span>
   );
-}
+});
 
-function NotificationPanel({ notifications, onClose, t }) {
+const NotificationPanel = React.memo(function NotificationPanel({ notifications, onClose, t }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8, scale: 0.96 }}
@@ -60,9 +62,9 @@ function NotificationPanel({ notifications, onClose, t }) {
       </div>
     </motion.div>
   );
-}
+});
 
-function LanguageToggle({ lang, setLang }) {
+const LanguageToggle = React.memo(function LanguageToggle({ lang, setLang }) {
   const options = ["en", "hi"];
   return (
     <div
@@ -96,54 +98,73 @@ function LanguageToggle({ lang, setLang }) {
       })}
     </div>
   );
-}
+});
 
-function ViewModeToggle({ viewMode, setViewMode, t }) {
-  const options = [
-    { id: "student", labelKey: "view.student", icon: GraduationCap },
-    { id: "parent", labelKey: "view.parent", icon: Users },
-  ];
 
+
+const ProfileDropdown = React.memo(function ProfileDropdown({ student, t, onNavigate, onLogout }) {
   return (
-    <div
-      className="hidden md:flex items-center rounded-full p-0.5 border"
-      style={{ backgroundColor: "#caf0f8", borderColor: "#00b4d8" }}
-      role="group"
-      aria-label="View mode selector"
+    <motion.div
+      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className="absolute right-0 top-full mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden"
     >
-      {options.map(({ id, labelKey, icon: Icon }) => {
-        const isActive = viewMode === id;
-        return (
-          <button
-            key={id}
-            onClick={() => setViewMode(id)}
-            className="relative flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 whitespace-nowrap"
-            style={{ color: isActive ? "#ffffff" : "#03045e", zIndex: 1 }}
-            aria-pressed={isActive}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="view-active-pill"
-                className="absolute inset-0 rounded-full"
-                style={{ backgroundColor: "#03045e", zIndex: -1 }}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-            )}
-            <Icon size={16} className="relative" aria-hidden="true" />
-            <span className="relative">{t(labelKey)}</span>
-          </button>
-        );
-      })}
-    </div>
+      <div className="px-4 py-4 border-b border-gray-50 flex items-center gap-3">
+        <div 
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm"
+          style={{ backgroundColor: student?.avatarColor || "#03045e" }}
+        >
+          {student?.avatarInitials || (student?.name || student?.fullName || "?")[0]?.toUpperCase()}
+        </div>
+        <div className="flex flex-col min-w-0">
+          <p className="text-sm font-black text-[#03045e] truncate">
+            {student?.name || student?.fullName || t("common.student")}
+          </p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {student?.enrollmentNumber || student?.admissionNo || "Student"}
+          </p>
+        </div>
+      </div>
+      
+      <div className="p-1.5">
+        <button
+          onClick={() => onNavigate("profile")}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-[#caf0f8] hover:text-[#03045e] transition-all"
+        >
+          <User size={18} />
+          <span>{t("nav.profile")}</span>
+        </button>
+        
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all mt-1"
+        >
+          <LogOut size={18} />
+          <span>{t("nav.logout")}</span>
+        </button>
+      </div>
+    </motion.div>
   );
-}
+});
 
-function Header({ student, notifications = [], currentDate, onMenuClick }) {
+const Header = React.memo(function Header({ student, notifications = [], currentDate, onMenuClick, onNavigatePage }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const { lang, setLang, t } = useLanguage();
-  const { role, login, viewMode, setViewMode } = useAuth();
+  const { role, logout, isParent } = useAuth();
+  const { activeStudent } = useStudent();
+  
+  const displayStudent = isParent ? activeStudent : student;
+
   const unreadCount = notifications.filter((n) => !n.read).length;
   const displayDate = currentDate || formatDate(new Date(), lang);
+
+  const handleProfileNavigate = (page) => {
+    setShowProfile(false);
+    if (onNavigatePage) onNavigatePage(page);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -194,11 +215,17 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
             </span>
           </div>
 
-          {/* Language Toggle */}
-          <LanguageToggle lang={lang} setLang={setLang} />
+          {/* Child Scope Switcher - Only for Parents with multi-child */}
+          {isParent && (
+            <div className="hidden lg:block">
+              <ChildScopeSwitcher />
+            </div>
+          )}
 
-          {/* View Mode Toggle (hidden on mobile) */}
-          <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} t={t} />
+          {/* Language Toggle - Only visible for Parents */}
+          {role === ROLES.PARENT && (
+            <LanguageToggle lang={lang} setLang={setLang} />
+          )}
 
           {/* Notification bell */}
           <div className="relative">
@@ -228,12 +255,6 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
                 />
               )}
             </AnimatePresence>
-            {/* FIX: backdrop must be BELOW the panel (z-40 < z-50) and only
-                present when panel is open — previously it was always rendered
-                when showNotifications was true, which is correct, but the
-                z-index was competing with other fixed elements. Using z-30
-                keeps it below the sidebar (z-30) on desktop but still catches
-                outside clicks for the notification panel. */}
             {showNotifications && (
               <div
                 className="fixed inset-0 z-30"
@@ -244,23 +265,44 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
           </div>
 
           {/* Avatar + name */}
-          <div
-            className="flex items-center gap-2.5 border rounded-xl px-3 py-1.5 cursor-pointer transition-colors"
-            style={{ backgroundColor: "#caf0f8", borderColor: "#00b4d8" }}
-          >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm"
-              style={{ backgroundColor: student?.avatarColor || "#03045e" }}
+          <div className="relative">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowProfile((prev) => !prev)}
+              className="flex items-center border rounded-xl p-1 pr-2.5 sm:pr-3 cursor-pointer transition-all hover:shadow-md"
+              style={{ backgroundColor: "#caf0f8", borderColor: "#00b4d8" }}
             >
-              {student?.avatarInitials || "?"}
-            </div>
-            <span
-              className="hidden sm:block text-sm font-bold whitespace-nowrap"
-              style={{ color: "#03045e" }}
-            >
-              {student?.name || t("common.student")}
-            </span>
-            <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm"
+                style={{ backgroundColor: student?.avatarColor || "#03045e" }}
+              >
+                {student?.avatarInitials || (student?.name || student?.fullName || "?")[0]?.toUpperCase()}
+              </div>
+              <ChevronDown 
+                size={16} 
+                className={`ml-2 text-[#03045e] transition-transform duration-200 ${showProfile ? "rotate-180" : ""}`} 
+              />
+            </motion.div>
+            
+            <AnimatePresence>
+              {showProfile && (
+                <ProfileDropdown 
+                  student={displayStudent} 
+                  t={t} 
+                  onNavigate={handleProfileNavigate}
+                  onLogout={logout}
+                />
+              )}
+            </AnimatePresence>
+            
+            {showProfile && (
+              <div
+                className="fixed inset-0 z-30"
+                onClick={() => setShowProfile(false)}
+                aria-hidden="true"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -276,6 +318,6 @@ function Header({ student, notifications = [], currentDate, onMenuClick }) {
       />
     </header>
   );
-}
+});
 
 export default Header;

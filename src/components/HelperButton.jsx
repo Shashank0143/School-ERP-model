@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
  *   onClick  — () => void
  *   className — optional extra classes for positioning (e.g. "absolute top-4 right-4")
  */
-function HelperButton({ onClick, className = "absolute top-4 right-4" }) {
+function HelperButton({ onClick, className = "" }) {
   return (
     <motion.button
       onClick={(e) => {

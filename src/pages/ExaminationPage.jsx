@@ -7,14 +7,19 @@ import {
   Award,
   CheckCircle,
   Clock,
-  AlertCircle,
   Info,
   Download,
+  AlertCircle
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
 import MainCard from "../components/MainCard";
+import { getExamData, getStudentResults, getStudentAnalytics } from "../services/examService";
+import { useService } from "../hooks/useService";
+import { useAuth } from "../context/AuthContext";
+import { useStudent } from "../context/StudentContext";
+import ChildScopeSwitcher from "../components/parent/ChildScopeSwitcher";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -34,31 +39,24 @@ const cardVariants = {
   },
 };
 
-// ── Admit Card ────────────────────────────────────────────────────────────────
-function AdmitCardSection({ admitCard }) {
+function AdmitCardSection({ admitCard = {} }) {
   const { t } = useLanguage();
   return (
-    <MainCard
-      variants={cardVariants}
-      className="h-full"
-    >
+    <MainCard variants={cardVariants} className="h-full">
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div
-              className="p-2.5 rounded-2xl"
-              style={{ backgroundColor: LIME }}
-            >
+            <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
               <FileText size={26} style={{ color: NAVY }} aria-hidden="true" />
             </div>
             <div>
               <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
                 {t("exam.admitCard")}
               </h3>
-              <p className="text-xs text-gray-400">{t(admitCard.examName)}</p>
+              <p className="text-xs text-gray-400">{admitCard?.examName || "N/A"}</p>
             </div>
           </div>
-          {admitCard.issued ? (
+          {admitCard?.issued ? (
             <span
               className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
               style={{ backgroundColor: SAGE + "25", color: SAGE }}
@@ -74,10 +72,10 @@ function AdmitCardSection({ admitCard }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            { label: "exam.rollNumber", value: admitCard.rollNo },
-            { label: "exam.examCenter", value: admitCard.examCenter },
-            { label: "exam.reportingTime", value: admitCard.reportingTime },
-            { label: "exam.examDates", value: admitCard.examDates },
+            { label: "exam.rollNumber", value: admitCard?.rollNo || "N/A" },
+            { label: "exam.examCenter", value: admitCard?.examCenter || "N/A" },
+            { label: "exam.reportingTime", value: admitCard?.reportingTime || "N/A" },
+            { label: "exam.examDates", value: admitCard?.examDates || "N/A" },
           ].map((item) => (
             <div
               key={item.label}
@@ -110,35 +108,25 @@ function AdmitCardSection({ admitCard }) {
   );
 }
 
-// ── Exam Schedule ─────────────────────────────────────────────────────────────
-function ScheduleSection({ schedule }) {
+function ScheduleSection({ schedule = [] }) {
   const { t } = useLanguage();
   return (
-    <MainCard
-      variants={cardVariants}
-      className="h-full"
-    >
+    <MainCard variants={cardVariants} className="h-full">
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
-            <CalendarDays
-              size={26}
-              style={{ color: TEAL }}
-              aria-hidden="true"
-            />
+            <CalendarDays size={26} style={{ color: TEAL }} aria-hidden="true" />
           </div>
           <div>
             <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
               {t("exam.schedule")}
             </h3>
-            <p className="text-xs text-gray-400">
-              {t("Half-Yearly Examination 2025")}
-            </p>
+            <p className="text-xs text-gray-400">Half-Yearly Examination 2025</p>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          {schedule.map((exam, i) => (
+          {(schedule || []).map((exam, i) => (
             <motion.div
               key={exam.id}
               initial={{ opacity: 0, x: -12 }}
@@ -150,7 +138,6 @@ function ScheduleSection({ schedule }) {
                 outline: i % 2 !== 0 ? `1px solid ${LIME}` : "none",
               }}
             >
-              {/* Date block */}
               <div className="flex-shrink-0 w-12 text-center">
                 <p className="text-xs font-extrabold" style={{ color: TEAL }}>
                   {exam.date.split(" ")[1]}
@@ -162,19 +149,14 @@ function ScheduleSection({ schedule }) {
                   {exam.date.split(" ")[0]}
                 </p>
               </div>
-              {/* Divider */}
               <div
                 className="w-px h-10 flex-shrink-0"
                 style={{ backgroundColor: TEAL + "40" }}
                 aria-hidden="true"
               />
-              {/* Details */}
               <div className="flex-1 min-w-0">
-                <p
-                  className="text-sm font-bold truncate"
-                  style={{ color: NAVY }}
-                >
-                  {t(exam.subject)}
+                <p className="text-sm font-bold truncate" style={{ color: NAVY }}>
+                  {exam.subject}
                 </p>
                 <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                   <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -185,7 +167,6 @@ function ScheduleSection({ schedule }) {
                   <span className="text-xs text-gray-400">{exam.day}</span>
                 </div>
               </div>
-              {/* Status */}
               <span
                 className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
                 style={{ backgroundColor: TEAL + "20", color: TEAL }}
@@ -200,14 +181,10 @@ function ScheduleSection({ schedule }) {
   );
 }
 
-// ── Results ───────────────────────────────────────────────────────────────────
 function ResultsSection({ results }) {
   const { t } = useLanguage();
   return (
-    <MainCard
-      variants={cardVariants}
-      className="h-full"
-    >
+    <MainCard variants={cardVariants} className="h-full">
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
@@ -237,17 +214,39 @@ function ResultsSection({ results }) {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {results.map((r) => (
               <div
                 key={r.id}
-                className="rounded-xl px-4 py-3"
-                style={{ backgroundColor: LIME }}
+                className="rounded-2xl px-4 py-4 flex items-center justify-between group hover:bg-white transition-all shadow-sm border border-transparent hover:border-[#caf0f8]"
+                style={{ backgroundColor: LIME + "50" }}
               >
-                <p className="text-sm font-bold" style={{ color: NAVY }}>
-                  {t(r.examName)}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">{r.date}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-black" style={{ color: NAVY }}>
+                      {r.subjectName}
+                    </p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-[#00b4d8]">
+                      {r.examName}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 italic">"{r.remarks}"</p>
+                </div>
+                
+                <div className="flex flex-col items-end gap-1 ml-4">
+                  <div className="text-xl font-black" style={{ color: NAVY }}>
+                    {r.marksObtained}<span className="text-[10px] text-gray-400 font-bold ml-0.5">/{r.maxMarks}</span>
+                  </div>
+                  <div 
+                    className="text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider"
+                    style={{ 
+                      backgroundColor: r.grade === 'A+' || r.grade === 'A' ? '#d8f3dc' : '#fee2e2',
+                      color: r.grade === 'A+' || r.grade === 'A' ? '#2d6a4f' : '#991b1b'
+                    }}
+                  >
+                    Grade {r.grade}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -257,34 +256,64 @@ function ResultsSection({ results }) {
   );
 }
 
-// ── Instructions ──────────────────────────────────────────────────────────────
+function AcademicAlertsSection({ analytics }) {
+  const { t } = useLanguage();
+  if (!analytics?.weakAreas?.length) return null;
+
+  return (
+    <MainCard variants={cardVariants} className="bg-red-50/30 border-red-100 border">
+      <div className="p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2.5 rounded-2xl bg-red-100">
+            <AlertCircle size={26} className="text-red-600" aria-hidden="true" />
+          </div>
+          <div>
+            <h3 className="text-base font-extrabold text-red-900">
+              Academic Attention Required
+            </h3>
+            <p className="text-xs text-red-700/60 font-bold uppercase tracking-widest">Performance Insight</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {analytics.weakAreas.map((wa, idx) => (
+            <div key={idx} className="bg-white p-4 rounded-2xl border border-red-100 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-black text-red-900">{wa.subjectName}</p>
+                <p className="text-[10px] font-bold text-gray-500 uppercase">Current Score: {wa.score}%</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-red-50 text-red-700 uppercase tracking-tighter">Needs Improvement</span>
+              </div>
+            </div>
+          ))}
+          <p className="text-[10px] font-bold text-red-800/50 italic px-2">
+            * We recommend scheduling a mentor session for these subjects.
+          </p>
+        </div>
+      </div>
+    </MainCard>
+  );
+}
+
 function InstructionsSection({ instructions }) {
   const { t } = useLanguage();
   return (
-    <MainCard
-      variants={cardVariants}
-      className="h-full"
-    >
+    <MainCard variants={cardVariants} className="h-full">
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: LIME }}>
-            <ClipboardList
-              size={26}
-              style={{ color: NAVY }}
-              aria-hidden="true"
-            />
+            <ClipboardList size={26} style={{ color: NAVY }} aria-hidden="true" />
           </div>
           <div>
             <h3 className="text-base font-extrabold" style={{ color: NAVY }}>
               {t("exam.instructions")}
             </h3>
-            <p className="text-xs text-gray-400">
-              {t("exam.instructionDesc")}
-            </p>
+            <p className="text-xs text-gray-400">{t("exam.instructionDesc")}</p>
           </div>
         </div>
         <ol className="flex flex-col gap-2.5">
-          {instructions.map((inst, i) => (
+          {(instructions || []).map((inst, i) => (
             <li key={i} className="flex items-start gap-3">
               <span
                 className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold mt-0.5"
@@ -293,7 +322,7 @@ function InstructionsSection({ instructions }) {
               >
                 {i + 1}
               </span>
-              <p className="text-sm text-gray-600 leading-snug">{t(inst)}</p>
+              <p className="text-sm text-gray-600 leading-snug">{inst}</p>
             </li>
           ))}
         </ol>
@@ -302,30 +331,58 @@ function InstructionsSection({ instructions }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-function ExaminationPage({ examination }) {
+function ExaminationPage() {
   const { t } = useLanguage();
+  const { activeStudentId } = useStudent();
+  const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
+  
+  const { data: examination, loading: examLoading, error: examError } = useService(getExamData, [activeStudentId], [activeStudentId]);
+  const { data: results, loading: resultsLoading, error: resultsError } = useService(
+    getStudentResults, 
+    [activeStudentId], 
+    [activeStudentId]
+  );
+  const { data: analytics, loading: analyticsLoading, error: analyticsError } = useService(
+    getStudentAnalytics,
+    [activeStudentId],
+    [activeStudentId]
+  );
+
+  if (examError || resultsError || analyticsError) {
+    throw examError || resultsError || analyticsError;
+  }
+
+  const loading = examLoading || resultsLoading || analyticsLoading;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!examination) return null;
 
   return (
     <>
       <div className="relative">
-        {/* Page header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-2xl" style={{ backgroundColor: NAVY }}>
-            <FileText size={26} className="text-white" aria-hidden="true" />
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: NAVY }}>
+              <FileText size={26} className="text-white" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black truncate" style={{ color: NAVY }}>
+                {t("exam.title")}
+              </h1>
+              <p className="text-sm text-gray-500 truncate">{t("exam.subtitle")}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-              {t("exam.title")}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {t("exam.subtitle")}
-            </p>
-          </div>
-          <div className="ml-auto">
+
+
+          <div className="flex-shrink-0">
             <HelperButton
               onClick={() => setShowHelper(true)}
               className="relative"
@@ -339,13 +396,12 @@ function ExaminationPage({ examination }) {
           initial="hidden"
           animate="visible"
         >
-          {/* Left column */}
           <div className="flex flex-col gap-6">
             <AdmitCardSection admitCard={examination.admitCard} />
-            <ResultsSection results={examination.results} />
+            <AcademicAlertsSection analytics={analytics} />
+            <ResultsSection results={results || []} />
           </div>
 
-          {/* Right column */}
           <div className="flex flex-col gap-6">
             <ScheduleSection schedule={examination.schedule} />
             <InstructionsSection instructions={examination.instructions} />

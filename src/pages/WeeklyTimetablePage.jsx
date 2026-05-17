@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, MapPin, User, BookOpen, CalendarDays } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 import HelperButton from "../components/HelperButton";
 import HelperPopup from "../components/HelperPopup";
+import { getTimetable } from "../services/academicsService";
+import { useService } from "../hooks/useService";
+import { useStudent } from "../context/StudentContext";
+import ChildScopeSwitcher from "../components/parent/ChildScopeSwitcher";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -12,7 +17,6 @@ const LIME = "#caf0f8";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-// Color cycle for subject blocks — keeps visual variety
 const SUBJECT_COLORS = [
   { bg: `${NAVY}`, text: "#caf0f8" },
   { bg: `${TEAL}`, text: "#ffffff" },
@@ -22,7 +26,6 @@ const SUBJECT_COLORS = [
   { bg: "#48cae4", text: "#03045e" },
 ];
 
-// Deterministic color per subject code
 function getSubjectColor(code) {
   let hash = 0;
   for (let i = 0; i < code.length; i++)
@@ -43,9 +46,8 @@ const cardVariants = {
   },
 };
 
-// ── Class block ───────────────────────────────────────────────────────────────
 function ClassBlock({ cls }) {
-  const color = getSubjectColor(cls.code);
+  const color = getSubjectColor(cls.code || "SUB-00");
 
   return (
     <motion.div
@@ -55,7 +57,6 @@ function ClassBlock({ cls }) {
       role="article"
       aria-label={`${cls.subject} at ${cls.startTime}`}
     >
-      {/* Subject + code */}
       <div>
         <p
           className="text-sm font-extrabold leading-tight"
@@ -70,11 +71,10 @@ function ClassBlock({ cls }) {
             color: color.text,
           }}
         >
-          {cls.code}
+          {cls.code || "SUB-00"}
         </span>
       </div>
 
-      {/* Meta */}
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-1.5">
           <Clock
@@ -120,13 +120,11 @@ function ClassBlock({ cls }) {
   );
 }
 
-// ── Day column ────────────────────────────────────────────────────────────────
 function DayColumn({ day, classes }) {
   const isEmpty = !classes || classes.length === 0;
 
   return (
     <div className="flex flex-col gap-3 min-w-0">
-      {/* Day header */}
       <div
         className="rounded-xl px-3 py-2 text-center font-extrabold text-sm sticky top-0 z-10"
         style={{ backgroundColor: NAVY, color: LIME }}
@@ -157,7 +155,6 @@ function DayColumn({ day, classes }) {
   );
 }
 
-// ── Weekend card ──────────────────────────────────────────────────────────────
 function WeekendCard({ day }) {
   return (
     <div className="flex flex-col gap-3 min-w-0">
@@ -178,13 +175,11 @@ function WeekendCard({ day }) {
   );
 }
 
-// ── Mobile day tabs ───────────────────────────────────────────────────────────
 function MobileView({ weeklyTimetable }) {
   const [activeDay, setActiveDay] = useState("Monday");
 
   return (
     <div>
-      {/* Day selector */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
         {DAYS.map((day) => {
           const isActive = activeDay === day;
@@ -214,7 +209,6 @@ function MobileView({ weeklyTimetable }) {
         ))}
       </div>
 
-      {/* Active day classes */}
       <motion.div
         key={activeDay}
         initial={{ opacity: 0, y: 10 }}
@@ -239,28 +233,44 @@ function MobileView({ weeklyTimetable }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-function WeeklyTimetablePage({ weeklyTimetable = {} }) {
+function WeeklyTimetablePage() {
   const { t } = useLanguage();
+  const { activeStudentId } = useStudent();
   const [showHelper, setShowHelper] = useState(false);
+  const { data: timetable, loading, error } = useService(getTimetable, [activeStudentId], [activeStudentId]);
+
+  if (error) throw error;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#00b4d8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const weeklyTimetable = timetable?.weekly || {};
 
   return (
     <>
       <div className="relative">
-        {/* Page header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-2xl" style={{ backgroundColor: NAVY }}>
-            <CalendarDays size={31} className="text-white" aria-hidden="true" />
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl shadow-sm flex-shrink-0" style={{ backgroundColor: NAVY }}>
+              <CalendarDays size={31} className="text-white" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-black truncate" style={{ color: NAVY }}>
+                {t("timetable.title") || "Weekly Timetable"}
+              </h1>
+              <p className="text-sm text-gray-500 truncate">
+                {t("timetable.subtitle") || "Mon–Fri schedule · Sat & Sun off"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-black" style={{ color: NAVY }}>
-              Weekly Timetable
-            </h1>
-            <p className="text-sm text-gray-500">
-              Mon–Fri schedule · Sat &amp; Sun off
-            </p>
-          </div>
-          <div className="ml-auto">
+
+
+          <div className="flex-shrink-0">
             <HelperButton
               onClick={() => setShowHelper(true)}
               className="relative"
@@ -268,7 +278,6 @@ function WeeklyTimetablePage({ weeklyTimetable = {} }) {
           </div>
         </div>
 
-        {/* Desktop grid — horizontally scrollable on tablet, hidden on mobile */}
         <div className="hidden md:block overflow-x-auto pb-4 scrollbar-thin">
           <div
             className="grid gap-4 min-w-[900px]"
@@ -282,12 +291,10 @@ function WeeklyTimetablePage({ weeklyTimetable = {} }) {
           </div>
         </div>
 
-        {/* Mobile tab view */}
         <div className="md:hidden">
           <MobileView weeklyTimetable={weeklyTimetable} />
         </div>
 
-        {/* Color legend */}
         <div
           className="mt-8 bg-white rounded-2xl p-5 shadow-md"
           style={{ outline: `1px solid ${LIME}` }}
@@ -336,21 +343,9 @@ function WeeklyTimetablePage({ weeklyTimetable = {} }) {
         contentEn="The weekly timetable shows all classes scheduled from Monday to Friday. Saturday and Sunday are holidays. Each colored block shows the subject, course code, teacher, time, and room number."
         contentHi="साप्ताहिक समय-सारणी सोमवार से शुक्रवार तक निर्धारित सभी कक्षाएं दिखाती है। शनिवार और रविवार छुट्टी के दिन हैं। प्रत्येक रंगीन ब्लॉक में विषय, कोर्स कोड, शिक्षक, समय और कमरा नंबर दिखाया जाता है।"
         colorLegend={[
-          {
-            color: NAVY,
-            labelEn: "Navy — Core CS subjects",
-            labelHi: "नेवी — मुख्य CS विषय",
-          },
-          {
-            color: TEAL,
-            labelEn: "Teal — Lab / practical sessions",
-            labelHi: "टील — लैब / प्रैक्टिकल सत्र",
-          },
-          {
-            color: SAGE,
-            labelEn: "Sage — Elective / language subjects",
-            labelHi: "सेज — ऐच्छिक / भाषा विषय",
-          },
+          { color: NAVY, labelEn: "Navy — Core subjects", labelHi: "नेवी — मुख्य विषय" },
+          { color: TEAL, labelEn: "Teal — Lab sessions", labelHi: "टील — लैब सत्र" },
+          { color: SAGE, labelEn: "Sage — Electives", labelHi: "सेज — ऐच्छिक" },
         ]}
       />
     </>
