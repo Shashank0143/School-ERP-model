@@ -8,6 +8,7 @@ Welcome to the **EduDash ERP** engineering guide. This is the single source of t
 
 | Property         | Value                                                              |
 | :--------------- | :----------------------------------------------------------------- |
+| **Live Demo**    | [https://school-erp-dashboard-lime.vercel.app/](https://school-erp-dashboard-lime.vercel.app/) |
 | **Name**         | EduDash School ERP Dashboard                                       |
 | **Type**         | Frontend-Only SPA (React + Vite) simulating a full K-12 school ERP |
 | **School Scale** | Nursery to Class 12 · 4 sections per class · 60 classes total      |
