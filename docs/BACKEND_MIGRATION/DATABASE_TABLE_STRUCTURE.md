@@ -347,3 +347,25 @@ CREATE TABLE notice_attachments (
 - Use TLS for database connections
 - Encrypt backups at rest
 - Key management best practices
+
+## Communication Center Module
+
+### erp_campaigns
+Stores active and historical communication campaigns (Email, SMS).
+- id (PK, UUID)
+- 
+ame (VARCHAR)
+- 	ype (ENUM: 'email', 'sms')
+- udience (JSONB) - Defines target audience criteria
+- status (ENUM: 'draft', 'queued', 'sending', 'completed')
+- scheduled_for (TIMESTAMP)
+- created_at (TIMESTAMP)
+
+### erp_communication_templates
+Stores templates for emails and SMS.
+- id (PK, UUID)
+- 
+ame (VARCHAR)
+- 	ype (ENUM: 'email', 'sms')
+- content (TEXT)
+- ariables (JSONB)

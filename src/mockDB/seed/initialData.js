@@ -8,7 +8,6 @@
 import { getClassesSeed } from "./classes";
 import { subjectsSeed } from "./subjects";
 import { streamsSeed } from "./streams";
-import { teacherSubjectAssignmentsSeed } from "./timetable";
 import { generateExpandedTeachers } from "./expandedTeachers";
 import {
   generateTeacherSubjectAssignments,
@@ -64,7 +63,6 @@ import { STORAGE_KEYS } from "../../persistence/storageKeys";
  */
 export const seedData = (db) => {
   // 1. Static and Dyno definitions
-  db.teacherSubjectAssignments = [...teacherSubjectAssignmentsSeed];
   db.subjects = subjectsSeed;
   db.streams = streamsSeed;
 

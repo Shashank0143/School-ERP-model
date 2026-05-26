@@ -47,7 +47,7 @@ const cardVariants = {
 };
 
 function ClassBlock({ cls }) {
-  const color = getSubjectColor(cls.code || "SUB-00");
+  const color = getSubjectColor(cls.subjectId || "SUB-00");
 
   return (
     <motion.div
@@ -71,7 +71,7 @@ function ClassBlock({ cls }) {
             color: color.text,
           }}
         >
-          {cls.code || "SUB-00"}
+          {cls.room || "TBA"}
         </span>
       </div>
 
@@ -112,7 +112,7 @@ function ClassBlock({ cls }) {
             className="text-[11px] font-semibold"
             style={{ color: color.text, opacity: 0.9 }}
           >
-            {cls.room}
+            {cls.periodNumber || "N/A"}
           </span>
         </div>
       </div>
@@ -249,6 +249,7 @@ function WeeklyTimetablePage() {
     );
   }
 
+  const isConfigured = timetable?.isConfigured;
   const weeklyTimetable = timetable?.weekly || {};
 
   return (
@@ -278,62 +279,73 @@ function WeeklyTimetablePage() {
           </div>
         </div>
 
-        <div className="hidden md:block overflow-x-auto pb-4 scrollbar-thin">
-          <div
-            className="grid gap-4 min-w-[900px]"
-            style={{ gridTemplateColumns: "repeat(7, 1fr)" }}
-          >
-            {DAYS.map((day) => (
-              <DayColumn key={day} day={day} classes={weeklyTimetable[day]} />
-            ))}
-            <WeekendCard day="Saturday" />
-            <WeekendCard day="Sunday" />
-          </div>
-        </div>
-
-        <div className="md:hidden">
-          <MobileView weeklyTimetable={weeklyTimetable} />
-        </div>
-
-        <div
-          className="mt-8 bg-white rounded-2xl p-5 shadow-md"
-          style={{ outline: `1px solid ${LIME}` }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen size={21} style={{ color: TEAL }} aria-hidden="true" />
-            <p className="text-sm font-extrabold" style={{ color: NAVY }}>
-              Subject Color Guide
+        {!isConfigured ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl shadow-sm border border-gray-100">
+            <div className="w-20 h-20 rounded-full bg-[#caf0f8] flex items-center justify-center mb-6">
+              <CalendarDays size={40} className="text-[#03045e]" />
+            </div>
+            <h2 className="text-xl font-black text-[#03045e] mb-2">No Timetable Available</h2>
+            <p className="text-gray-500 font-semibold max-w-md">
+              Timetable has not been set yet.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {Object.values(
-              DAYS.flatMap((d) => weeklyTimetable[d] ?? []).reduce(
-                (acc, cls) => {
-                  if (!acc[cls.code]) acc[cls.code] = cls;
-                  return acc;
-                },
-                {},
-              ),
-            ).map((cls) => {
-              const color = getSubjectColor(cls.code);
-              return (
-                <div key={cls.code} className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: color.bg }}
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs font-semibold text-gray-600">
-                    {cls.subject}{" "}
-                    <span className="font-mono text-gray-400">
-                      ({cls.code})
-                    </span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="hidden md:block overflow-x-auto pb-4 scrollbar-thin">
+              <div
+                className="grid gap-4 min-w-[900px]"
+                style={{ gridTemplateColumns: "repeat(7, 1fr)" }}
+              >
+                {DAYS.map((day) => (
+                  <DayColumn key={day} day={day} classes={weeklyTimetable[day]} />
+                ))}
+                <WeekendCard day="Saturday" />
+                <WeekendCard day="Sunday" />
+              </div>
+            </div>
+
+            <div className="md:hidden">
+              <MobileView weeklyTimetable={weeklyTimetable} />
+            </div>
+
+            <div
+              className="mt-8 bg-white rounded-2xl p-5 shadow-md"
+              style={{ outline: `1px solid ${LIME}` }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <BookOpen size={21} style={{ color: TEAL }} aria-hidden="true" />
+                <p className="text-sm font-extrabold" style={{ color: NAVY }}>
+                  Subject Color Guide
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {Object.values(
+                  DAYS.flatMap((d) => weeklyTimetable[d] ?? []).reduce(
+                    (acc, cls) => {
+                      if (!acc[cls.subjectId]) acc[cls.subjectId] = cls;
+                      return acc;
+                    },
+                    {},
+                  ),
+                ).map((cls) => {
+                  const color = getSubjectColor(cls.subjectId || cls.code || "SUB-00");
+                  return (
+                    <div key={cls.subjectId} className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: color.bg }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-semibold text-gray-600">
+                        {cls.subject}{" "}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <HelperPopup

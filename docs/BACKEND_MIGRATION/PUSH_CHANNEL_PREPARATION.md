@@ -649,3 +649,9 @@ const testNotice = {
 - Monitor performance
 - Optimize based on analytics
 - Document procedures
+
+## Active Communication Center (New Module)
+While notices are *passive*, the new **Communication Center** module handles *active* outbound communications (Email/SMS).
+- Requires integration with ESPs (Email Service Providers like SendGrid/AWS SES).
+- Requires SMS gateway integration (e.g., Twilio, MSG91).
+- Delivery statuses should be fed back into the campaign tracking UI via Webhooks.

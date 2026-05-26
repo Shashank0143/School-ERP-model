@@ -307,7 +307,7 @@ export const deriveTeacherWorkload = (teachers, assignments) => {
 };
 
 // 4. Derive Class Teacher Map
-const CLASS_TEACHER_PRIORITY = [
+export const CLASS_TEACHER_PRIORITY = [
   "multi-subject", // Foundation homeroom teacher
   "sub-eng", // English
   "sub-math", // Mathematics

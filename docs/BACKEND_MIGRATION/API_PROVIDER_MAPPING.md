@@ -223,3 +223,27 @@ Common error codes:
 - `VALIDATION_ERROR` - Invalid request data
 - `ALREADY_RESPONDED` - User already responded to notice
 - `DEADLINE_PASSED` - Action deadline has passed
+
+### Communication Center Service (src/services/communicationCenterService.js / Stub)
+
+| Current Method | API Endpoint | HTTP Method | Description |
+|----------------|--------------|-------------|-------------|
+| getCampaigns() | GET /api/communication/campaigns | GET | Fetch all campaigns |
+| getCampaignById(id) | GET /api/communication/campaigns/:id | GET | Fetch single campaign |
+| createCampaign(data) | POST /api/communication/campaigns | POST | Create and queue new campaign |
+| getTemplates() | GET /api/communication/templates | GET | Fetch communication templates |
+
+### Timetable Services (src/services/timetable/*)
+
+| Current Method | API Endpoint | HTTP Method | Description |
+|----------------|--------------|-------------|-------------|
+| initializeTimetables() | POST /api/timetable/initialize | POST | Bulk initialize timetables |
+| saveTimetableSlot() | PUT /api/timetable/slot | PUT | Save or update specific slot |
+| clearTimetableSlot() | DELETE /api/timetable/slot | DELETE | Clear a specific slot |
+| alidateTimetables() | POST /api/timetable/validate | POST | Validate timetable for conflicts |
+
+### Workflow Event Bus (src/services/workflowEvents.js)
+
+| Current Method | API Endpoint | HTTP Method | Description |
+|----------------|--------------|-------------|-------------|
+| emitEvent(type, payload) | POST /api/events/emit | POST | Emit a system event to queue |

@@ -18,13 +18,12 @@ import {
   canBeClassTeacher,
   auditAllClassTeacherAssignments,
   TEACHER_TYPES,
-  isFoundationLevel,
-  extractLevelFromClassId,
 } from "./teacherClassification";
 import {
   deriveEligibleStages,
   getStageFromClassId,
 } from "../data/academicStages.js";
+import { extractLevel, isFoundationClass } from "../utils/classIdentity";
 
 // ─── READ QUERIES ─────────────────────────────────────────────────────────────
 
@@ -121,9 +120,9 @@ export const getSubjectTeachersForClass = async (classId) => {
   const cls = classes.find((c) => c.id === classId);
   if (!cls) return [];
 
-  const level = extractLevelFromClassId(classId);
+  const level = extractLevel(classId);
 
-  if (isFoundationLevel(level)) {
+  if (isFoundationClass(level)) {
     // Foundation: class teacher teaches everything — find that teacher
     const classTeacher = cls.classTeacherId
       ? teachers.find((t) => t.id === cls.classTeacherId)
@@ -220,7 +219,7 @@ export const getTeacherAssignments = async (teacherId) => {
     for (const cId of ownedClasses) {
       const cls = classMap.get(cId);
       if (!cls) continue;
-      const level = extractLevelFromClassId(cId);
+      const level = extractLevel(cId);
       const classSubs = subjects.filter(
         (s) => s.applicableClasses && s.applicableClasses.includes(level),
       );
@@ -312,10 +311,10 @@ export const validateTeacherAssignment = async (
     return { valid: false, error: `Teacher "${teacherId}" not found.` };
 
   const teacherType = deriveTeacherType(teacher);
-  const level = extractLevelFromClassId(classId);
+  const level = extractLevel(classId);
 
   // Foundation teacher trying to teach in a specialized class
-  if (teacherType === TEACHER_TYPES.FOUNDATION && !isFoundationLevel(level)) {
+  if (teacherType === TEACHER_TYPES.FOUNDATION && !isFoundationClass(level)) {
     return {
       valid: false,
       error: `Foundation teacher "${teacher.name}" cannot be assigned to Class ${level}. Foundation teachers are restricted to Nursery–Class 4.`,
@@ -323,7 +322,7 @@ export const validateTeacherAssignment = async (
   }
 
   // Specialized teacher trying to teach in a foundation class
-  if (teacherType === TEACHER_TYPES.SPECIALIZED && isFoundationLevel(level)) {
+  if (teacherType === TEACHER_TYPES.SPECIALIZED && isFoundationClass(level)) {
     return {
       valid: false,
       error: `Specialized teacher "${teacher.name}" cannot be assigned to foundation class "${classId}". Foundation classes use homeroom teachers only.`,

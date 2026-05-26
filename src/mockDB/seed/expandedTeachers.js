@@ -587,6 +587,8 @@ const restructureTeacher = (teacher) => {
   };
   const eligibleStages = deriveEligibleStages(tempTeacher);
 
+  const primarySub = specializationSubjectId || teacher.subjectId || null;
+
   return {
     id,
     teacherType: resolvedType,
@@ -595,6 +597,7 @@ const restructureTeacher = (teacher) => {
     eligibleStages,
     assignedLevels: [],
     assignedSections: [],
+    primarySubjectId: primarySub,
     metadata: {
       ...metadata,
       subjectId:

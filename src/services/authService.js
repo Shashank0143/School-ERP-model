@@ -5,6 +5,11 @@
 
 import { getDataProvider } from "../data";
 import { ROLES } from "../auth/roles";
+import {
+  extractLevel,
+  extractSection,
+  formatClassLevel,
+} from "../utils/classIdentity";
 
 /**
  * Authenticates a user with username and password.
@@ -114,8 +119,6 @@ export const getDemoAccounts = async () => {
   const parentsList = await provider.getParents();
   const classesList = await provider.getClasses();
 
-  const CLASS_ID_RE = /^class-(nursery|lkg|ukg|\d+)([a-d])$/i;
-
   // Group by role
   const demoAccounts = {
     [ROLES.STUDENT]: [],
@@ -135,12 +138,11 @@ export const getDemoAccounts = async () => {
       if (student) {
         description = `Adm No. ${student.admissionNo}`;
         if (student.classId) {
-          description += ` · Class ${student.classId.replace("class-", "").toUpperCase()}`;
-          const m = student.classId.match(CLASS_ID_RE);
-          if (m) {
-            extraMeta.classLevel = m[1].toLowerCase();
-            extraMeta.section = m[2].toUpperCase();
-          }
+          const displayLevel = formatClassLevel(extractLevel(student.classId));
+          const section = extractSection(student.classId);
+          description += ` · Class ${displayLevel}-${section}`;
+          extraMeta.classLevel = extractLevel(student.classId).toLowerCase();
+          extraMeta.section = section.toUpperCase();
         }
       }
     } else if (user.role === ROLES.TEACHER) {
@@ -172,10 +174,13 @@ export const getDemoAccounts = async () => {
           .map((c) => `${c.name} (${c.admissionNo})`)
           .join(" & ");
         description = `Parent of ${childInfo}`;
-        const m = children[0].classId?.match(CLASS_ID_RE);
-        if (m) {
-          extraMeta.childClassLevel = m[1].toLowerCase();
-          extraMeta.childSection = m[2].toUpperCase();
+        if (children[0].classId) {
+          extraMeta.childClassLevel = extractLevel(
+            children[0].classId,
+          ).toLowerCase();
+          extraMeta.childSection = extractSection(
+            children[0].classId,
+          ).toUpperCase();
         }
       }
     } else if (user.role === ROLES.ADMIN) {

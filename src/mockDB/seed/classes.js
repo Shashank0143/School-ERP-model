@@ -24,6 +24,7 @@
  */
 
 import { getStageFromLevel } from "../../data/academicStages.js";
+import { formatClassLevel } from "../../utils/classIdentity.js";
 
 /**
  * Foundation class levels (Nursery–Class 4).
@@ -56,7 +57,6 @@ export const getClassesSeed = (classTeacherMap = null) => {
     "12",
   ];
   const sections = ["A", "B", "C", "D"];
-  const levelToRoman = { 11: "XI", 12: "XII" };
   const streamsMap = {
     A: "SCIENCE_NON_MEDICAL",
     B: "SCIENCE_MEDICAL",
@@ -90,21 +90,26 @@ export const getClassesSeed = (classTeacherMap = null) => {
           ? `N-${sec}`
           : `${level}-${sec}`;
 
-      const romanName = levelToRoman[level];
-      const levelLabel = romanName || level; // "Nursery" | "LKG" | "UKG" | "1"…"10" | "XI" | "XII"
-      const className = romanName ? `${romanName}-${sec}` : `${level}-${sec}`;
+      const displayLevel = formatClassLevel(level); // "Nursery" | "LKG" | "UKG" | "1"…"10" | "XI" | "XII"
+      const className = `${displayLevel}-${sec}`;
       const displayName = isSenior
-        ? `Class ${romanName}-${sec} (${streamName})`
-        : `Class ${level}-${sec}`;
+        ? `Class ${displayLevel}-${sec} (${streamName})`
+        : `Class ${displayLevel}-${sec}`;
 
       const roomValue = `Room ${roomNum}`;
+
+      const fixedRoomId = isSenior
+        ? `room-${level}${sec.toLowerCase()}`
+        : ["Nursery", "LKG", "UKG"].includes(level)
+          ? `room-${level.toLowerCase()}${sec.toLowerCase()}`
+          : `room-${level}${sec.toLowerCase()}`;
 
       classes.push({
         classId,
         id: classId,
         className,
         name: className,
-        level: levelLabel, // canonical level label without section: "Nursery"|"LKG"|"UKG"|"1"…"10"|"XI"|"XII"
+        level: level, // canonical level label without section: "Nursery"|"LKG"|"UKG"|"1"…"10"|"11"|"12"
         section: sec,
         grade: isSenior
           ? parseInt(level)
@@ -118,6 +123,7 @@ export const getClassesSeed = (classTeacherMap = null) => {
         isFoundationClass: isFoundation,
         roomNumber: roomValue,
         room: roomValue,
+        fixedRoomId,
         displayName,
         academicYear: "2026",
       });

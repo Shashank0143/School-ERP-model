@@ -1,4 +1,5 @@
 import { getDataProvider } from "../data";
+import { teacherTimetableService } from "./timetable/teacherTimetableService";
 import { teacherScheduleService } from "./teacherScheduleService";
 import { teacherActionCenterService } from "./teacherActionCenterService";
 
@@ -50,16 +51,20 @@ export const getCriticalTeacherDashboardData = async (
   const subjectsTaught = resolvedSubjects.map((s) => s.name);
   const classesAssigned = resolvedClasses.map((c) => c.name);
 
-  const todaySchedule =
-    await teacherScheduleService.getTeacherTodaySchedule(tId);
-  const currentClass = await teacherScheduleService.getCurrentClass(
-    tId,
-    todaySchedule,
-  );
-  const nextClass = await teacherScheduleService.getNextClass(
-    tId,
-    todaySchedule,
-  );
+  const rawTodaySchedule = await teacherTimetableService.getTeacherTodaySchedule(tId);
+  const todaySchedule = rawTodaySchedule.map(slot => {
+    const cls = resolvedClasses.find(c => c.id === slot.classId) || classesList.find(c => c.id === slot.classId);
+    const sub = resolvedSubjects.find(s => s.id === slot.subjectId) || subjects.find(s => s.id === slot.subjectId);
+    return {
+      ...slot,
+      period: slot.periodNumber,
+      subject: sub ? sub.name : slot.subjectId,
+      class: cls ? cls.name.replace("Class ", "") : slot.classId,
+      time: `${slot.startTime} – ${slot.endTime}`,
+    };
+  });
+  const currentClass = todaySchedule.length > 0 ? { ...todaySchedule[0], status: "Ongoing" } : null;
+  const nextClass = todaySchedule.length > 1 ? { ...todaySchedule[1], status: "Upcoming" } : null;
 
   const classTeacherData =
     await teacherScheduleService.getClassTeacherResponsibilities(tId);

@@ -61,7 +61,6 @@ export const ROLE_NAVIGATION = {
     { id: "admin_subject_alloc", icon: "ClipboardList" },
     { id: "admin_timetable", icon: "Calendar" },
     { id: "admin_exams", icon: "GraduationCap" },
-    { id: "admin_results", icon: "FileText" },
     { id: "admin_academic_performance", icon: "BarChart2" },
     { id: "admin_attendance", icon: "CheckSquare" },
     { id: "admin_leaves", icon: "CalendarDays" },
@@ -73,6 +72,8 @@ export const ROLE_NAVIGATION = {
     { id: "admin_calendar", icon: "CalendarDays" },
     { id: "admin_notices", icon: "Megaphone" },
     { id: "admin_analytics_workload", icon: "Briefcase" },
+    { id: "admin_manage_departments", icon: "Layers" },
+    { id: "admin_communication_center", icon: "Send" },
     { id: "admin_profile", icon: "User" },
     { id: "admin_school_settings", icon: "Settings" },
     { id: "logout", icon: "LogOut" },
@@ -103,7 +104,6 @@ export const ADMIN_SECTIONS = [
       { id: "admin_academic_structure", icon: "Layers" },
       { id: "admin_timetable", icon: "Calendar" },
       { id: "admin_exams", icon: "GraduationCap" },
-      { id: "admin_results", icon: "FileText" },
       { id: "admin_academic_performance", icon: "BarChart2" },
     ],
   },
@@ -128,14 +128,20 @@ export const ADMIN_SECTIONS = [
   },
   {
     title: "Analytics",
+    items: [{ id: "admin_analytics_workload", icon: "Briefcase" }],
+  },
+  {
+    title: "Institutional",
     items: [
-      { id: "admin_analytics_workload", icon: "Briefcase" },
+      { id: "admin_manage_departments", icon: "Layers" },
+      { id: "admin_communication_center", icon: "Send" },
     ],
   },
   {
     title: "Settings",
     items: [
       { id: "admin_profile", icon: "User" },
+      { id: "admin_access_control", icon: "ShieldCheck" },
       { id: "admin_school_settings", icon: "Settings" },
       { id: "logout", icon: "LogOut" },
     ],

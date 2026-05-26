@@ -10,6 +10,7 @@ import {
   Users,
   Edit3,
 } from "lucide-react";
+import { formatClassLevel, isSeniorSecondary } from "../../utils/classIdentity";
 
 /**
  * AdminProfilePreview
@@ -117,20 +118,14 @@ const AdminProfilePreview = ({
 
                 {type === "student" &&
                   (() => {
-                    const displayClass =
-                      data.classLevel === "11"
-                        ? "Class XI"
-                        : data.classLevel === "12"
-                          ? "Class XII"
-                          : `Class ${data.classLevel || "N/A"}`;
+                    const displayClass = `Class ${formatClassLevel(data.classLevel)}`;
                     const rollNumber =
                       data.rollNumber ||
                       (data.id && data.id.includes("-")
                         ? parseInt(data.id.split("-")[1], 10)
                         : "N/A");
                     const hasStream =
-                      (data.classLevel === "11" || data.classLevel === "12") &&
-                      data.stream;
+                      isSeniorSecondary(data.classLevel) && data.stream;
 
                     return (
                       <div className="grid grid-cols-2 gap-4">
@@ -237,11 +232,7 @@ const AdminProfilePreview = ({
                               Class
                             </p>
                             <p className="text-xs font-black text-[#03045e] mt-1">
-                              {data.student.classLevel === "11"
-                                ? "Class XI"
-                                : data.student.classLevel === "12"
-                                  ? "Class XII"
-                                  : `Class ${data.student.classLevel || "N/A"}`}
+                              {`Class ${formatClassLevel(data.student.classLevel)}`}
                             </p>
                           </div>
                           <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40">
@@ -252,8 +243,7 @@ const AdminProfilePreview = ({
                               {data.student.section || "N/A"}
                             </p>
                           </div>
-                          {(data.student.classLevel === "11" ||
-                            data.student.classLevel === "12") &&
+                          {isSeniorSecondary(data.student.classLevel) &&
                             data.student.stream && (
                               <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40 col-span-2">
                                 <p className="text-[9px] text-gray-400 font-bold uppercase">

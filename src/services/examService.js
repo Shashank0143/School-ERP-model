@@ -2,6 +2,7 @@ import { getDataProvider } from "../data";
 import { getSubjectsForStudent } from "./academicsService";
 import { emitEvent, WORKFLOW_EVENTS } from "./workflowEvents";
 import { getStudentSubjects } from "../data/subjectArchitecture";
+import { normalizeClassLevel } from "../utils/classIdentity";
 
 /**
  * Fetches all examination sessions
@@ -24,19 +25,19 @@ export const getExamById = async (examId) => {
  */
 export const createExamSession = async (sessionData) => {
   const provider = getDataProvider();
-  
+
   const initialHistory = sessionData.statusHistory || [
     {
       from: null,
       to: sessionData.status || "draft",
       changedBy: sessionData.createdBy || "admin-001",
-      changedAt: new Date().toISOString()
-    }
+      changedAt: new Date().toISOString(),
+    },
   ];
 
   const exam = await provider.createExam({
     ...sessionData,
-    statusHistory: initialHistory
+    statusHistory: initialHistory,
   });
 
   // Emit event for notice generation
@@ -61,14 +62,18 @@ export const updateExamSession = async (examId, updates) => {
   const existingExam = await provider.getExamById(examId);
   let finalUpdates = { ...updates };
 
-  if (existingExam && updates.status && updates.status !== existingExam.status) {
+  if (
+    existingExam &&
+    updates.status &&
+    updates.status !== existingExam.status
+  ) {
     const currentHistory = existingExam.statusHistory || [
       {
         from: null,
         to: existingExam.status || "draft",
         changedBy: "admin-001",
-        changedAt: existingExam.createdAt || new Date().toISOString()
-      }
+        changedAt: existingExam.createdAt || new Date().toISOString(),
+      },
     ];
     finalUpdates.statusHistory = [
       ...currentHistory,
@@ -76,8 +81,8 @@ export const updateExamSession = async (examId, updates) => {
         from: existingExam.status,
         to: updates.status,
         changedBy: updates.createdBy || "admin-001",
-        changedAt: new Date().toISOString()
-      }
+        changedAt: new Date().toISOString(),
+      },
     ];
 
     // Audit logs for release to scheduled status
@@ -95,7 +100,7 @@ export const updateExamSession = async (examId, updates) => {
     for (const paper of sessionPapers) {
       await provider.updateExamPaper(paper.id, {
         ...paper,
-        status: "scheduled"
+        status: "scheduled",
       });
     }
   }
@@ -479,7 +484,11 @@ export const getExamData = async (studentId) => {
 
   // Graceful fallback to static simulated schedule if database is empty/not scheduled yet
   // But ONLY if the session is not a draft (Fix #3)
-  if (schedule.length === 0 && !isDraft && activeSession?.status !== "evaluation") {
+  if (
+    schedule.length === 0 &&
+    !isDraft &&
+    activeSession?.status !== "evaluation"
+  ) {
     const studentSubjects = await getSubjectsForStudent(studentId);
     const baseDates = [
       { date: "18 Jul", day: "Friday" },
@@ -532,7 +541,7 @@ export const getExamData = async (studentId) => {
     examName: activeSession
       ? activeSession.name
       : "Half-Yearly Examination 2025",
-    issued: activeSession ? (activeSession.status !== "draft") : false,
+    issued: activeSession ? activeSession.status !== "draft" : false,
     rollNo: rollNo,
     examCenter: "Springdale Senior Secondary School, Main Campus",
     reportingTime: "08:30 AM",
@@ -662,10 +671,13 @@ export const getClassAnalytics = async (classId, subjectId, examId) => {
  */
 export const validateSessionForRelease = async (sessionId) => {
   const provider = getDataProvider();
-  
+
   const exam = await provider.getExamById(sessionId);
   if (!exam) {
-    return { errors: [{ type: "NOT_FOUND", message: "Exam session not found." }], warnings: [] };
+    return {
+      errors: [{ type: "NOT_FOUND", message: "Exam session not found." }],
+      warnings: [],
+    };
   }
 
   const errors = [];
@@ -685,13 +697,19 @@ export const validateSessionForRelease = async (sessionId) => {
   if (targetClassIds.length === 0) {
     errors.push({
       type: "NO_TARGET_CLASSES",
-      message: "No target classes have been selected for this exam session."
+      message: "No target classes have been selected for this exam session.",
     });
     return { errors, warnings };
   }
 
   // Define difficult academic subjects list
-  const difficultSubjects = ["sub-sci", "sub-math", "sub-phy", "sub-chem", "sub-bio"];
+  const difficultSubjects = [
+    "sub-sci",
+    "sub-math",
+    "sub-phy",
+    "sub-chem",
+    "sub-bio",
+  ];
 
   // Helper to parse time string "HH:MM" to integer minutes from midnight
   const parseTimeToMinutes = (timeStr) => {
@@ -723,17 +741,18 @@ export const validateSessionForRelease = async (sessionId) => {
     const classObj = allClasses.find((c) => c.id === targetClassId);
     if (!classObj) continue;
 
-    // Convert level for XI/XII to 11/12
-    let classLevel = classObj.level;
-    if (classLevel === "XI") classLevel = "11";
-    if (classLevel === "XII") classLevel = "12";
+    // Normalize level to canonical format (XI → 11, XII → 12)
+    let classLevel = normalizeClassLevel(classObj.level);
 
     // Resolve canonical subjects
-    const canonicalSubs = getStudentSubjects(classLevel, classObj.streamId || null);
+    const canonicalSubs = getStudentSubjects(
+      classLevel,
+      classObj.streamId || null,
+    );
 
     // Get papers for this class in this exam session
     const classPapers = allPapers.filter(
-      (p) => p.examSessionId === sessionId && p.classId === targetClassId
+      (p) => p.examSessionId === sessionId && p.classId === targetClassId,
     );
 
     // A. Check for missing mandatory subjects
@@ -769,7 +788,7 @@ export const validateSessionForRelease = async (sessionId) => {
 
     // C. Check for back-to-back difficult subjects in the same class (Warning)
     const difficultPapers = classPapers.filter((p) =>
-      difficultSubjects.includes(p.subjectId)
+      difficultSubjects.includes(p.subjectId),
     );
 
     for (let i = 0; i < difficultPapers.length; i++) {
@@ -782,8 +801,10 @@ export const validateSessionForRelease = async (sessionId) => {
         const diffDays = Math.abs(t1 - t2) / (1000 * 60 * 60 * 24);
 
         if (diffDays <= 1) {
-          const sub1Name = subjects.find((s) => s.id === p1.subjectId)?.name || p1.subjectId;
-          const sub2Name = subjects.find((s) => s.id === p2.subjectId)?.name || p2.subjectId;
+          const sub1Name =
+            subjects.find((s) => s.id === p1.subjectId)?.name || p1.subjectId;
+          const sub2Name =
+            subjects.find((s) => s.id === p2.subjectId)?.name || p2.subjectId;
           warnings.push({
             type: "BACK_TO_BACK_DIFFICULT",
             message: `Academic Spacing: Class ${classObj.displayName || classObj.name} has back-to-back difficult exams: "${sub1Name}" (${p1.date}) and "${sub2Name}" (${p2.date}).`,
@@ -802,13 +823,14 @@ export const validateSessionForRelease = async (sessionId) => {
   for (let i = 0; i < sessionPapers.length; i++) {
     const p1 = sessionPapers[i];
     const class1 = allClasses.find((c) => c.id === p1.classId);
-    const class1Name = class1 ? (class1.displayName || class1.name) : p1.classId;
+    const class1Name = class1 ? class1.displayName || class1.name : p1.classId;
 
     // A. Sunday Collisions (Warning)
     if (p1.date) {
       const dayOfWeek = new Date(p1.date).getDay();
       if (dayOfWeek === 0) {
-        const subName = subjects.find((s) => s.id === p1.subjectId)?.name || p1.subjectId;
+        const subName =
+          subjects.find((s) => s.id === p1.subjectId)?.name || p1.subjectId;
         warnings.push({
           type: "SUNDAY_COLLISION",
           message: `Sunday Exam: "${subName}" exam for class ${class1Name} is scheduled on a Sunday (${p1.date}).`,
@@ -819,7 +841,8 @@ export const validateSessionForRelease = async (sessionId) => {
 
     // B. Missing Invigilators (Warning)
     if (!p1.invigilatorTeacherIds || p1.invigilatorTeacherIds.length === 0) {
-      const subName = subjects.find((s) => s.id === p1.subjectId)?.name || p1.subjectId;
+      const subName =
+        subjects.find((s) => s.id === p1.subjectId)?.name || p1.subjectId;
       warnings.push({
         type: "MISSING_INVIGILATOR",
         message: `Missing Invigilator: No invigilator is assigned to class ${class1Name} for "${subName}" exam.`,
@@ -835,7 +858,7 @@ export const validateSessionForRelease = async (sessionId) => {
           p2.id !== p1.id &&
           p2.roomId === p1.roomId &&
           p2.date === p1.date &&
-          isTimeOverlapping(p1.startTime, p1.endTime, p2.startTime, p2.endTime)
+          isTimeOverlapping(p1.startTime, p1.endTime, p2.startTime, p2.endTime),
       );
 
       roomClashingPapers.forEach((p2) => {
@@ -843,8 +866,12 @@ export const validateSessionForRelease = async (sessionId) => {
         if (!seenRoomClashes.has(clashKey)) {
           seenRoomClashes.add(clashKey);
           const class2 = allClasses.find((c) => c.id === p2.classId);
-          const class2Name = class2 ? (class2.displayName || class2.name) : p2.classId;
-          const roomObj = rooms.find((r) => (r.roomId || r.id) === p1.roomId) || { roomNumber: p1.roomId };
+          const class2Name = class2
+            ? class2.displayName || class2.name
+            : p2.classId;
+          const roomObj = rooms.find(
+            (r) => (r.roomId || r.id) === p1.roomId,
+          ) || { roomNumber: p1.roomId };
           const roomName = roomObj.roomNumber || roomObj.name || p1.roomId;
           errors.push({
             type: "ROOM_CLASH",
@@ -901,14 +928,22 @@ export const validateSessionForRelease = async (sessionId) => {
         const p1 = assignedPapers[i];
         const p2 = assignedPapers[j];
 
-        if (p1.date && p1.date === p2.date && p1.startTime && p1.endTime && p2.startTime && p2.endTime) {
+        if (
+          p1.date &&
+          p1.date === p2.date &&
+          p1.startTime &&
+          p1.endTime &&
+          p2.startTime &&
+          p2.endTime
+        ) {
           const s1 = parseTimeToMinutes(p1.startTime);
           const e1 = parseTimeToMinutes(p1.endTime);
           const s2 = parseTimeToMinutes(p2.startTime);
           const e2 = parseTimeToMinutes(p2.endTime);
 
           const isOverlapping = s1 < e2 && s2 < e1;
-          const isConsecutive = Math.abs(s1 - e2) <= 30 || Math.abs(s2 - e1) <= 30;
+          const isConsecutive =
+            Math.abs(s1 - e2) <= 30 || Math.abs(s2 - e1) <= 30;
 
           if (isOverlapping || isConsecutive) {
             const clashKey = [p1.id, p2.id].sort().join("-");
@@ -932,9 +967,12 @@ export const validateSessionForRelease = async (sessionId) => {
 /**
  * Transition an exam session to the Evaluation phase
  */
-export const transitionToEvaluation = async (examCycleId, changedBy = "admin-001") => {
+export const transitionToEvaluation = async (
+  examCycleId,
+  changedBy = "admin-001",
+) => {
   const provider = getDataProvider();
-  
+
   const existingExam = await provider.getExamById(examCycleId);
   if (!existingExam) {
     throw new Error("Exam session not found");
@@ -942,8 +980,10 @@ export const transitionToEvaluation = async (examCycleId, changedBy = "admin-001
 
   // Preconditions validation (demo-safe checks)
   const allPapers = await provider.getExamPapers();
-  const sessionPapers = allPapers.filter((p) => p.examSessionId === examCycleId);
-  
+  const sessionPapers = allPapers.filter(
+    (p) => p.examSessionId === examCycleId,
+  );
+
   const finalUpdates = {
     status: "evaluation",
     evaluationStartedAt: new Date().toISOString(),
@@ -957,8 +997,8 @@ export const transitionToEvaluation = async (examCycleId, changedBy = "admin-001
       from: null,
       to: existingExam.status || "draft",
       changedBy: "admin-001",
-      changedAt: existingExam.createdAt || new Date().toISOString()
-    }
+      changedAt: existingExam.createdAt || new Date().toISOString(),
+    },
   ];
   finalUpdates.statusHistory = [
     ...currentHistory,
@@ -966,8 +1006,8 @@ export const transitionToEvaluation = async (examCycleId, changedBy = "admin-001
       from: existingExam.status,
       to: "evaluation",
       changedBy: changedBy,
-      changedAt: new Date().toISOString()
-    }
+      changedAt: new Date().toISOString(),
+    },
   ];
 
   const exam = await provider.updateExam(examCycleId, finalUpdates);
@@ -989,7 +1029,9 @@ export const transitionToEvaluation = async (examCycleId, changedBy = "admin-001
 export const getEvaluationProgress = async (examCycleId) => {
   const provider = getDataProvider();
   const allPapers = await provider.getExamPapers();
-  const sessionPapers = allPapers.filter((p) => p.examSessionId === examCycleId);
+  const sessionPapers = allPapers.filter(
+    (p) => p.examSessionId === examCycleId,
+  );
 
   const totalPapers = sessionPapers.length;
   if (totalPapers === 0) {
@@ -1004,22 +1046,34 @@ export const getEvaluationProgress = async (examCycleId) => {
     };
   }
 
-  const storedRecordsStr = localStorage.getItem(`exam_op_state_${examCycleId}_evaluation_records`) || "[]";
+  const storedRecordsStr =
+    localStorage.getItem(`exam_op_state_${examCycleId}_evaluation_records`) ||
+    "[]";
   const records = JSON.parse(storedRecordsStr);
 
-  const evaluatedCount = sessionPapers.filter(p => {
-    const paperRecords = records.filter(r => r.paperId === p.id);
-    return paperRecords.length > 0 && paperRecords.every(r => r.status !== "draft");
+  const evaluatedCount = sessionPapers.filter((p) => {
+    const paperRecords = records.filter((r) => r.paperId === p.id);
+    return (
+      paperRecords.length > 0 && paperRecords.every((r) => r.status !== "draft")
+    );
   }).length;
 
-  const moderatedCount = sessionPapers.filter(p => {
-    const paperRecords = records.filter(r => r.paperId === p.id);
-    return paperRecords.length > 0 && paperRecords.every(r => r.status === "moderated" || r.status === "locked");
+  const moderatedCount = sessionPapers.filter((p) => {
+    const paperRecords = records.filter((r) => r.paperId === p.id);
+    return (
+      paperRecords.length > 0 &&
+      paperRecords.every(
+        (r) => r.status === "moderated" || r.status === "locked",
+      )
+    );
   }).length;
 
-  const lockedCount = sessionPapers.filter(p => {
-    const paperRecords = records.filter(r => r.paperId === p.id);
-    return paperRecords.length > 0 && paperRecords.every(r => r.status === "locked");
+  const lockedCount = sessionPapers.filter((p) => {
+    const paperRecords = records.filter((r) => r.paperId === p.id);
+    return (
+      paperRecords.length > 0 &&
+      paperRecords.every((r) => r.status === "locked")
+    );
   }).length;
 
   const completionPercentage = Math.round((evaluatedCount / totalPapers) * 100);
@@ -1047,11 +1101,19 @@ export const canTeacherEvaluatePaper = async ({ teacherId, paperId }) => {
 
   const assignments = await provider.getTeacherSubjectAssignments();
   const subjectAssignment = assignments.find(
-    (a) => a.teacherId === teacherId && a.subjectId === paper.subjectId && a.classId === paper.classId
+    (a) =>
+      a.teacherId === teacherId &&
+      a.subjectId === paper.subjectId &&
+      a.classId === paper.classId,
   );
 
   if (subjectAssignment) return true;
-  if (teacherId === "admin-001" || teacherId === "coord-001" || teacherId === "teach-001") return true;
+  if (
+    teacherId === "admin-001" ||
+    teacherId === "coord-001" ||
+    teacherId === "teach-001"
+  )
+    return true;
 
   return false;
 };
@@ -1068,7 +1130,9 @@ export const validateSessionForPublication = async (sessionId) => {
   const errors = [];
   const warnings = [];
 
-  const storedRecordsStr = localStorage.getItem(`exam_op_state_${sessionId}_evaluation_records`) || "[]";
+  const storedRecordsStr =
+    localStorage.getItem(`exam_op_state_${sessionId}_evaluation_records`) ||
+    "[]";
   const records = JSON.parse(storedRecordsStr);
 
   for (const paper of sessionPapers) {
@@ -1097,7 +1161,9 @@ export const validateSessionForPublication = async (sessionId) => {
     }
 
     // 3. Pending moderation block
-    const pendingModCount = paperRecords.filter((r) => r.status === "evaluated").length;
+    const pendingModCount = paperRecords.filter(
+      (r) => r.status === "evaluated",
+    ).length;
     if (pendingModCount > 0) {
       errors.push({
         type: "PENDING_MODERATION",
@@ -1109,7 +1175,8 @@ export const validateSessionForPublication = async (sessionId) => {
     // Warnings checks (Pedagogical warnings)
     if (paperRecords.length > 0) {
       const absentCount = paperRecords.filter((r) => r.isAbsent).length;
-      const passTotalMarks = (paper.theoryMarks || 40) + (paper.practicalMarks || 0);
+      const passTotalMarks =
+        (paper.theoryMarks || 40) + (paper.practicalMarks || 0);
 
       // Warning: Large absent count (> 20%)
       if (absentCount / totalStudents > 0.2) {
@@ -1121,7 +1188,9 @@ export const validateSessionForPublication = async (sessionId) => {
       }
 
       // Warning: Grade distribution unusually low (e.g. failures > 40%)
-      const failures = paperRecords.filter((r) => !r.isAbsent && r.marksObtained < passTotalMarks * 0.33).length;
+      const failures = paperRecords.filter(
+        (r) => !r.isAbsent && r.marksObtained < passTotalMarks * 0.33,
+      ).length;
       if (failures / totalStudents > 0.4) {
         warnings.push({
           type: "LOW_DISTRIBUTION",
@@ -1133,9 +1202,12 @@ export const validateSessionForPublication = async (sessionId) => {
   }
 
   // 4. Malpractice escalations check
-  const malpracticesStr = localStorage.getItem(`exam_op_state_${sessionId}_malpractices`) || "[]";
+  const malpracticesStr =
+    localStorage.getItem(`exam_op_state_${sessionId}_malpractices`) || "[]";
   const malpractices = JSON.parse(malpracticesStr);
-  const unresolvedMalpractices = malpractices.filter((m) => m.status === "reported" || m.status === "escalated");
+  const unresolvedMalpractices = malpractices.filter(
+    (m) => m.status === "reported" || m.status === "escalated",
+  );
   if (unresolvedMalpractices.length > 0) {
     errors.push({
       type: "UNRESOLVED_MALPRACTICE",
@@ -1149,12 +1221,17 @@ export const validateSessionForPublication = async (sessionId) => {
 /**
  * Freeze and finalize evaluation records, syncing directly to official Results database
  */
-export const finalizeEvaluationRecords = async (sessionId, lockedBy = "admin-001") => {
+export const finalizeEvaluationRecords = async (
+  sessionId,
+  lockedBy = "admin-001",
+) => {
   const provider = getDataProvider();
   const allPapers = await provider.getExamPapers();
   const sessionPapers = allPapers.filter((p) => p.examSessionId === sessionId);
 
-  const storedRecordsStr = localStorage.getItem(`exam_op_state_${sessionId}_evaluation_records`) || "[]";
+  const storedRecordsStr =
+    localStorage.getItem(`exam_op_state_${sessionId}_evaluation_records`) ||
+    "[]";
   let records = JSON.parse(storedRecordsStr);
 
   // 1. Lock evaluation records and sync to central database Result table
@@ -1166,7 +1243,10 @@ export const finalizeEvaluationRecords = async (sessionId, lockedBy = "admin-001
       lockedBy,
     };
   });
-  localStorage.setItem(`exam_op_state_${sessionId}_evaluation_records`, JSON.stringify(records));
+  localStorage.setItem(
+    `exam_op_state_${sessionId}_evaluation_records`,
+    JSON.stringify(records),
+  );
 
   // 2. Cascade final scores to Results table
   const currentResults = await provider.getResults();
@@ -1188,7 +1268,10 @@ export const finalizeEvaluationRecords = async (sessionId, lockedBy = "admin-001
         examId: sessionId,
         marksObtained: record.marksObtained,
         maxMarks: (paper.theoryMarks || 40) + (paper.practicalMarks || 0),
-        remarks: record.overrideReason || record.moderationNotes || "Approved under moderation",
+        remarks:
+          record.overrideReason ||
+          record.moderationNotes ||
+          "Approved under moderation",
         grade: record.grade,
         teacherId: lockedBy,
         isAbsent: !!record.isAbsent,
@@ -1199,11 +1282,14 @@ export const finalizeEvaluationRecords = async (sessionId, lockedBy = "admin-001
         (r) =>
           r.studentId === officialResult.studentId &&
           r.examId === officialResult.examId &&
-          r.subjectId === officialResult.subjectId
+          r.subjectId === officialResult.subjectId,
       );
 
       if (existingIdx !== -1) {
-        await provider.updateResult(currentResults[existingIdx].id, officialResult);
+        await provider.updateResult(
+          currentResults[existingIdx].id,
+          officialResult,
+        );
       } else {
         await provider.createResult(officialResult);
       }
@@ -1211,7 +1297,9 @@ export const finalizeEvaluationRecords = async (sessionId, lockedBy = "admin-001
   }
 
   // 3. Log publication events in timeline
-  const timelineStr = localStorage.getItem(`exam_op_state_${sessionId}_evaluation_timeline`) || "[]";
+  const timelineStr =
+    localStorage.getItem(`exam_op_state_${sessionId}_evaluation_timeline`) ||
+    "[]";
   const timeline = JSON.parse(timelineStr);
   timeline.unshift({
     timestamp: new Date().toISOString(),
@@ -1223,7 +1311,10 @@ export const finalizeEvaluationRecords = async (sessionId, lockedBy = "admin-001
     message: "Results released to student and parent portals successfully",
     type: "danger",
   });
-  localStorage.setItem(`exam_op_state_${sessionId}_evaluation_timeline`, JSON.stringify(timeline));
+  localStorage.setItem(
+    `exam_op_state_${sessionId}_evaluation_timeline`,
+    JSON.stringify(timeline),
+  );
 };
 
 /**
@@ -1237,12 +1328,14 @@ export const requestResultCorrection = async ({
   approvedBy = "admin-001",
 }) => {
   if (!overrideReason || !overrideReason.trim()) {
-    throw new Error("An override reason is strictly MANDATORY for the results post-publication correction audit.");
+    throw new Error(
+      "An override reason is strictly MANDATORY for the results post-publication correction audit.",
+    );
   }
 
   const provider = getDataProvider();
   const results = await provider.getResults();
-  
+
   // Find index in Results table
   const existingIdx = results.findIndex((r) => r.id === resultId);
   if (existingIdx === -1) {
@@ -1252,7 +1345,8 @@ export const requestResultCorrection = async ({
   const existingResult = results[existingIdx];
 
   // Perform audit logging of correction history
-  const historyStr = localStorage.getItem(`results_correction_history_${resultId}`) || "[]";
+  const historyStr =
+    localStorage.getItem(`results_correction_history_${resultId}`) || "[]";
   const history = JSON.parse(historyStr);
 
   history.push({
@@ -1263,10 +1357,16 @@ export const requestResultCorrection = async ({
     approvedBy,
   });
 
-  localStorage.setItem(`results_correction_history_${resultId}`, JSON.stringify(history));
+  localStorage.setItem(
+    `results_correction_history_${resultId}`,
+    JSON.stringify(history),
+  );
 
   // Compute new grade based on percentage
-  const percent = existingResult.maxMarks > 0 ? ((newTheory + newPractical) / existingResult.maxMarks) * 100 : 0;
+  const percent =
+    existingResult.maxMarks > 0
+      ? ((newTheory + newPractical) / existingResult.maxMarks) * 100
+      : 0;
   let grade = "C";
   if (percent >= 90) grade = "A+";
   else if (percent >= 80) grade = "A";
@@ -1284,9 +1384,16 @@ export const requestResultCorrection = async ({
   await provider.updateResult(resultId, updatedResult);
 
   // Sync back to local evaluation records if they exist to keep them clean
-  const storedRecordsStr = localStorage.getItem(`exam_op_state_${existingResult.examId}_evaluation_records`) || "[]";
+  const storedRecordsStr =
+    localStorage.getItem(
+      `exam_op_state_${existingResult.examId}_evaluation_records`,
+    ) || "[]";
   let evalRecords = JSON.parse(storedRecordsStr);
-  const evalIdx = evalRecords.findIndex((r) => r.studentId === existingResult.studentId && r.classId === existingResult.classId);
+  const evalIdx = evalRecords.findIndex(
+    (r) =>
+      r.studentId === existingResult.studentId &&
+      r.classId === existingResult.classId,
+  );
   if (evalIdx !== -1) {
     evalRecords[evalIdx] = {
       ...evalRecords[evalIdx],
@@ -1296,7 +1403,10 @@ export const requestResultCorrection = async ({
       grade,
       overrideReason,
     };
-    localStorage.setItem(`exam_op_state_${existingResult.examId}_evaluation_records`, JSON.stringify(evalRecords));
+    localStorage.setItem(
+      `exam_op_state_${existingResult.examId}_evaluation_records`,
+      JSON.stringify(evalRecords),
+    );
   }
 
   return updatedResult;

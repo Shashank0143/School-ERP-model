@@ -27,25 +27,27 @@
  *   - teacherType = "ACTIVITY"
  */
 
+import { extractLevel, isFoundationClass } from "../utils/classIdentity";
+
 // ─── Level Classification ─────────────────────────────────────────────────────
 
 export const FOUNDATION_LEVELS = ["Nursery", "LKG", "UKG", "1", "2", "3", "4"];
 export const SPECIALIZED_LEVELS = ["5", "6", "7", "8", "9", "10", "11", "12"];
-export const ACTIVITY_SUBJECT_IDS = ["act-art", "act-music", "act-games", "act-library", "sub-pe"];
+export const ACTIVITY_SUBJECT_IDS = [
+  "act-art",
+  "act-music",
+  "act-games",
+  "act-library",
+  "sub-pe",
+];
+
+// Legacy: use isFoundationClass from classIdentity instead
+export const isFoundationLevel = (classLevel) => isFoundationClass(classLevel);
 
 export const TEACHER_TYPES = {
   FOUNDATION: "FOUNDATION",
   SPECIALIZED: "SPECIALIZED",
   ACTIVITY: "ACTIVITY",
-};
-
-/**
- * Determines whether a class level is a foundation level.
- * @param {string} classLevel - e.g. "Nursery", "1", "4", "5"
- * @returns {boolean}
- */
-export const isFoundationLevel = (classLevel) => {
-  return FOUNDATION_LEVELS.includes(String(classLevel));
 };
 
 /**
@@ -55,28 +57,6 @@ export const isFoundationLevel = (classLevel) => {
  */
 export const isSpecializedLevel = (classLevel) => {
   return SPECIALIZED_LEVELS.includes(String(classLevel));
-};
-
-/**
- * Extracts the class level string from a classId.
- * e.g. "class-11a" → "11", "class-nurseryb" → "Nursery", "class-lkga" → "LKG"
- * @param {string} classId
- * @returns {string}
- */
-export const extractLevelFromClassId = (classId) => {
-  if (!classId) return "";
-  const raw = classId.replace("class-", "");
-  // Strip the trailing section letter (single char a-d)
-  const withoutSection = raw.slice(0, -1);
-
-  // Normalize to title case for named levels
-  const namedLevels = {
-    nursery: "Nursery",
-    lkg: "LKG",
-    ukg: "UKG",
-  };
-  const lower = withoutSection.toLowerCase();
-  return namedLevels[lower] || withoutSection;
 };
 
 /**
@@ -92,13 +72,19 @@ export const deriveTeacherType = (teacher) => {
   // Explicit field takes precedence (already set by generator or migration)
   if (teacher.teacherType) {
     const t = String(teacher.teacherType).toUpperCase();
-    if (t === "FOUNDATION" || t === "section-homeroom") return TEACHER_TYPES.FOUNDATION;
-    if (t === "ACTIVITY" || t === "activity-specialized") return TEACHER_TYPES.ACTIVITY;
-    if (t === "SPECIALIZED" || t === "subject-specialized") return TEACHER_TYPES.SPECIALIZED;
+    if (t === "FOUNDATION" || t === "section-homeroom")
+      return TEACHER_TYPES.FOUNDATION;
+    if (t === "ACTIVITY" || t === "activity-specialized")
+      return TEACHER_TYPES.ACTIVITY;
+    if (t === "SPECIALIZED" || t === "subject-specialized")
+      return TEACHER_TYPES.SPECIALIZED;
   }
 
   // Infer from specialization subject
-  if (teacher.specializationSubjectId && ACTIVITY_SUBJECT_IDS.includes(teacher.specializationSubjectId)) {
+  if (
+    teacher.specializationSubjectId &&
+    ACTIVITY_SUBJECT_IDS.includes(teacher.specializationSubjectId)
+  ) {
     return TEACHER_TYPES.ACTIVITY;
   }
   if (teacher.subjectId && ACTIVITY_SUBJECT_IDS.includes(teacher.subjectId)) {
@@ -134,7 +120,11 @@ export const deriveTeacherType = (teacher) => {
  * @param {Array} teacherSubjectAssignments - all TSA records
  * @returns {boolean}
  */
-export const canBeClassTeacher = (teacher, classId, teacherSubjectAssignments = []) => {
+export const canBeClassTeacher = (
+  teacher,
+  classId,
+  teacherSubjectAssignments = [],
+) => {
   if (!teacher || !classId) return false;
 
   const type = deriveTeacherType(teacher);
@@ -151,7 +141,7 @@ export const canBeClassTeacher = (teacher, classId, teacherSubjectAssignments = 
 
   // Specialized: must actually teach a subject in this class
   return teacherSubjectAssignments.some(
-    (a) => a.teacherId === teacher.id && a.classId === classId
+    (a) => a.teacherId === teacher.id && a.classId === classId,
   );
 };
 
@@ -163,7 +153,10 @@ export const canBeClassTeacher = (teacher, classId, teacherSubjectAssignments = 
  * @param {Array} teacherSubjectAssignments - all TSA records for this teacher
  * @returns {{ valid: boolean, error?: string }}
  */
-export const validateSpecializationIntegrity = (teacher, teacherSubjectAssignments = []) => {
+export const validateSpecializationIntegrity = (
+  teacher,
+  teacherSubjectAssignments = [],
+) => {
   if (!teacher) return { valid: false, error: "Teacher not found." };
 
   const type = deriveTeacherType(teacher);
@@ -174,12 +167,14 @@ export const validateSpecializationIntegrity = (teacher, teacherSubjectAssignmen
   }
 
   const teacherAssignments = teacherSubjectAssignments.filter(
-    (a) => a.teacherId === teacher.id
+    (a) => a.teacherId === teacher.id,
   );
 
   if (teacherAssignments.length === 0) return { valid: true };
 
-  const uniqueSubjectIds = [...new Set(teacherAssignments.map((a) => a.subjectId))];
+  const uniqueSubjectIds = [
+    ...new Set(teacherAssignments.map((a) => a.subjectId)),
+  ];
 
   if (uniqueSubjectIds.length > 1) {
     return {
@@ -189,8 +184,13 @@ export const validateSpecializationIntegrity = (teacher, teacherSubjectAssignmen
   }
 
   // Also validate against declared specialization
-  const declaredSpecialization = teacher.specializationSubjectId || teacher.subjectId;
-  if (declaredSpecialization && uniqueSubjectIds[0] && uniqueSubjectIds[0] !== declaredSpecialization) {
+  const declaredSpecialization =
+    teacher.specializationSubjectId || teacher.subjectId;
+  if (
+    declaredSpecialization &&
+    uniqueSubjectIds[0] &&
+    uniqueSubjectIds[0] !== declaredSpecialization
+  ) {
     return {
       valid: false,
       error: `Teacher "${teacher.name}" declared specialization is "${declaredSpecialization}" but is assigned subject "${uniqueSubjectIds[0]}".`,
@@ -208,7 +208,11 @@ export const validateSpecializationIntegrity = (teacher, teacherSubjectAssignmen
  * @param {Array} teacherSubjectAssignments
  * @returns {{ valid: boolean, error?: string }}
  */
-export const validateClassTeacherAssignment = (teacher, classId, teacherSubjectAssignments = []) => {
+export const validateClassTeacherAssignment = (
+  teacher,
+  classId,
+  teacherSubjectAssignments = [],
+) => {
   if (!teacher) return { valid: false, error: "Teacher not found." };
   if (!classId) return { valid: false, error: "Class ID is required." };
 
@@ -234,7 +238,7 @@ export const validateClassTeacherAssignment = (teacher, classId, teacherSubjectA
 
   // Specialized: must teach at least one subject in this class
   const teachesInClass = teacherSubjectAssignments.some(
-    (a) => a.teacherId === teacher.id && a.classId === classId
+    (a) => a.teacherId === teacher.id && a.classId === classId,
   );
 
   if (!teachesInClass) {
@@ -253,8 +257,10 @@ export const validateClassTeacherAssignment = (teacher, classId, teacherSubjectA
  * @returns {"FOUNDATION" | "SPECIALIZED"}
  */
 export const getExpectedTeacherModelForClass = (classId) => {
-  const level = extractLevelFromClassId(classId);
-  return isFoundationLevel(level) ? TEACHER_TYPES.FOUNDATION : TEACHER_TYPES.SPECIALIZED;
+  const level = extractLevel(classId);
+  return isFoundationClass(level)
+    ? TEACHER_TYPES.FOUNDATION
+    : TEACHER_TYPES.SPECIALIZED;
 };
 
 /**
@@ -266,20 +272,36 @@ export const getExpectedTeacherModelForClass = (classId) => {
  * @param {Array} teacherSubjectAssignments
  * @returns {Array<{ classId: string, valid: boolean, error?: string }>}
  */
-export const auditAllClassTeacherAssignments = (classes, teachers, teacherSubjectAssignments) => {
+export const auditAllClassTeacherAssignments = (
+  classes,
+  teachers,
+  teacherSubjectAssignments,
+) => {
   const teacherMap = new Map(teachers.map((t) => [t.id, t]));
 
   return classes.map((cls) => {
     if (!cls.classTeacherId) {
-      return { classId: cls.id, valid: false, error: `Class "${cls.id}" has no classTeacherId assigned.` };
+      return {
+        classId: cls.id,
+        valid: false,
+        error: `Class "${cls.id}" has no classTeacherId assigned.`,
+      };
     }
 
     const teacher = teacherMap.get(cls.classTeacherId);
     if (!teacher) {
-      return { classId: cls.id, valid: false, error: `classTeacherId "${cls.classTeacherId}" in class "${cls.id}" does not resolve to a known teacher.` };
+      return {
+        classId: cls.id,
+        valid: false,
+        error: `classTeacherId "${cls.classTeacherId}" in class "${cls.id}" does not resolve to a known teacher.`,
+      };
     }
 
-    const result = validateClassTeacherAssignment(teacher, cls.id, teacherSubjectAssignments);
+    const result = validateClassTeacherAssignment(
+      teacher,
+      cls.id,
+      teacherSubjectAssignments,
+    );
     return { classId: cls.id, valid: result.valid, error: result.error };
   });
 };

@@ -90,9 +90,11 @@ export const clearScheduleCache = (teacherId) => {
 
 // ── Weekly Schedule ──────────────────────────────────────────────────────────
 
+import { teacherTimetableService } from "./timetable";
+import { studentTimetableService } from "./timetable";
+
 export const getTeacherWeeklySchedule = async (teacherId) => {
   const tId = teacherId || "teach-001";
-  const provider = getDataProvider();
 
   if (weeklyScheduleCache.has(tId)) {
     return weeklyScheduleCache.get(tId);
@@ -100,49 +102,18 @@ export const getTeacherWeeklySchedule = async (teacherId) => {
 
   console.time(`[PERF AUDIT] getTeacherWeeklySchedule for ${tId}`);
 
-  const teachers = await provider.getTeachers();
-  const teacher = teachers.find((t) => t.id === tId);
-  if (!teacher) return [];
-
-  const assignments = await provider.getTeacherSubjectAssignments();
-  const teacherAssignments = assignments.filter((a) => a.teacherId === tId);
-
-  const subjects = await provider.getSubjects();
-  const classes = await provider.getClasses();
-
-  const subjectsMap = new Map(subjects.map((s) => [s.id, s]));
-  const classesMap = new Map(classes.map((c) => [c.id, c]));
-
-  const weeklySchedule = [];
-
-  for (const assignment of teacherAssignments) {
-    const sub = subjectsMap.get(assignment.subjectId);
-    const cls = classesMap.get(assignment.classId);
-    if (!sub || !cls) continue;
-
-    const { day, period } = assignment;
-    if (!day || !period || !PERIOD_CONFIG[period]) continue;
-
-    const periodInfo = PERIOD_CONFIG[period];
-    const room = assignment.room || sub.room || cls.room || "Room 101";
-
-    weeklySchedule.push({
-      day,
-      period,
-      time: periodInfo.time,
-      startTime: periodInfo.startTime,
-      endTime: periodInfo.endTime,
-      subject: sub.name,
-      subjectId: sub.id,
-      classId: cls.id,
-      class: cls.name,
-      room,
-      status: "Upcoming",
-    });
-  }
+  // Fetch from the canonical projection service
+  const weeklySchedule = await teacherTimetableService.getTeacherSchedule(tId);
+  
+  // Format to match old component expectations if necessary
+  const formatted = weeklySchedule.map(slot => ({
+    ...slot,
+    time: `${slot.startTime} - ${slot.endTime}`,
+    status: "Upcoming" // components derive real status on render usually
+  }));
 
   // Sort by day order then period order
-  const sorted = weeklySchedule.sort((a, b) => {
+  const sorted = formatted.sort((a, b) => {
     const dayDiff = DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day);
     if (dayDiff !== 0) return dayDiff;
     return PERIOD_ORDER.indexOf(a.period) - PERIOD_ORDER.indexOf(b.period);

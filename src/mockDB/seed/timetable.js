@@ -1,43 +1,109 @@
 /**
- * Timetable Seed Data
+ * Timetable Seed Data Engine
  *
- * Imports, normalizes, and re-exports the conflict-free CBSE secondary timetable
- * assignments to establish clear schema separation and high-fidelity structures.
+ * Generates the canonical timetables collection.
+ * Auto-injects the Class Teacher's primary subject into P1 for Mon-Fri.
  */
 
-import { teacherSubjectAssignments } from "../teacherSubjectAssignments";
+import { CLASS_TEACHER_PRIORITY } from "./teacherSubjectAssignments";
 
 const periodTimes = {
-  P1: { startTime: "08:00 AM", endTime: "08:50 AM" },
-  P2: { startTime: "08:50 AM", endTime: "09:40 AM" },
-  P3: { startTime: "09:40 AM", endTime: "10:30 AM" },
-  P4: { startTime: "10:30 AM", endTime: "11:20 AM" },
+  P1: { startTime: "08:00", endTime: "08:50" },
+  P2: { startTime: "08:50", endTime: "09:40" },
+  P3: { startTime: "09:40", endTime: "10:30" },
+  P4: { startTime: "10:30", endTime: "11:20" },
   // Lunch Break: 11:20 AM - 11:50 AM
-  P5: { startTime: "11:50 AM", endTime: "12:40 PM" },
-  P6: { startTime: "12:40 PM", endTime: "01:30 PM" },
-  P7: { startTime: "01:30 PM", endTime: "02:20 PM" },
-  P8: { startTime: "02:20 PM", endTime: "03:10 PM" },
+  P5: { startTime: "11:50", endTime: "12:40" },
+  P6: { startTime: "12:40", endTime: "13:30" },
+  P7: { startTime: "13:30", endTime: "14:20" },
+  P8: { startTime: "14:20", endTime: "15:10" },
 };
 
-export const teacherSubjectAssignmentsSeed = teacherSubjectAssignments.map((assignment) => {
-  const times = periodTimes[assignment.period] || { startTime: "08:00 AM", endTime: "08:50 AM" };
-  const periodId = `${assignment.classId}-${assignment.day}-${assignment.period}`;
-  const roomVal = assignment.room || "Room 101";
+/**
+ * Identify the primary subject for a class teacher.
+ */
+const getPrimarySubjectForTeacher = (teacherId, classId, teacherSubjectAssignments) => {
+  const teacherAssignments = teacherSubjectAssignments.filter(
+    (a) => a.teacherId === teacherId && a.classId === classId
+  );
+  
+  if (teacherAssignments.length === 0) return null;
+  if (teacherAssignments.length === 1) return teacherAssignments[0];
 
-  return {
-    periodId,
-    id: periodId, // legacy alias
-    classId: assignment.classId,
-    subjectId: assignment.subjectId,
-    teacherId: assignment.teacherId,
-    roomNumber: roomVal,
-    room: roomVal, // legacy alias
-    startTime: times.startTime,
-    endTime: times.endTime,
-    day: assignment.day,
-    period: assignment.period,
-    schedule: `${assignment.day} Period ${assignment.period}`, // legacy alias
-  };
-});
+  let bestMatch = teacherAssignments[0];
+  let bestScore = Infinity;
 
-export default teacherSubjectAssignmentsSeed;
+  for (const assignment of teacherAssignments) {
+    const score = CLASS_TEACHER_PRIORITY.indexOf(assignment.subjectId);
+    if (score !== -1 && score < bestScore) {
+      bestScore = score;
+      bestMatch = assignment;
+    }
+  }
+
+  return bestMatch;
+};
+
+/**
+ * Builds canonical timetables for all classes dynamically.
+ * Injects P1 automatically with the class teacher.
+ */
+export const buildCanonicalTimetables = (classes, teacherSubjectAssignments, teachers = []) => {
+  const timetables = [];
+  const now = new Date().toISOString();
+  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+
+  classes.forEach((cls) => {
+    const classId = cls.id || cls.classId;
+    const timetable = {
+      id: `tt-${classId}`,
+      schemaVersion: 1,
+      classId: classId,
+      academicYear: "2026-2027",
+      status: "draft",
+      weeklySchedule: {
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: []
+      },
+      publishedAt: null,
+      publishedBy: null,
+      updatedAt: now,
+      updatedBy: "system"
+    };
+
+    // Auto-inject P1 for the class teacher across all weekdays
+    const classTeacherId = cls.classTeacherId;
+    let primarySubjectId = null;
+    if (classTeacherId) {
+      const ctObj = teachers.find((t) => t.id === classTeacherId);
+      if (ctObj && ctObj.primarySubjectId) {
+        primarySubjectId = ctObj.primarySubjectId;
+      } else {
+        const p1Assignment = getPrimarySubjectForTeacher(classTeacherId, classId, teacherSubjectAssignments);
+        if (p1Assignment) {
+          primarySubjectId = p1Assignment.subjectId;
+        }
+      }
+    }
+
+    if (classTeacherId) {
+      weekdays.forEach((dayKey) => {
+        timetable.weeklySchedule[dayKey].push({
+          periodNumber: "P1",
+          subjectId: primarySubjectId || "sub-homeroom",
+          teacherId: classTeacherId,
+          startTime: periodTimes.P1.startTime,
+          endTime: periodTimes.P1.endTime,
+          isLocked: true // P1 is structurally locked for CT
+        });
+      });
+    }
+
+    timetables.push(timetable);
+  });
+
+  return timetables;
+};

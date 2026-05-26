@@ -4,7 +4,7 @@ import {
   getDocuments,
 } from "./studentService";
 import { getFeeDetails } from "./financeService";
-import { getTimetable } from "./academicsService";
+import { studentTimetableProjectionService } from "./timetable/studentTimetableProjectionService";
 import { getBrandingInfo, getNoticesAndEvents } from "./sharedService";
 import { getAcademicProgress, getAcademicTimeline } from "./assignmentService";
 import { getExamData } from "./examService";
@@ -42,7 +42,7 @@ export const getCriticalStudentDashboardPayload = async (
     getStudentProfile(sId),
     getAttendance(sId),
     getFeeDetails(sId),
-    getTimetable(sId),
+    studentTimetableProjectionService.buildStudentTimetableProjection(sId),
   ]);
 
   // Only full-day attendance is used - check overall percentage

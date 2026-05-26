@@ -19,6 +19,21 @@ Welcome to the **EduDash ERP** engineering guide. This is the single source of t
 
 ---
 
+## 📚 Comprehensive Documentation Library
+
+We have prepared deep-dive technical documents for developers and backend engineers. Before contributing or modifying the architecture, please review the relevant documentation:
+
+- [**TECHNICAL_REFERENCE.md**](./TECHNICAL_REFERENCE.md): The absolute master source of truth for the entire architecture, entity field schemas, MockDB engine capabilities, event workflows, and detailed service layers.
+- [**docs/BACKEND_MIGRATION/**](./docs/BACKEND_MIGRATION): A suite of documents explicitly detailing how to swap the frontend MockDB for a real backend (Node/Python/Java).
+  - `API_PROVIDER_MAPPING.md`: Maps frontend service methods to required REST endpoints.
+  - `DATABASE_TABLE_STRUCTURE.md`: Recommended PostgreSQL/MySQL schema tables.
+  - `BACKEND_MIGRATION_GUIDE.md`: Step-by-step phases for transitioning to real APIs.
+  - `ARCHITECTURAL_DECISIONS.md`: Context behind major structural and decoupling choices.
+  - `PUSH_CHANNEL_PREPARATION.md`: Email, SMS, and Push notification strategies.
+- [**docs/CLASS_IDENTITY_ENFORCEMENT_GUIDELINES.md**](./docs/CLASS_IDENTITY_ENFORCEMENT_GUIDELINES.md): Strict rules on how academic class identities are managed between the DB and the UI.
+
+---
+
 ## 📅 System Execution Status Matrix
 
 | Module                      | Sub-System                                                                                                                           | Status      | Notes                                                    |
@@ -27,7 +42,7 @@ Welcome to the **EduDash ERP** engineering guide. This is the single source of t
 | **Student Portal**          | Dashboard, timetable, profile, attendance, fees, transport, docs, achievements, mentor, clubs, leave                                 | ✅ Complete | Fully service-driven, no direct DB imports               |
 | **Parent Portal**           | Multi-child switcher, fee details, transport monitoring                                                                              | ✅ Complete | `ChildScopeSwitcher` with dynamic child context          |
 | **Teacher Portal**          | Dashboard, attendance mgmt, marks/exams, assignments, timetable, student performance, leave, mentor, clubs, announcements, reports   | ✅ Complete | All 12 pages use services; no MockDB imports             |
-| **Admin Portal**            | Students, Teachers, Parents, Classes, Subjects, Timetable, Results, Attendance, Fee Management, Transport, Notices, Clubs, Workload Analytics | ✅ Complete | 24 pages; some still use MockDB directly (known debt). (Academic & Attendance analytics removed) |
+| **Admin Portal**            | Students, Teachers, Parents, Classes, Subjects, Timetable, Attendance, Fee Management, Transport, Notices, Clubs, Workload Analytics | ✅ Complete | 23 pages; some still use MockDB directly (known debt). (Results page and Academic & Attendance analytics removed) |
 | **Seed System**             | Institutional data generation for all entities                                                                                       | ✅ Complete | Fully dynamic generators for students, parents, teachers |
 | **Academic Structure**      | Periods, rooms, academic calendar                                                                                                    | ✅ Complete | `academicStructure.js` + persisted to localStorage       |
 | **Schema Migrations**       | Version-stamped field evolution                                                                                                      | ✅ Complete | `migrationManager.js` runs on every boot                 |
@@ -59,7 +74,8 @@ src/
  ├── components/         # Shared UI system (MainCard, SkeletonCard, ErrorBoundary, etc.)
  ├── context/            # AuthContext, StudentContext, LanguageContext
  ├── data/               # Data provider abstraction layer (getDataProvider)
- ├── docs/               # Internal architecture references (e.g., user_roles_capabilities_matrix.md map)
+ ├── docs/               # In-depth architectural guides and backend migration plans
+ │   └── BACKEND_MIGRATION/  # Guides on transitioning to real API endpoints
  ├── hooks/              # useService (WeakMap caching hook)
  ├── initialization/     # Boot pipeline: storage setup, seeding, migrations, validation
  ├── layouts/            # Role-scoped layout shells (StudentLayout, TeacherLayout, etc.)
@@ -292,13 +308,13 @@ Pages: Dashboard · Attendance Management · Assignments Management · Marks & E
 
 All 12 pages use services exclusively — no MockDB imports, no direct localStorage access.
 
-### ⚙️ Admin Portal (24 pages)
+### ⚙️ Admin Portal (23 pages)
 
 **Role**: System governance — master data, configuration, analytics.
 
-Pages: Dashboard · Students · Teachers · Parents · Admins · Classes · Subjects · Subject Allocation · Timetable · Examinations · Results · Attendance Overview · Leave Approvals · Fee Management · Transport Management · Documents · Notices · Announcements · Clubs · Committees · Achievements · School Calendar · Workload Analytics · Admin Profile
+Pages: Dashboard · Students · Teachers · Parents · Admins · Classes · Subjects · Subject Allocation · Timetable · Examinations · Attendance Overview · Leave Approvals · Fee Management · Transport Management · Documents · Notices · Announcements · Clubs · Committees · Achievements · School Calendar · Workload Analytics · Admin Profile
 
-*Note: The "Academic Performance" and "Attendance Insights" analytics dashboards have been removed from the Admin Portal navigation. Refer to the comprehensive [user_roles_capabilities_matrix.md](file:///d:/Projects/school-erp-dashboard/src/docs/user_roles_capabilities_matrix.md) map for functional role capabilities and access permissions across all modules.*
+*Note: The "Results" management page, as well as the "Academic Performance" and "Attendance Insights" analytics dashboards, have been removed from the Admin Portal navigation. Refer to the comprehensive [user_roles_capabilities_matrix.md](file:///d:/Projects/school-erp-dashboard/src/docs/user_roles_capabilities_matrix.md) map for functional role capabilities and access permissions across all modules.*
 
 > **Note**: 23+ admin pages still import MockDB directly rather than using services — this is known architectural debt and is on the refactoring roadmap.
 

@@ -131,8 +131,10 @@ export const DataProviderInterface = {
   getAuthUserByUsername: async (_username, _role) => null,
 
   // === TIMETABLE DATA ===
-  getTimetable: async () => ({}),
-  setTimetable: async (_data) => null,
+  getTimetables: async () => [],
+  getTimetableByClass: async (_classId) => null,
+  setTimetables: async (_dataArray) => null,
+  updateTimetable: async (_classId, _updates) => null,
   getTimetableSlot: async (_classId, _day, _period) => null,
   setTimetableSlot: async (_classId, _day, _period, _slotData) => null,
   clearTimetableSlot: async (_classId, _day, _period) => null,

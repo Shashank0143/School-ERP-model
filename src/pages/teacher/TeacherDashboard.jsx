@@ -8,7 +8,9 @@ import QuickActionsPanel from "../../components/teacherHome/QuickActionsPanel";
 import NoticeBoard from "../../components/NoticeBoard";
 import { teacherDashboardService } from "../../services/teacherDashboardService";
 import { useAuth } from "../../context/AuthContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { onEvent, WORKFLOW_EVENTS } from "../../services/workflowEvents";
+import { CheckCircle2 } from "lucide-react";
 
 // Progressive Loading Skeletons
 import DashboardCardSkeleton from "../../components/common/skeletons/DashboardCardSkeleton";
@@ -52,6 +54,8 @@ const TeacherDashboard = () => {
   // Error indicators
   const [errorCritical, setErrorCritical] = useState("");
   const [errorDeferred, setErrorDeferred] = useState("");
+
+  const [toastMessage, setToastMessage] = useState(null);
 
   const fetchCriticalData = useCallback(
     async (force = false) => {
@@ -117,6 +121,17 @@ const TeacherDashboard = () => {
     return () => clearTimeout(timer);
   }, [fetchCriticalData, fetchDeferredData]);
 
+  useEffect(() => {
+    const unsubscribe = onEvent(WORKFLOW_EVENTS.TIMETABLE_PUBLISHED, () => {
+      fetchCriticalData(true);
+      fetchDeferredData(true);
+      setToastMessage("Timetable updated successfully");
+      setTimeout(() => setToastMessage(null), 3000);
+    });
+
+    return () => unsubscribe();
+  }, [fetchCriticalData, fetchDeferredData]);
+
   // Memoize homeroom/class teacher check to avoid recalcs
   const isClassTeacher = useMemo(() => {
     return !!identity?.isClassTeacher;
@@ -128,7 +143,21 @@ const TeacherDashboard = () => {
   }, [actionItems]);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 relative">
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-emerald-500 text-white px-4 py-3 rounded-2xl shadow-xl shadow-emerald-500/20"
+          >
+            <CheckCircle2 size={16} />
+            <span className="text-xs font-black">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

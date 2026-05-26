@@ -11,17 +11,24 @@ import {
 } from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import TimetableGrid from "../../components/admin/academic/TimetableGrid";
+import TimetableOverrideManager from "../../components/admin/academic/TimetableOverrideManager";
 import MainCard from "../../components/MainCard";
 import { getItem } from "../../persistence/storage";
 import { STORAGE_KEYS } from "../../persistence/storageKeys";
 import {
-  resetTimetable,
-  getClassTimetable,
-  getTeacherTimetable,
+  adminTimetableService,
+  teacherTimetableService,
+} from "../../services/timetable";
+
+const {
+  initializeTimetables,
+  resetTimetables,
+  getClassTimetableFlat,
   saveTimetableSlot,
   clearTimetableSlot,
+  publishTimetables,
   SUBJECT_DEFAULT_ROOMS,
-} from "../../services/timetableService";
+} = adminTimetableService;
 
 // ── Period labels for the edit modal ────────────────────────────────────────
 
@@ -57,12 +64,16 @@ function EditSlotModal({
   const resolvedOption =
     classOptions.find((o) => o.subjectId === subjectId) || null;
 
+  const isSharedSubject = subjectId && !!SUBJECT_DEFAULT_ROOMS[subjectId];
+
   // Auto-fill room when subject changes
   const handleSubjectChange = (id) => {
     setSubjectId(id);
     setConflict(null);
-    if (!room || SUBJECT_DEFAULT_ROOMS[cell.existingSlot?.subjectId] === room) {
-      setRoom(SUBJECT_DEFAULT_ROOMS[id] || "");
+    if (SUBJECT_DEFAULT_ROOMS[id]) {
+      setRoom(SUBJECT_DEFAULT_ROOMS[id]);
+    } else {
+      setRoom("");
     }
   };
 
@@ -70,54 +81,72 @@ function EditSlotModal({
     if (!resolvedOption) return;
     setSaving(true);
 
-    const result = await saveTimetableSlot(
-      classId,
-      cell.day,
-      cell.period,
-      {
-        subjectId: resolvedOption.subjectId,
-        teacherId: resolvedOption.teacherId,
-        subject: resolvedOption.subjectName,
-        teacher: resolvedOption.teacherName,
-        room: room || "Room 101",
-      },
-      classNamesMap,
-    );
-
-    setSaving(false);
-
-    if (result.conflict) {
-      setConflict(
-        `${resolvedOption.teacherName} is already assigned to ${result.conflict.className} at this period.`,
+    try {
+      const result = await saveTimetableSlot(
+        classId,
+        cell.day,
+        cell.period,
+        {
+          subjectId: resolvedOption.subjectId,
+          teacherId: resolvedOption.teacherId,
+          subject: resolvedOption.subjectName,
+          teacher: resolvedOption.teacherName,
+          room: isSharedSubject ? room : null, // Send null for normal subjects so it inherits
+        },
+        classNamesMap,
       );
-    } else {
-      onSaved();
+
+      if (result.warning) {
+        setConflict(
+          `${resolvedOption.teacherName} is already assigned to ${result.warning.className} at this period.`,
+        );
+      } else {
+        onSaved("Slot saved successfully", "success");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      onSaved(error.message || "Failed to save slot", "error");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleForceSave = async () => {
     if (!resolvedOption) return;
+    setSaving(true);
 
-    await saveTimetableSlot(
-      classId,
-      cell.day,
-      cell.period,
-      {
-        subjectId: resolvedOption.subjectId,
-        teacherId: resolvedOption.teacherId,
-        subject: resolvedOption.subjectName,
-        teacher: resolvedOption.teacherName,
-        room: room || "Room 101",
-      },
-      classNamesMap,
-      true,
-    );
-    onSaved();
+    try {
+      await saveTimetableSlot(
+        classId,
+        cell.day,
+        cell.period,
+        {
+          subjectId: resolvedOption.subjectId,
+          teacherId: resolvedOption.teacherId,
+          subject: resolvedOption.subjectName,
+          teacher: resolvedOption.teacherName,
+          room: room || "Room 101",
+        },
+        classNamesMap,
+        true,
+      );
+      onSaved("Slot saved successfully (forced)", "success");
+    } catch (error) {
+      console.error("Force save error:", error);
+      onSaved(error.message || "Failed to save slot", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleClear = async () => {
-    await clearTimetableSlot(classId, cell.day, cell.period);
-    onSaved();
+    try {
+      await clearTimetableSlot(classId, cell.day, cell.period);
+      onSaved("Slot cleared successfully", "success");
+    } catch (error) {
+      console.error("Clear error:", error);
+      onSaved(error.message || "Failed to clear slot", "error");
+    }
   };
 
   const isValid = !!resolvedOption;
@@ -205,19 +234,33 @@ function EditSlotModal({
             </div>
           </div>
 
-          {/* Room */}
-          <div>
-            <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5">
-              Room / Venue
-            </label>
-            <input
-              type="text"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-              placeholder="e.g. Physics Lab 1"
-              className="w-full px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none focus:border-[#0077b6] bg-white transition-colors placeholder:font-normal placeholder:text-gray-300"
-            />
-          </div>
+          {/* Room - Only for Shared Subjects */}
+          <AnimatePresence>
+            {isSharedSubject && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-4">
+                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5">
+                    Room / Venue
+                    <span className="ml-2 text-[9px] font-bold text-emerald-500 normal-case tracking-normal">
+                      shared facility override
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={room}
+                    onChange={(e) => setRoom(e.target.value)}
+                    placeholder="e.g. Physics Lab 1"
+                    className="w-full px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none focus:border-[#0077b6] bg-white transition-colors placeholder:font-normal placeholder:text-gray-300"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Conflict Warning */}
           <AnimatePresence>
@@ -234,7 +277,7 @@ function EditSlotModal({
                 />
                 <div>
                   <p className="text-[10px] font-black text-amber-700">
-                    Teacher Conflict Detected
+                    Draft Warning: Teacher Conflict Detected
                   </p>
                   <p className="text-[10px] font-semibold text-amber-600 mt-0.5 leading-relaxed">
                     {conflict}
@@ -243,7 +286,7 @@ function EditSlotModal({
                     onClick={handleForceSave}
                     className="mt-2 text-[10px] font-black text-amber-700 underline underline-offset-2 hover:text-amber-900 transition-colors"
                   >
-                    Override &amp; Save Anyway →
+                    Save as Draft Anyway →
                   </button>
                 </div>
               </motion.div>
@@ -286,6 +329,38 @@ function EditSlotModal({
   );
 }
 
+// ── Components ─────────────────────────────────────────────────────────────
+
+const Toast = ({ message, type = "success", onClose }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 50, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 20, scale: 0.9 }}
+    className={`fixed bottom-6 right-6 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border ${
+      type === "success"
+        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+        : "bg-red-50 border-red-200 text-red-800"
+    } z-[100]`}
+  >
+    <div
+      className={`p-2 rounded-xl ${type === "success" ? "bg-emerald-200/50 text-emerald-700" : "bg-red-200/50 text-red-700"}`}
+    >
+      {type === "success" ? (
+        <ShieldCheck size={18} />
+      ) : (
+        <AlertTriangle size={18} />
+      )}
+    </div>
+    <p className="text-xs font-black">{message}</p>
+    <button
+      onClick={onClose}
+      className="ml-2 p-1.5 rounded-lg hover:bg-black/5 opacity-60 hover:opacity-100 transition-all"
+    >
+      <X size={14} />
+    </button>
+  </motion.div>
+);
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 const TimetablePage = () => {
@@ -298,16 +373,31 @@ const TimetablePage = () => {
   const [selectedClassId, setSelectedClassId] = useState("class-11a");
   const [selectedTeacherId, setSelectedTeacherId] = useState("teach-001");
   const [currentSchedule, setCurrentSchedule] = useState([]);
+  const [activeTab, setActiveTab] = useState("timetable");
 
   const [editMode, setEditMode] = useState(false);
   const [editingCell, setEditingCell] = useState(null); // { day, period, existingSlot }
+  const [publishErrors, setPublishErrors] = useState([]);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const [initialized, setInitialized] = useState(false);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
+
+  const triggerToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 3000);
+  };
 
   // ── Initial data load (one-time) ──────────────────────────────────────────
 
   useEffect(() => {
-    const bootstrap = () => {
+    const bootstrap = async () => {
       const allClasses = getItem(STORAGE_KEYS.CLASSES, []);
       const allTeachers = getItem(STORAGE_KEYS.TEACHERS, []);
       const allSubjects = getItem(STORAGE_KEYS.SUBJECTS, []);
@@ -321,6 +411,10 @@ const TimetablePage = () => {
       setTeachers(allTeachers || []);
       setSubjects(allSubjects || []);
       setDbTsAssignments(allTsAssignments || []);
+
+      // Auto-initialize the timetable layout map if it is empty in storage
+      await initializeTimetables();
+
       setInitialized(true);
     };
     bootstrap();
@@ -330,14 +424,66 @@ const TimetablePage = () => {
 
   const refreshSchedule = useCallback(async () => {
     if (!initialized) return;
+
+    // Helper to resolve names
+    const resolveNames = (s) => {
+      const sub = subjects.find((x) => x.id === s.subjectId);
+      const teach = teachers.find((x) => x.id === s.teacherId);
+
+      let resolvedSubject = s.subject || (sub ? sub.name : "");
+      if (s.subjectId === "sub-homeroom") {
+        resolvedSubject = "Homeroom / Class Teacher Period";
+      }
+
+      return {
+        ...s,
+        subject: resolvedSubject,
+        teacher: s.teacher || (teach ? teach.metadata?.name || teach.name : ""),
+      };
+    };
+
     if (viewerType === "teacher") {
-      const schedule = await getTeacherTimetable(selectedTeacherId);
-      setCurrentSchedule(schedule);
+      const schedule =
+        await teacherTimetableService.getTeacherSchedule(selectedTeacherId);
+      const flat = [];
+      Object.entries(schedule).forEach(([day, daySchedule]) => {
+        const capitalizedDay = day.charAt(0).toUpperCase() + day.slice(1);
+        daySchedule.forEach((s) => {
+          flat.push(
+            resolveNames({
+              ...s,
+              day: capitalizedDay,
+              period: s.periodNumber,
+              teacherId: selectedTeacherId,
+              room: s.room || s.roomId,
+            }),
+          );
+        });
+      });
+      setCurrentSchedule(flat);
     } else {
-      const schedule = await getClassTimetable(selectedClassId);
-      setCurrentSchedule(schedule);
+      const targetClass = classes.find((c) => c.id === selectedClassId);
+      const defaultRoom =
+        targetClass?.roomNumber || targetClass?.fixedRoomId || "";
+
+      const schedule = await getClassTimetableFlat(selectedClassId);
+      const flat = schedule.map((s) =>
+        resolveNames({
+          ...s,
+          classId: selectedClassId,
+          room: s.room || s.roomId || defaultRoom,
+        }),
+      );
+      setCurrentSchedule(flat);
     }
-  }, [initialized, viewerType, selectedClassId, selectedTeacherId]);
+  }, [
+    initialized,
+    viewerType,
+    selectedClassId,
+    selectedTeacherId,
+    subjects,
+    teachers,
+  ]);
 
   useEffect(() => {
     refreshSchedule();
@@ -347,6 +493,12 @@ const TimetablePage = () => {
 
   const handleCellClick = (day, period, existingSlot) => {
     if (!editMode || viewerType !== "class") return;
+    if (period === "P1") {
+      alert(
+        "Period 1 is locked for Class Teacher homeroom and cannot be manually edited.",
+      );
+      return;
+    }
     setEditingCell({ day, period, existingSlot });
   };
 
@@ -362,7 +514,7 @@ const TimetablePage = () => {
       return;
     }
     setShowResetConfirm(false);
-    await resetTimetable([], [], []);
+    await resetTimetables();
     refreshSchedule();
   };
 
@@ -392,6 +544,26 @@ const TimetablePage = () => {
 
   const classNamesMap = Object.fromEntries(classes.map((c) => [c.id, c.name]));
   const selectedClass = classes.find((c) => c.id === selectedClassId);
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    // Development mode bypasses completeness validation for testing
+    const result = await adminTimetableService.publishClassTimetable(
+      selectedClassId,
+      { enforceCompleteness: false },
+    );
+    setIsPublishing(false);
+    if (!result.success) {
+      setPublishErrors(result.errors);
+    } else {
+      setPublishErrors([]);
+      triggerToast(
+        `Timetable for ${selectedClass?.name || selectedClassId} Published Successfully!`,
+        "success",
+      );
+      refreshSchedule();
+    }
+  };
 
   return (
     <motion.div
@@ -435,6 +607,26 @@ const TimetablePage = () => {
                     RESET
                   </button>
                 )}
+
+                {/* Publish Class Timetable */}
+                <button
+                  disabled={isPublishing}
+                  onClick={handlePublish}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black transition-all shadow-lg ${
+                    isPublishing
+                      ? "bg-gray-100 text-gray-400 shadow-none cursor-not-allowed"
+                      : "bg-[#0077b6] text-white hover:bg-[#03045e] shadow-[#0077b6]/20"
+                  }`}
+                >
+                  {isPublishing ? (
+                    <RefreshCw size={14} className="animate-spin" />
+                  ) : (
+                    <ShieldCheck size={14} />
+                  )}
+                  {isPublishing
+                    ? "PUBLISHING..."
+                    : `PUBLISH ${selectedClass?.name || selectedClassId} TIMETABLE`}
+                </button>
               </>
             )}
 
@@ -486,77 +678,112 @@ const TimetablePage = () => {
       {/* View Selection + Target */}
       <MainCard className="p-4 border border-[#caf0f8]/60 bg-white">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* View Toggle */}
+          {/* Tab Toggle */}
           <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-2xl">
             <button
-              onClick={() => {
-                setViewerType("class");
-                setEditMode(false);
-              }}
+              onClick={() => setActiveTab("timetable")}
               className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${
-                viewerType === "class"
+                activeTab === "timetable"
                   ? "bg-[#03045e] text-white shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              CLASS VIEW
+              MASTER TIMETABLE
             </button>
             <button
-              onClick={() => {
-                setViewerType("teacher");
-                setEditMode(false);
-              }}
+              onClick={() => setActiveTab("overrides")}
               className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${
-                viewerType === "teacher"
+                activeTab === "overrides"
                   ? "bg-[#03045e] text-white shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              TEACHER VIEW
+              OPERATIONAL OVERRIDES
             </button>
           </div>
 
-          {/* Selector */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <span className="text-[10px] text-gray-400 font-black uppercase tracking-wider flex-shrink-0">
-              {viewerType === "class" ? "Select Class:" : "Select Teacher:"}
-            </span>
-            {viewerType === "class" ? (
-              <select
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full md:w-52 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer"
+          {/* View Toggle (only for timetable tab) */}
+          {activeTab === "timetable" && (
+            <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-2xl">
+              <button
+                onClick={() => {
+                  setViewerType("class");
+                  setEditMode(false);
+                }}
+                className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${
+                  viewerType === "class"
+                    ? "bg-[#03045e] text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
               >
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <select
-                value={selectedTeacherId}
-                onChange={(e) => setSelectedTeacherId(e.target.value)}
-                className="w-full md:w-52 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer"
+                CLASS VIEW
+              </button>
+              <button
+                onClick={() => {
+                  setViewerType("teacher");
+                  setEditMode(false);
+                }}
+                className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${
+                  viewerType === "teacher"
+                    ? "bg-[#03045e] text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
               >
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+                TEACHER VIEW
+              </button>
+            </div>
+          )}
+
+          {/* Selector (only for timetable tab) */}
+          {activeTab === "timetable" && (
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <span className="text-[10px] text-gray-400 font-black uppercase tracking-wider flex-shrink-0">
+                {viewerType === "class" ? "Select Class:" : "Select Teacher:"}
+              </span>
+              {viewerType === "class" ? (
+                <select
+                  value={selectedClassId}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                  className="w-full md:w-52 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer"
+                >
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  value={selectedTeacherId}
+                  onChange={(e) => setSelectedTeacherId(e.target.value)}
+                  className="w-full md:w-52 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer"
+                >
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
         </div>
       </MainCard>
 
-      {/* Timetable Grid */}
-      <TimetableGrid
-        schedule={currentSchedule}
-        type={viewerType}
-        editMode={editMode && viewerType === "class"}
-        onCellClick={handleCellClick}
-      />
+      {/* Tab Content */}
+      {activeTab === "timetable" ? (
+        <>
+          {/* Timetable Grid */}
+          <TimetableGrid
+            schedule={currentSchedule}
+            type={viewerType}
+            editMode={editMode && viewerType === "class"}
+            onCellClick={handleCellClick}
+          />
+        </>
+      ) : (
+        <TimetableOverrideManager classes={classes} teachers={teachers} />
+      )}
 
       {/* Edit Modal */}
       <AnimatePresence>
@@ -565,11 +792,25 @@ const TimetablePage = () => {
             key="edit-modal"
             cell={editingCell}
             classId={selectedClassId}
-            className={selectedClass?.name || selectedClassId}
             classOptions={classOptions}
             classNamesMap={classNamesMap}
             onClose={() => setEditingCell(null)}
-            onSaved={handleModalSaved}
+            onSaved={(msg, type) => {
+              setEditingCell(null);
+              if (msg) triggerToast(msg, type);
+              refreshSchedule();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast((prev) => ({ ...prev, show: false }))}
           />
         )}
       </AnimatePresence>
@@ -606,12 +847,87 @@ const TimetablePage = () => {
                 <button
                   onClick={async () => {
                     setShowResetConfirm(false);
-                    await resetTimetable([], [], []);
-                    refreshSchedule();
+                    try {
+                      await resetTimetables();
+                      triggerToast("Timetables reset successfully", "success");
+                      refreshSchedule();
+                    } catch (error) {
+                      triggerToast("Failed to reset timetables", "error");
+                    }
                   }}
                   className="px-6 py-3 rounded-xl text-sm font-black bg-red-500 text-white hover:bg-red-600 transition-colors"
                 >
                   Reset
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Publish Errors Modal */}
+      <AnimatePresence>
+        {publishErrors.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 text-red-600 rounded-xl">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#03045e]">
+                      Publish Failed
+                    </h3>
+                    <p className="text-xs font-bold text-gray-500 mt-1">
+                      {publishErrors.length} validation errors found
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPublishErrors([])}
+                  className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                {publishErrors.map((err, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-xl bg-red-50 border border-red-100"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-red-600 uppercase tracking-widest px-2 py-0.5 bg-white rounded-md shadow-sm">
+                        {err.type.replace(/_/g, " ")}
+                      </span>
+                      <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
+                        {err.classId} · {err.day} · {err.period}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-red-800 mt-2 leading-relaxed">
+                      {err.message}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setPublishErrors([])}
+                  className="px-6 py-3 rounded-xl text-xs font-black bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                >
+                  Close & Edit Draft
                 </button>
               </div>
             </motion.div>

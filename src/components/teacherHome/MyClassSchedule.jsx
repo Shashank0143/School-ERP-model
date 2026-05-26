@@ -60,7 +60,7 @@ export default function MyClassSchedule({ classSchedule, className }) {
       {activeTab === "today" ? (
         today.length === 0 ? (
           <div className="text-center py-10 text-xs font-bold text-slate-400 italic">
-            No periods scheduled for your class today.
+            Timetable has not been set yet
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -115,7 +115,7 @@ export default function MyClassSchedule({ classSchedule, className }) {
                   {day}
                 </h4>
                 {dayPeriods.length === 0 ? (
-                  <p className="text-[10px] font-bold text-slate-400 italic pl-4">No academic lectures assigned.</p>
+                  <p className="text-[10px] font-bold text-slate-400 italic pl-4">Timetable has not been set yet</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {dayPeriods.map((period, pIdx) => (

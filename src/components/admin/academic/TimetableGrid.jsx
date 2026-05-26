@@ -1,6 +1,6 @@
 import React from "react";
 import MainCard from "../../MainCard";
-import { MapPin, Coffee, Pencil } from "lucide-react";
+import { MapPin, Coffee, Pencil, Lock } from "lucide-react";
 
 /**
  * TimetableGrid
@@ -175,7 +175,12 @@ function SubjectCell({ slot, type, editMode, onClick }) {
         >
           {slot.subject}
         </p>
-        {editMode && (
+        {slot.isLocked ? (
+          <Lock
+            size={8}
+            className="ml-auto text-amber-500 flex-shrink-0 mt-0.5"
+          />
+        ) : editMode && (
           <Pencil
             size={8}
             className="ml-auto text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0 mt-0.5"

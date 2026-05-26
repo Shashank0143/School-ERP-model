@@ -96,7 +96,6 @@ const AcademicStructurePage = lazy(
 );
 const TimetablePage = lazy(() => import("./pages/admin/TimetablePage"));
 const ExaminationsPage = lazy(() => import("./pages/admin/ExaminationsPage"));
-const ResultsPage = lazy(() => import("./pages/admin/ResultsPage"));
 const AttendanceOverviewPage = lazy(
   () => import("./pages/admin/AttendanceOverviewPage"),
 );
@@ -127,12 +126,19 @@ const WorkloadAnalyticsPage = lazy(
   () => import("./pages/admin/WorkloadAnalyticsPage"),
 );
 const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
+const ManageDepartmentsPage = lazy(
+  () => import("./pages/admin/ManageDepartmentsPage"),
+);
+const AccessControlPage = lazy(() => import("./pages/admin/AccessControlPage"));
+const CommunicationCenterPage = lazy(() => import("./pages/admin/CommunicationCenterPage"));
 
 import { formatDate } from "./utils/attendanceHelpers";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 import SkeletonCard from "./components/SkeletonCard";
+import { onEvent, WORKFLOW_EVENTS } from "./services/workflowEvents";
 
 // Auth & Routing
 import { ROLES } from "./auth/roles";
@@ -248,88 +254,97 @@ const HomePage = React.memo(function HomePage({ onNavigatePage }) {
   const [errorCritical, setErrorCritical] = useState("");
   const [errorDeferred, setErrorDeferred] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
+  const [toastMessage, setToastMessage] = useState(null);
 
-    const fetchCritical = async () => {
+  const fetchCritical = useCallback(
+    async (force = false) => {
       setLoadingCritical(true);
       try {
         const payload =
           await studentDashboardService.getCriticalStudentDashboardPayload(
             activeStudentId,
+            force,
           );
-        if (isMounted) {
-          setProfile(payload.profile);
-          setAttendance(payload.attendance);
-          setFinance(payload.finance);
-          setTimetable(payload.timetable);
-          setDerived((prev) => ({
-            ...prev,
-            attendanceWarnings: payload.derived?.attendanceWarnings || [],
-          }));
-          setErrorCritical("");
-        }
+        setProfile(payload.profile);
+        setAttendance(payload.attendance);
+        setFinance(payload.finance);
+        setTimetable(payload.timetable);
+        setDerived((prev) => ({
+          ...prev,
+          attendanceWarnings: payload.derived?.attendanceWarnings || [],
+        }));
+        setErrorCritical("");
       } catch (err) {
         console.error("Failed to load Student Dashboard critical data:", err);
-        if (isMounted) {
-          setErrorCritical("Unable to retrieve basic student profile details.");
-        }
+        setErrorCritical("Unable to retrieve basic student profile details.");
       } finally {
-        if (isMounted) {
-          setLoadingCritical(false);
-        }
+        setLoadingCritical(false);
       }
-    };
+    },
+    [activeStudentId],
+  );
 
-    const fetchDeferred = async () => {
+  const fetchDeferred = useCallback(
+    async (force = false) => {
       setLoadingDeferred(true);
       try {
         const payload =
           await studentDashboardService.getDeferredStudentDashboardPayload(
             activeStudentId,
             isParent,
+            force,
           );
-        if (isMounted) {
-          setProgress(payload.progress);
-          setTimeline(payload.timeline);
-          setBranding(payload.branding);
-          setShared(payload.shared);
-          setClassUpdates(payload.classUpdates || []);
-          setDerived((prev) => ({
-            ...prev,
-            missingDocuments: payload.derived?.missingDocuments || [],
-            completionRate: payload.derived?.completionRate || 0,
-            pendingCount: payload.derived?.pendingCount || 0,
-            overdueCount: payload.derived?.overdueCount || 0,
-            nextExam: payload.derived?.nextExam,
-          }));
-          setErrorDeferred("");
-        }
+        setProgress(payload.progress);
+        setTimeline(payload.timeline);
+        setBranding(payload.branding);
+        setShared(payload.shared);
+        setClassUpdates(payload.classUpdates || []);
+        setDerived((prev) => ({
+          ...prev,
+          missingDocuments: payload.derived?.missingDocuments || [],
+          completionRate: payload.derived?.completionRate || 0,
+          pendingCount: payload.derived?.pendingCount || 0,
+          overdueCount: payload.derived?.overdueCount || 0,
+          nextExam: payload.derived?.nextExam,
+        }));
+        setErrorDeferred("");
       } catch (err) {
         console.error("Failed to load Student Dashboard deferred data:", err);
-        if (isMounted) {
-          setErrorDeferred("Unable to retrieve announcements board.");
-        }
+        setErrorDeferred("Unable to retrieve announcements board.");
       } finally {
-        if (isMounted) {
-          setLoadingDeferred(false);
-        }
+        setLoadingDeferred(false);
       }
-    };
+    },
+    [activeStudentId, isParent],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
 
     // 1. Fetch critical metrics immediately for instantaneous first-paint
     fetchCritical();
 
     // 2. Defer secondary heavy calls to allow seamless page mounting
     const timer = setTimeout(() => {
-      fetchDeferred();
+      if (isMounted) fetchDeferred();
     }, 50);
 
     return () => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [activeStudentId, isParent]);
+  }, [fetchCritical, fetchDeferred]);
+
+  useEffect(() => {
+    const unsubscribe = onEvent(WORKFLOW_EVENTS.TIMETABLE_PUBLISHED, () => {
+      fetchCritical(true);
+      fetchDeferred(true);
+      setToastMessage("Timetable updated successfully");
+      setTimeout(() => setToastMessage(null), 3000);
+    });
+
+    return () => unsubscribe();
+  }, [fetchCritical, fetchDeferred]);
 
   const handleNavigate = useCallback((sectionId) => {
     const ref = sectionRefs.current[sectionId];
@@ -364,7 +379,21 @@ const HomePage = React.memo(function HomePage({ onNavigatePage }) {
   return (
     <div className="flex flex-col gap-6 items-start w-full">
       <div className="w-full flex gap-6 items-start">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative">
+          <AnimatePresence>
+            {toastMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-emerald-500 text-white px-4 py-3 rounded-2xl shadow-xl shadow-emerald-500/20"
+              >
+                <CheckCircle2 size={16} />
+                <span className="text-xs font-black">{toastMessage}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Hero Banner Section */}
           {loadingCritical ? (
             <div className="h-40 w-full bg-gray-100/50 rounded-[2.5rem] animate-pulse" />
@@ -439,7 +468,8 @@ const HomePage = React.memo(function HomePage({ onNavigatePage }) {
                 <ScheduleSkeleton />
               ) : (
                 <MemoizedTimetableCard
-                  weeklyTimetable={timetable?.weekly || []}
+                  weeklyTimetable={timetable?.weekly || {}}
+                  isConfigured={timetable?.isConfigured}
                 />
               )}
             </div>
@@ -908,7 +938,6 @@ function AppContent() {
           path="exams"
           element={<LazyRoute Component={ExaminationsPage} />}
         />
-        <Route path="results" element={<LazyRoute Component={ResultsPage} />} />
         <Route
           path="academic-performance"
           element={<LazyRoute Component={AcademicPerformancePage} />}
@@ -961,6 +990,18 @@ function AppContent() {
         <Route
           path="profile"
           element={<LazyRoute Component={AdminProfilePage} />}
+        />
+        <Route
+          path="manage-departments"
+          element={<LazyRoute Component={ManageDepartmentsPage} />}
+        />
+        <Route
+          path="access-control"
+          element={<LazyRoute Component={AccessControlPage} />}
+        />
+        <Route
+          path="communication-center"
+          element={<LazyRoute Component={CommunicationCenterPage} />}
         />
         <Route
           path="school-settings"

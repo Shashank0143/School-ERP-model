@@ -7,7 +7,7 @@
  * Structure per template:
  *   id        : unique key e.g. "fs-nursery", "fs-xi-science-nm"
  *   label     : human-readable name
- *   level     : canonical class level ("Nursery"|"LKG"|"UKG"|"1"…"10"|"XI"|"XII")
+ *   level     : canonical class level ("Nursery"|"LKG"|"UKG"|"1"…"10"|"11"|"12")
  *   streamId  : for XI/XII only ("SCIENCE_NON_MEDICAL"|"SCIENCE_MEDICAL"|"COMMERCE"|"HUMANITIES") else null
  *   stage     : academic stage
  *   feeHeads  : array of { id, label, annualAmount, applicableMonths (null=all 12) }
@@ -17,14 +17,57 @@
 const now = new Date().toISOString();
 
 // Helper — build a standard fee heads array for a level
-const heads = (tuition, transport, lab, activity, tech, admission = 0, security = 0) => [
-  { id: "tuition",   label: "Tuition Fee",       annualAmount: tuition,   applicableMonths: null },
-  { id: "transport", label: "Transport Fee",      annualAmount: transport, applicableMonths: null },
-  { id: "lab",       label: "Laboratory Fee",     annualAmount: lab,       applicableMonths: null },
-  { id: "activity",  label: "Activity Fee",       annualAmount: activity,  applicableMonths: null },
-  { id: "tech",      label: "Technology Fee",     annualAmount: tech,      applicableMonths: null },
-  { id: "admission", label: "Admission Fee",      annualAmount: admission, applicableMonths: [1] }, // April only
-  { id: "security",  label: "Security Deposit",   annualAmount: security,  applicableMonths: [1] }, // April only
+const heads = (
+  tuition,
+  transport,
+  lab,
+  activity,
+  tech,
+  admission = 0,
+  security = 0,
+) => [
+  {
+    id: "tuition",
+    label: "Tuition Fee",
+    annualAmount: tuition,
+    applicableMonths: null,
+  },
+  {
+    id: "transport",
+    label: "Transport Fee",
+    annualAmount: transport,
+    applicableMonths: null,
+  },
+  {
+    id: "lab",
+    label: "Laboratory Fee",
+    annualAmount: lab,
+    applicableMonths: null,
+  },
+  {
+    id: "activity",
+    label: "Activity Fee",
+    annualAmount: activity,
+    applicableMonths: null,
+  },
+  {
+    id: "tech",
+    label: "Technology Fee",
+    annualAmount: tech,
+    applicableMonths: null,
+  },
+  {
+    id: "admission",
+    label: "Admission Fee",
+    annualAmount: admission,
+    applicableMonths: [1],
+  }, // April only
+  {
+    id: "security",
+    label: "Security Deposit",
+    annualAmount: security,
+    applicableMonths: [1],
+  }, // April only
 ];
 
 export const feeStructuresSeed = [
@@ -149,75 +192,75 @@ export const feeStructuresSeed = [
     feeHeads: heads(62400, 13200, 6000, 4800, 6000, 0, 0),
     updatedAt: now,
   },
-  // ─── Senior Secondary: Class XI ─────────────────────────────────────────
+  // ─── Senior Secondary: Class 11 ─────────────────────────────────────────
   {
-    id: "fs-xi-science-nm",
+    id: "fs-11-science-nm",
     label: "Class XI — Science (Non-Medical)",
-    level: "XI",
+    level: "11",
     streamId: "SCIENCE_NON_MEDICAL",
     stage: "senior_secondary",
     feeHeads: heads(72000, 13200, 12000, 4800, 7200, 0, 0),
     updatedAt: now,
   },
   {
-    id: "fs-xi-science-med",
+    id: "fs-11-science-med",
     label: "Class XI — Science (Medical)",
-    level: "XI",
+    level: "11",
     streamId: "SCIENCE_MEDICAL",
     stage: "senior_secondary",
     feeHeads: heads(72000, 13200, 12000, 4800, 7200, 0, 0),
     updatedAt: now,
   },
   {
-    id: "fs-xi-commerce",
+    id: "fs-11-commerce",
     label: "Class XI — Commerce",
-    level: "XI",
+    level: "11",
     streamId: "COMMERCE",
     stage: "senior_secondary",
     feeHeads: heads(67200, 13200, 4800, 4800, 7200, 0, 0),
     updatedAt: now,
   },
   {
-    id: "fs-xi-humanities",
+    id: "fs-11-humanities",
     label: "Class XI — Humanities",
-    level: "XI",
+    level: "11",
     streamId: "HUMANITIES",
     stage: "senior_secondary",
     feeHeads: heads(64800, 13200, 2400, 4800, 7200, 0, 0),
     updatedAt: now,
   },
-  // ─── Senior Secondary: Class XII ────────────────────────────────────────
+  // ─── Senior Secondary: Class 12 ────────────────────────────────────────
   {
-    id: "fs-xii-science-nm",
+    id: "fs-12-science-nm",
     label: "Class XII — Science (Non-Medical)",
-    level: "XII",
+    level: "12",
     streamId: "SCIENCE_NON_MEDICAL",
     stage: "senior_secondary",
     feeHeads: heads(74400, 13200, 12000, 4800, 7200, 0, 0),
     updatedAt: now,
   },
   {
-    id: "fs-xii-science-med",
+    id: "fs-12-science-med",
     label: "Class XII — Science (Medical)",
-    level: "XII",
+    level: "12",
     streamId: "SCIENCE_MEDICAL",
     stage: "senior_secondary",
     feeHeads: heads(74400, 13200, 12000, 4800, 7200, 0, 0),
     updatedAt: now,
   },
   {
-    id: "fs-xii-commerce",
+    id: "fs-12-commerce",
     label: "Class XII — Commerce",
-    level: "XII",
+    level: "12",
     streamId: "COMMERCE",
     stage: "senior_secondary",
     feeHeads: heads(69600, 13200, 4800, 4800, 7200, 0, 0),
     updatedAt: now,
   },
   {
-    id: "fs-xii-humanities",
+    id: "fs-12-humanities",
     label: "Class XII — Humanities",
-    level: "XII",
+    level: "12",
     streamId: "HUMANITIES",
     stage: "senior_secondary",
     feeHeads: heads(67200, 13200, 2400, 4800, 7200, 0, 0),
@@ -233,13 +276,19 @@ export const feeStructuresSeed = [
  */
 export const getFeeStructureForClass = (feeStructures, cls) => {
   if (!cls) return null;
-  const isSenior = cls.level === "XI" || cls.level === "XII";
+  const isSenior = cls.level === "11" || cls.level === "12";
   if (isSenior) {
-    return feeStructures.find(
-      (fs) => fs.level === cls.level && fs.streamId === (cls.streamId || cls.stream),
-    ) || null;
+    return (
+      feeStructures.find(
+        (fs) =>
+          fs.level === cls.level &&
+          fs.streamId === (cls.streamId || cls.stream),
+      ) || null
+    );
   }
-  return feeStructures.find((fs) => fs.level === cls.level && !fs.streamId) || null;
+  return (
+    feeStructures.find((fs) => fs.level === cls.level && !fs.streamId) || null
+  );
 };
 
 /**
@@ -247,5 +296,8 @@ export const getFeeStructureForClass = (feeStructures, cls) => {
  */
 export const computeAnnualTotal = (feeStructure) => {
   if (!feeStructure) return 0;
-  return feeStructure.feeHeads.reduce((sum, h) => sum + (h.annualAmount || 0), 0);
+  return feeStructure.feeHeads.reduce(
+    (sum, h) => sum + (h.annualAmount || 0),
+    0,
+  );
 };

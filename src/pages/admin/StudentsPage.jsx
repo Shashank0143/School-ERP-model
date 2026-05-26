@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, Filter, Mail, Phone, ChevronRight, Users, Trash } from "lucide-react";
+import {
+  UserPlus,
+  Filter,
+  Mail,
+  Phone,
+  ChevronRight,
+  Users,
+  Trash,
+} from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import AdminStatCard from "../../components/admin/AdminStatCard";
 import AdminFilterBar from "../../components/admin/AdminFilterBar";
@@ -8,7 +16,11 @@ import AdminDataTable from "../../components/admin/AdminDataTable";
 import AdminSectionCard from "../../components/admin/AdminSectionCard";
 import AdminProfilePreview from "../../components/admin/AdminProfilePreview";
 import AdminEditForm from "../../components/admin/AdminEditForm";
-import { getAllStudents, updateStudentProfile } from "../../services/studentService";
+import {
+  getAllStudents,
+  updateStudentProfile,
+} from "../../services/studentService";
+import { formatClassName, isSeniorSecondary } from "../../utils/classIdentity";
 
 const StudentsPage = () => {
   const [students, setStudents] = useState([]);
@@ -43,7 +55,9 @@ const StudentsPage = () => {
       const updated = await updateStudentProfile(editStudent.id, formData);
       if (updated) {
         // Sync local list
-        setStudents(prev => prev.map(s => s.id === editStudent.id ? { ...s, ...updated } : s));
+        setStudents((prev) =>
+          prev.map((s) => (s.id === editStudent.id ? { ...s, ...updated } : s)),
+        );
       }
     } catch (e) {
       console.error(e);
@@ -51,10 +65,10 @@ const StudentsPage = () => {
   };
 
   const sectionToStream = {
-    'A': 'Science Non-Medical',
-    'B': 'Science Medical',
-    'C': 'Commerce',
-    'D': 'Humanities'
+    A: "Science Non-Medical",
+    B: "Science Medical",
+    C: "Commerce",
+    D: "Humanities",
   };
 
   const handleClassChange = (cls) => {
@@ -73,56 +87,97 @@ const StudentsPage = () => {
     }
   };
 
-  const filteredStudents = students.filter(stu => {
-    const matchesSearch = stu.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredStudents = students.filter((stu) => {
+    const matchesSearch =
+      stu.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       stu.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       stu.admissionNo.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesClass = filterClass === "" || stu.classLevel === filterClass;
-    const matchesSection = filterSection === "" || stu.section === filterSection;
-    const matchesStream = !(stu.classLevel === '11' || stu.classLevel === '12') || filterStream === "" || stu.stream === filterStream;
-    
+    const matchesSection =
+      filterSection === "" || stu.section === filterSection;
+    const matchesStream =
+      !isSeniorSecondary(stu.classLevel) ||
+      filterStream === "" ||
+      stu.stream === filterStream;
+
     return matchesSearch && matchesClass && matchesSection && matchesStream;
   });
 
   const studentFields = [
     { name: "name", label: "Student Full Name", type: "text", required: true },
-    { 
-      name: "classLevel", 
-      label: "Class", 
-      type: "select", 
-      options: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
-      required: true 
+    {
+      name: "classLevel",
+      label: "Class",
+      type: "select",
+      options: [
+        "Nursery",
+        "LKG",
+        "UKG",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+      ],
+      required: true,
     },
-    { 
-      name: "section", 
-      label: "Section", 
-      type: "select", 
-      options: ['A', 'B', 'C', 'D'],
-      required: true 
+    {
+      name: "section",
+      label: "Section",
+      type: "select",
+      options: ["A", "B", "C", "D"],
+      required: true,
     },
-    { 
-      name: "stream", 
-      label: "Academic Stream (Classes 11 & 12 only)", 
-      type: "select", 
-      options: ['Science Non-Medical', 'Science Medical', 'Commerce', 'Humanities'],
-      hidden: (formState) => formState.classLevel !== '11' && formState.classLevel !== '12'
+    {
+      name: "stream",
+      label: "Academic Stream (Classes 11 & 12 only)",
+      type: "select",
+      options: [
+        "Science Non-Medical",
+        "Science Medical",
+        "Commerce",
+        "Humanities",
+      ],
+      hidden: (formState) => !isSeniorSecondary(formState.classLevel),
     },
-    { name: "phoneNumber", label: "Primary Contact Number", type: "text", required: true },
-    { name: "gender", label: "Gender", type: "select", options: ["Male", "Female", "Other"] },
-    { name: "category", label: "Category", type: "select", options: ["General", "OBC", "SC", "ST"] },
+    {
+      name: "phoneNumber",
+      label: "Primary Contact Number",
+      type: "text",
+      required: true,
+    },
+    {
+      name: "gender",
+      label: "Gender",
+      type: "select",
+      options: ["Male", "Female", "Other"],
+    },
+    {
+      name: "category",
+      label: "Category",
+      type: "select",
+      options: ["General", "OBC", "SC", "ST"],
+    },
     { name: "nationality", label: "Nationality", type: "text" },
-    { name: "dob", label: "Date of Birth (YYYY-MM-DD)", type: "text" }
+    { name: "dob", label: "Date of Birth (YYYY-MM-DD)", type: "text" },
   ];
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="space-y-6 pb-12"
     >
-      <AdminPageHeader 
+      <AdminPageHeader
         title="Student Directory"
         description="Manage institutional student records, admission statuses, and parent mappings."
         breadcrumbs={["Admin Portal", "User Management", "Students"]}
@@ -136,23 +191,25 @@ const StudentsPage = () => {
 
       {/* Stats Counters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <AdminStatCard 
+        <AdminStatCard
           title="Active Admissions"
           value={students.length.toString()}
           badgeText="All Clear"
           badgeType="success"
           icon={Users}
         />
-        <AdminStatCard 
+        <AdminStatCard
           title="Senior Secondary Students"
-          value={students.filter(s => s.classLevel === '11' || s.classLevel === '12').length.toString()}
+          value={students
+            .filter((s) => isSeniorSecondary(s.classLevel))
+            .length.toString()}
           badgeText="Class XI & XII"
           badgeType="info"
           icon={Users}
           color="#0096c7"
           bg="#ade8f4"
         />
-        <AdminStatCard 
+        <AdminStatCard
           title="Administrative Mappings"
           value="100%"
           badgeText="Fully Synced"
@@ -166,7 +223,7 @@ const StudentsPage = () => {
       {/* Directory Table inside Section Card */}
       <AdminSectionCard>
         {/* Search and filter bar */}
-        <AdminFilterBar 
+        <AdminFilterBar
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           placeholder="Search by name, admission no or id..."
@@ -181,9 +238,13 @@ const StudentsPage = () => {
                 <option value="Nursery">Nursery</option>
                 <option value="LKG">LKG</option>
                 <option value="UKG">UKG</option>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
                   <option key={num} value={num.toString()}>
-                    {num === 11 ? 'Class XI' : num === 12 ? 'Class XII' : `Class ${num}`}
+                    {num === 11
+                      ? "Class XI"
+                      : num === 12
+                        ? "Class XII"
+                        : `Class ${num}`}
                   </option>
                 ))}
               </select>
@@ -200,14 +261,16 @@ const StudentsPage = () => {
                 <option value="D">Section D</option>
               </select>
 
-              {(filterClass === '11' || filterClass === '12') && (
+              {(filterClass === "11" || filterClass === "12") && (
                 <select
                   value={filterStream}
                   onChange={(e) => setFilterStream(e.target.value)}
                   className="flex items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none"
                 >
                   <option value="">All Streams</option>
-                  <option value="Science Non-Medical">Science Non-Medical</option>
+                  <option value="Science Non-Medical">
+                    Science Non-Medical
+                  </option>
                   <option value="Science Medical">Science Medical</option>
                   <option value="Commerce">Commerce</option>
                   <option value="Humanities">Humanities</option>
@@ -219,25 +282,33 @@ const StudentsPage = () => {
 
         {/* Modular Table Shell */}
         <div className="mt-6">
-          <AdminDataTable 
+          <AdminDataTable
             headers={[
               "Adm No.",
               "Student Name",
               "Class & Section",
               "Contact Info",
               "Status",
-              "Actions"
+              "Actions",
             ]}
             items={filteredStudents}
             isEmpty={filteredStudents.length === 0}
             emptyTitle="No students found matching current query"
             renderRow={(stu) => {
-              const displayClassSec = stu.classLevel === '11' ? 'Class XI-' + stu.section : stu.classLevel === '12' ? 'Class XII-' + stu.section : `Class ${stu.classLevel}-${stu.section}`;
+              const displayClassSec = formatClassName(
+                stu.classLevel,
+                stu.section,
+              );
               return (
-                <tr key={stu.id} className="hover:bg-[#caf0f8]/10 transition-colors text-xs text-gray-700 font-bold">
-                  <td className="py-4 px-3 text-[#03045e] font-black first:pl-2">{stu.admissionNo}</td>
+                <tr
+                  key={stu.id}
+                  className="hover:bg-[#caf0f8]/10 transition-colors text-xs text-gray-700 font-bold"
+                >
+                  <td className="py-4 px-3 text-[#03045e] font-black first:pl-2">
+                    {stu.admissionNo}
+                  </td>
                   <td className="py-4 px-3">
-                    <button 
+                    <button
                       onClick={() => setPreviewStudent(stu)}
                       className="hover:text-[#0077b6] text-left transition-colors font-extrabold focus:outline-none"
                     >
@@ -249,7 +320,7 @@ const StudentsPage = () => {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#caf0f8]/70 text-[#03045e] border border-[#caf0f8]">
                         {displayClassSec}
                       </span>
-                      {(stu.classLevel === '11' || stu.classLevel === '12') && stu.stream && (
+                      {isSeniorSecondary(stu.classLevel) && stu.stream && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wider">
                           {stu.stream}
                         </span>
@@ -271,7 +342,7 @@ const StudentsPage = () => {
                   </td>
                   <td className="py-4 px-3 text-right last:pr-2">
                     <div className="flex items-center justify-end gap-1">
-                      <button 
+                      <button
                         onClick={() => setPreviewStudent(stu)}
                         className="text-[#0077b6] hover:text-[#03045e] transition-colors p-1.5 hover:bg-[#caf0f8]/40 rounded-lg"
                       >
@@ -287,7 +358,7 @@ const StudentsPage = () => {
       </AdminSectionCard>
 
       {/* Sliding Profile Drawer */}
-      <AdminProfilePreview 
+      <AdminProfilePreview
         isOpen={!!previewStudent}
         onClose={() => setPreviewStudent(null)}
         type="student"
@@ -296,7 +367,7 @@ const StudentsPage = () => {
       />
 
       {/* Centred Edit Modal */}
-      <AdminEditForm 
+      <AdminEditForm
         isOpen={!!editStudent}
         onClose={() => setEditStudent(null)}
         title="Edit Student Record"
@@ -314,7 +385,10 @@ const StudentsPage = () => {
             }
           }
           // If section changes and classLevel is 11 or 12, auto-populate stream
-          if (name === "section" && (updated.classLevel === "11" || updated.classLevel === "12")) {
+          if (
+            name === "section" &&
+            (updated.classLevel === "11" || updated.classLevel === "12")
+          ) {
             updated.stream = sectionToStream[value] || "";
           }
           return updated;

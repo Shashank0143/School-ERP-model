@@ -6,6 +6,12 @@
 
 import { STORAGE_KEYS } from "../persistence/storageKeys";
 import { getItem, setItem } from "../persistence/storage";
+import { runClassNamingMigration } from "../utils/classNamingMigration";
+import { validateClassIdentityIntegrity } from "../utils/classIdentity";
+import {
+  validateCrossPortalWorkflows,
+  printValidationReport,
+} from "../utils/crossPortalWorkflowValidation";
 
 const CURRENT_SCHEMA_VERSIONS = {
   STUDENTS: "v5",
@@ -183,6 +189,39 @@ export const migrationManager = {
       setItem(
         "erp_submissions_schema_version",
         CURRENT_SCHEMA_VERSIONS.SUBMISSIONS,
+      );
+    }
+
+    // 7. Class Naming Migration (XI/XII → 11/12)
+    // This migration handles legacy class naming in persisted data
+    runClassNamingMigration();
+
+    // 8. Class Identity Integrity Validation
+    // Validates that no legacy naming remains after migration
+    const integrityCheck = validateClassIdentityIntegrity();
+    if (!integrityCheck.valid) {
+      console.error(
+        "[InitializationEngine] Class identity integrity check failed:",
+        integrityCheck.errors,
+      );
+      // Don't block startup, but log the errors for debugging
+    }
+
+    // 9. Cross-Portal Workflow Validation
+    // Validates entire ERP ecosystem after normalization
+    const workflowCheck = validateCrossPortalWorkflows();
+    if (!workflowCheck.valid) {
+      console.error(
+        "[InitializationEngine] Cross-portal workflow validation failed:",
+        workflowCheck.errors,
+      );
+      // Print detailed report for debugging
+      printValidationReport(workflowCheck);
+      // Don't block startup, but log the errors for debugging
+    } else {
+      console.log(
+        "[InitializationEngine] Cross-portal workflow validation passed:",
+        workflowCheck.summary,
       );
     }
 

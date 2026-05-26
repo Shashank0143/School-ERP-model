@@ -861,3 +861,17 @@ For issues during migration:
 2. Review documentation
 3. Contact backend team
 4. Create GitHub issue
+
+## Phase 6: Asynchronous Workflows & Communication
+
+### 1. Workflow Event Bus Migration
+The current workflowEvents.js is a synchronous, in-memory pub-sub bus.
+- **Backend Task**: Replace with a robust message broker (e.g., Redis Pub/Sub, RabbitMQ, or Kafka).
+- **Frontend Task**: Refactor emitEvent to perform a POST /api/events/emit request.
+
+### 2. Timetable Sub-services
+The timetable logic is highly modular (dminTimetableService, alidationService).
+- **Backend Task**: Port validation logic to backend to ensure atomicity. Conflict checking must happen server-side before persisting slots.
+
+### 3. Communication Center
+- **Backend Task**: Implement queueing system (e.g., BullMQ) for processing mass email/SMS campaigns asynchronously to prevent API timeouts.

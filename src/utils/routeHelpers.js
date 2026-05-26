@@ -122,8 +122,6 @@ export function getRouteForNavItem(id, role) {
         return "/admin/timetable";
       case "admin_exams":
         return "/admin/exams";
-      case "admin_results":
-        return "/admin/results";
       case "admin_academic_performance":
         return "/admin/academic-performance";
       case "admin_attendance":
@@ -146,6 +144,12 @@ export function getRouteForNavItem(id, role) {
         return "/admin/notices";
       case "admin_analytics_workload":
         return "/admin/analytics-workload";
+      case "admin_manage_departments":
+        return "/admin/manage-departments";
+      case "admin_communication_center":
+        return "/admin/communication-center";
+      case "admin_access_control":
+        return "/admin/access-control";
       case "admin_profile":
         return "/admin/profile";
       case "admin_school_settings":

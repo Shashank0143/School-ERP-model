@@ -1,5 +1,6 @@
 import { getDataProvider } from "../data";
 import { getSubjectsForStudent } from "./academicsService";
+import { isSeniorSecondary } from "../utils/classIdentity";
 
 /**
  * Fetches the student profile (Purely Relational via storage)
@@ -79,10 +80,9 @@ export const getStudentProfile = async (studentId) => {
     academic: {
       class: student.classLevel || classData?.name || "N/A",
       section: student.section || classData?.section || "A",
-      stream:
-        student.classLevel === "11" || student.classLevel === "12"
-          ? student.stream || "General"
-          : null,
+      stream: isSeniorSecondary(student.classLevel)
+        ? student.stream || "General"
+        : null,
       subjects: subjects.map((s) => s.name),
       academicSession: "2024-25",
       cgpa: 8.8,
@@ -237,11 +237,7 @@ export const updateStudentProfile = async (id, updates) => {
     finalUpdates.classId = `class-${updates.classLevel.toLowerCase()}${updates.section.toLowerCase()}`;
   }
   // Clear stream fields for non-senior secondary
-  if (
-    updates.classLevel &&
-    updates.classLevel !== "11" &&
-    updates.classLevel !== "12"
-  ) {
+  if (updates.classLevel && !isSeniorSecondary(updates.classLevel)) {
     finalUpdates.stream = null;
     finalUpdates.streamId = null;
   } else if (updates.stream) {

@@ -334,7 +334,7 @@ const MiniDatePicker = ({ selectedDate, onSelect, onClose }) => {
   );
 };
 
-function TimetableCard({ weeklyTimetable = {} }) {
+function TimetableCard({ weeklyTimetable = {}, isConfigured = true }) {
   const { t, lang } = useLanguage();
   const { isParent: isParentMode } = useAuth();
   const [showHelper, setShowHelper] = useState(false);
@@ -376,8 +376,23 @@ function TimetableCard({ weeklyTimetable = {} }) {
           status = "upcoming";
         } else {
           // Real-time calculation for today
-          const [sh, sm] = cls.startTime.split(":").map(Number);
-          const [eh, em] = cls.endTime.split(":").map(Number);
+          const periodTimes = {
+            P1: { startTime: "08:00", endTime: "08:50" },
+            P2: { startTime: "08:50", endTime: "09:40" },
+            P3: { startTime: "09:40", endTime: "10:30" },
+            P4: { startTime: "10:30", endTime: "11:20" },
+            P5: { startTime: "11:50", endTime: "12:40" },
+            P6: { startTime: "12:40", endTime: "13:30" },
+            P7: { startTime: "13:30", endTime: "14:20" },
+            P8: { startTime: "14:20", endTime: "15:10" },
+          };
+          const periodKey = cls.periodNumber || cls.period || "P1";
+          const timeInfo = periodTimes[periodKey] || periodTimes.P1;
+          const startTime = cls.startTime || timeInfo.startTime;
+          const endTime = cls.endTime || timeInfo.endTime;
+
+          const [sh, sm] = startTime.split(":").map(Number);
+          const [eh, em] = endTime.split(":").map(Number);
           const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm);
           const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eh, em);
           
@@ -518,7 +533,7 @@ function TimetableCard({ weeklyTimetable = {} }) {
         </div>
 
         {/* Parent Insight */}
-        {isParentMode && classes.length > 0 && (
+        {isParentMode && classes.length > 0 && isConfigured && (
           <div className="mb-6 px-1">
             <ParentInsight 
               text={t("insight.timetable", { count: classes.length, time: classes[0].startTime })} 
@@ -534,17 +549,17 @@ function TimetableCard({ weeklyTimetable = {} }) {
             scrollbarColor: '#caf0f8 transparent'
           }}
         >
-          {classes.length === 0 && (
+          {(!isConfigured || classes.length === 0) && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-16 h-16 rounded-full bg-[#caf0f8] flex items-center justify-center mb-4">
                 <CalendarIcon size={32} className="text-[#9ca3af]" />
               </div>
               <p className="text-sm font-semibold text-gray-400">
-                {t("timetable.noClasses")}
+                Timetable has not been set yet
               </p>
             </div>
           )}
-          {classes.length > 0 && (
+          {isConfigured && classes.length > 0 && (
             <div className="flex flex-col pb-4">
               {classes.map((classItem, index) => (
                 <ClassCard

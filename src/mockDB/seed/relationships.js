@@ -227,7 +227,7 @@
 //     id: "stud-005",
 //     admissionNo: "ADM2026005",
 //     name: "Vikram Singh",
-//     classId: "class-11d", // XI-D Humanities
+//     classId: "class-11d", // 11-D Humanities
 //     classLevel: "11",
 //     section: "D",
 //     stream: "Humanities",
@@ -429,7 +429,7 @@
 //     id: "stud-009",
 //     admissionNo: "ADM2026009",
 //     name: "Zoya Khan",
-//     classId: "class-11d", // XI-D Humanities
+//     classId: "class-11d", // 11-D Humanities
 //     classLevel: "11",
 //     section: "D",
 //     stream: "Humanities",
@@ -788,8 +788,8 @@ export const baseTeachers = [
     employeeId: "EMP001",
     name: "Dr. Sarah Wilson",
     userId: "user-teach-1",
-    homeroom: "class-11a", // Class Teacher: XI-A (Science Non-Medical)
-    assignedClasses: ["class-11a", "class-11b"], // teaches Physics to XI-A and XI-B
+    homeroom: "class-11a", // Class Teacher: 11-A (Science Non-Medical)
+    assignedClasses: ["class-11a", "class-11b"], // teaches Physics to 11-A and 11-B
     assignedClassIds: ["class-11a", "class-11b"],
     assignedSections: ["A", "B"],
     specializationSubjectId: "sub-phy", // SPECIALIZATION: Physics ONLY
@@ -844,7 +844,7 @@ export const baseTeachers = [
     employeeId: "EMP003",
     name: "Mrs. Elena Gilbert",
     userId: "user-teach-3",
-    homeroom: "class-11c", // Class Teacher: XI-C (Commerce)
+    homeroom: "class-11c", // Class Teacher: 11-C (Commerce)
     assignedClasses: ["class-11c", "class-11a", "class-11b", "class-11d"], // English shared across all sections
     assignedClassIds: ["class-11c", "class-11a", "class-11b", "class-11d"],
     assignedSections: ["A", "B", "C", "D"],
@@ -872,8 +872,8 @@ export const baseTeachers = [
     employeeId: "EMP004",
     name: "Mr. Kiran Desai",
     userId: "user-teach-4",
-    homeroom: "class-11d", // Class Teacher: XI-D (Humanities)
-    assignedClasses: ["class-11d"], // teaches History to XI-D
+    homeroom: "class-11d", // Class Teacher: 11-D (Humanities)
+    assignedClasses: ["class-11d"], // teaches History to 11-D
     assignedClassIds: ["class-11d"],
     assignedSections: ["D"],
     specializationSubjectId: "sub-his", // SPECIALIZATION: History ONLY
@@ -962,7 +962,7 @@ export const baseTeachers = [
     name: "Mr. Vikram Singh",
     userId: "user-teach-7",
     homeroom: null,
-    assignedClasses: ["class-11a"], // teaches Mathematics to XI-A (Science Non-Medical)
+    assignedClasses: ["class-11a"], // teaches Mathematics to 11-A (Science Non-Medical)
     assignedClassIds: ["class-11a"],
     assignedSections: ["A"],
     specializationSubjectId: "sub-math", // SPECIALIZATION: Mathematics ONLY
@@ -1074,7 +1074,7 @@ export const baseTeachers = [
     name: "Mr. Sanjay Kumar",
     userId: "user-teach-11",
     homeroom: null,
-    assignedClasses: ["class-11d"], // teaches Political Science to XI-D (Humanities)
+    assignedClasses: ["class-11d"], // teaches Political Science to 11-D (Humanities)
     assignedClassIds: ["class-11d"],
     assignedSections: ["D"],
     specializationSubjectId: "sub-pol", // SPECIALIZATION: Political Science ONLY
@@ -1158,7 +1158,7 @@ export const baseTeachers = [
     name: "Mrs. Anjali Patel",
     userId: "user-teach-14",
     homeroom: null,
-    assignedClasses: ["class-11c"], // teaches Informatics Practices to XI-C (Commerce)
+    assignedClasses: ["class-11c"], // teaches Informatics Practices to 11-C (Commerce)
     assignedClassIds: ["class-11c"],
     assignedSections: ["C"],
     specializationSubjectId: "sub-ip", // SPECIALIZATION: Information Practices ONLY
@@ -2966,7 +2966,7 @@ export const clubsSeed = [
     description:
       "Arduino, microcontrollers, and competitive robotics projects.",
     logo: "cpu",
-    allowedClasses: ["XI-A", "XI-B", "XI-C", "XI-D"],
+    allowedClasses: ["11-A", "11-B", "11-C", "11-D"],
     maxMembers: 30,
     createdAt: "2026-05-19T08:00:00Z",
     status: "ACTIVE",
@@ -2979,7 +2979,7 @@ export const clubsSeed = [
     clubHeadTeacherId: "teach-003",
     description: "Declamation, model UN debates, and communication exercises.",
     logo: "mic",
-    allowedClasses: ["XI-A", "XI-B", "XI-C", "XI-D"],
+    allowedClasses: ["11-A", "11-B", "11-C", "11-D"],
     maxMembers: 25,
     createdAt: "2026-05-19T08:00:00Z",
     status: "ACTIVE",
@@ -2992,7 +2992,7 @@ export const clubsSeed = [
     clubHeadTeacherId: "teach-002",
     description: "Vocal training, classical theory, and rock band rehearsals.",
     logo: "music",
-    allowedClasses: ["XI-A", "XI-B", "XI-C", "XI-D"],
+    allowedClasses: ["11-A", "11-B", "11-C", "11-D"],
     maxMembers: 20,
     createdAt: "2026-05-19T08:00:00Z",
     status: "ACTIVE",
@@ -3005,7 +3005,7 @@ export const clubsSeed = [
     clubHeadTeacherId: "teach-004",
     description: "DSLR settings, photo editing workshops, and photo walks.",
     logo: "camera",
-    allowedClasses: ["XI-A", "XI-B", "XI-C", "XI-D"],
+    allowedClasses: ["11-A", "11-B", "11-C", "11-D"],
     maxMembers: 15,
     createdAt: "2026-05-19T08:00:00Z",
     status: "ACTIVE",
@@ -3019,7 +3019,7 @@ export const clubsSeed = [
     description:
       "Scientific experimentation, logic building, and chemistry fairs.",
     logo: "code",
-    allowedClasses: ["XI-A", "XI-B"],
+    allowedClasses: ["11-A", "11-B"],
     maxMembers: 30,
     createdAt: "2026-05-19T08:00:00Z",
     status: "ACTIVE",
@@ -3033,7 +3033,7 @@ export const clubsSeed = [
     description:
       "Creative writing prompts, book discussions, and poetry contests.",
     logo: "book-open",
-    allowedClasses: ["XI-A", "XI-B", "XI-C", "XI-D"],
+    allowedClasses: ["11-A", "11-B", "11-C", "11-D"],
     maxMembers: 25,
     createdAt: "2026-05-19T08:00:00Z",
     status: "ACTIVE",
@@ -3137,7 +3137,7 @@ export const clubActivitiesSeed = [
 export const mentorAssignmentsSeed = [
   {
     id: "mase-001",
-    studentId: "stud-001", // Rohan Kumar (Homeroom XI-A)
+    studentId: "stud-001", // Rohan Kumar (Homeroom 11-A)
     mentorTeacherId: "teach-001", // Dr. Sarah Wilson
     assignedBy: "admin",
     assignedAt: "2024-08-01T09:00:00Z",
@@ -3145,7 +3145,7 @@ export const mentorAssignmentsSeed = [
   },
   {
     id: "mase-002",
-    studentId: "stud-004", // Ananya Iyer (Homeroom XI-C, Mrs. Elena Gilbert class teacher)
+    studentId: "stud-004", // Ananya Iyer (Homeroom 11-C, Mrs. Elena Gilbert class teacher)
     mentorTeacherId: "teach-003", // Mrs. Elena Gilbert (Override!)
     assignedBy: "admin",
     assignedAt: "2024-08-05T10:00:00Z",
@@ -3543,7 +3543,7 @@ export const generateInvoicesAndReceiptsSeed = (
   // Import helper inline to avoid circular deps
   const getFeeStructureForClass = (cls) => {
     if (!cls || !feeStructures.length) return null;
-    const isSenior = cls.level === "XI" || cls.level === "XII";
+    const isSenior = cls.level === "11" || cls.level === "12";
     if (isSenior) {
       return (
         feeStructures.find(

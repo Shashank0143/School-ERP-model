@@ -13,7 +13,9 @@ import {
   isValidStream,
   SUBJECT_TYPES,
 } from "../data/subjectArchitecture";
+import { isSeniorSecondary } from "../utils/classIdentity";
 import { getDataProvider } from "../data";
+import { studentTimetableProjectionService } from "./timetable/studentTimetableProjectionService";
 
 /**
  * academicsService.js
@@ -62,7 +64,7 @@ export const getSubjectsForStudent = async (studentId) => {
   }
 
   // Class 11-12: Stream-based subjects
-  if (["11", "12"].includes(classLevel)) {
+  if (isSeniorSecondary(classLevel)) {
     const streamId = student.streamId;
     const optionalSubjectId = student.optionalSubjectId || null;
 
@@ -86,263 +88,11 @@ export const getCourses = async (studentId = "stud-001") => {
 };
 
 /**
- * Fetches the timetable for a specific student, filtered by their academic subjects.
+ * @deprecated Use studentTimetableProjectionService or parentTimetableService directly instead.
+ * Fetches the timetable for a specific student.
  */
 export const getTimetable = async (studentId = "stud-001") => {
-  const provider = getDataProvider();
-  const students = await provider.getStudents();
-  const student = students.find((s) => s.id === studentId);
-  if (!student) {
-    return { today: [], weekly: {} };
-  }
-
-  const allClasses = await provider.getClasses();
-  const studentClass = allClasses.find((c) => c.id === student.classId);
-  if (!studentClass) {
-    return { today: [], weekly: {} };
-  }
-
-  // 8 period slots per day with one Lunch Break placed after Period 4
-  const slots = [
-    {
-      time: "08:00 AM",
-      startTime: "08:00 AM",
-      endTime: "08:50 AM",
-      isBreak: false,
-      periodName: "Period 1",
-      periodCode: "P1",
-    },
-    {
-      time: "08:50 AM",
-      startTime: "08:50 AM",
-      endTime: "09:40 AM",
-      isBreak: false,
-      periodName: "Period 2",
-      periodCode: "P2",
-    },
-    {
-      time: "09:40 AM",
-      startTime: "09:40 AM",
-      endTime: "10:30 AM",
-      isBreak: false,
-      periodName: "Period 3",
-      periodCode: "P3",
-    },
-    {
-      time: "10:30 AM",
-      startTime: "10:30 AM",
-      endTime: "11:20 AM",
-      isBreak: false,
-      periodName: "Period 4",
-      periodCode: "P4",
-    },
-    {
-      time: "11:20 AM",
-      startTime: "11:20 AM",
-      endTime: "11:50 AM",
-      isBreak: true,
-      label: "Lunch Break",
-      periodCode: "LUNCH",
-    },
-    {
-      time: "11:50 AM",
-      startTime: "11:50 AM",
-      endTime: "12:40 PM",
-      isBreak: false,
-      periodName: "Period 5",
-      periodCode: "P5",
-    },
-    {
-      time: "12:40 PM",
-      startTime: "12:40 PM",
-      endTime: "01:30 PM",
-      isBreak: false,
-      periodName: "Period 6",
-      periodCode: "P6",
-    },
-    {
-      time: "01:30 PM",
-      startTime: "01:30 PM",
-      endTime: "02:20 PM",
-      isBreak: false,
-      periodName: "Period 7",
-      periodCode: "P7",
-    },
-    {
-      time: "02:20 PM",
-      startTime: "02:20 PM",
-      endTime: "03:10 PM",
-      isBreak: false,
-      periodName: "Period 8",
-      periodCode: "P8",
-    },
-  ];
-
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-  const weekly = {};
-
-  // Get all assignments for this student's class
-  const allAssignments = await provider.getTeacherSubjectAssignmentsByClass(
-    student.classId,
-  );
-  const classAssignments = allAssignments.filter(
-    (a) => a.classId === student.classId,
-  );
-
-  const subjects = await provider.getSubjects();
-  const teachers = await provider.getTeachers();
-
-  const subjectsMap = new Map(subjects.map((s) => [s.id, s]));
-  const teachersMap = new Map(teachers.map((t) => [t.id, t]));
-
-  // Resolve subjects, teachers and schedules
-  const parsedAssignments = [];
-  for (const assignment of classAssignments) {
-    const sub = subjectsMap.get(assignment.subjectId);
-    const teacher = teachersMap.get(assignment.teacherId);
-    if (!sub) continue;
-
-    // 1. Direct normalized matching
-    if (assignment.day && assignment.period) {
-      parsedAssignments.push({
-        day: assignment.day,
-        periodCode: assignment.period,
-        subjectName: sub.name,
-        subjectId: sub.id,
-        code: sub.code,
-        room:
-          assignment.room ||
-          assignment.roomNumber ||
-          sub.room ||
-          studentClass.room ||
-          "Room 101",
-        teacherName: teacher ? teacher.name : "Faculty",
-      });
-      continue;
-    }
-
-    // 2. Legacy schedule parsing fallback
-    const scheduleStr = assignment.schedule || sub?.schedule;
-    if (!scheduleStr) continue;
-
-    const scheduleParts = scheduleStr.split(" ");
-    if (scheduleParts.length < 2) continue;
-
-    const timeStr = scheduleParts[scheduleParts.length - 1]; // e.g. "08:00"
-    const daysStr = scheduleStr.replace(timeStr, "").trim(); // e.g. "Mon, Wed, Fri"
-
-    const lectureDays =
-      daysStr === "Daily"
-        ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-        : daysStr
-            .split(",")
-            .map((d) => {
-              const trim = d.trim().toLowerCase();
-              if (trim.startsWith("mon")) return "Monday";
-              if (trim.startsWith("tue")) return "Tuesday";
-              if (trim.startsWith("wed")) return "Wednesday";
-              if (trim.startsWith("thu")) return "Thursday";
-              if (trim.startsWith("fri")) return "Friday";
-              return "";
-            })
-            .filter(Boolean);
-
-    let periodCode = "P1";
-    if (timeStr.startsWith("08:00")) periodCode = "P1";
-    else if (timeStr.startsWith("08:50")) periodCode = "P2";
-    else if (timeStr.startsWith("09:40")) periodCode = "P3";
-    else if (timeStr.startsWith("10:30") || timeStr.startsWith("10:40"))
-      periodCode = "P4";
-    else if (timeStr.startsWith("11:50") || timeStr.startsWith("11:30"))
-      periodCode = "P5";
-    else if (timeStr.startsWith("12:40") || timeStr.startsWith("12:20"))
-      periodCode = "P6";
-    else if (timeStr.startsWith("13:30") || timeStr.startsWith("01:10"))
-      periodCode = "P7";
-    else if (timeStr.startsWith("14:20") || timeStr.startsWith("02:00"))
-      periodCode = "P8";
-
-    for (const day of lectureDays) {
-      parsedAssignments.push({
-        day,
-        periodCode,
-        subjectName: sub.name,
-        subjectId: sub.id,
-        code: sub.code,
-        room:
-          assignment.room ||
-          assignment.roomNumber ||
-          sub.room ||
-          studentClass.room ||
-          "Room 101",
-        teacherName: teacher ? teacher.name : "Faculty",
-      });
-    }
-  }
-
-  days.forEach((day) => {
-    const daySubjects = [];
-
-    slots.forEach((slot, slotIdx) => {
-      if (slot.isBreak) {
-        daySubjects.push({
-          id: `${day}-${slotIdx}-break`,
-          subject: slot.label,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          room: "Cafeteria / Courtyard",
-          teacher: "Duty Staff",
-          code: "BREAK",
-          isBreak: true,
-        });
-      } else {
-        // Find if there is a lecture scheduled for this class on this day at this period
-        const lecture = parsedAssignments.find(
-          (a) => a.day === day && a.periodCode === slot.periodCode,
-        );
-
-        if (lecture) {
-          // Check if this is the Class Teacher's period (for Period 1 / Homeroom visual badge)
-          const isHomeroom = slot.periodCode === "P1";
-
-          daySubjects.push({
-            id: `${day}-${slotIdx}`,
-            subject: lecture.subjectName,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            room: lecture.room,
-            teacher: lecture.teacherName,
-            code: lecture.code || "SUB-00",
-            isBreak: false,
-            isHomeroom: isHomeroom,
-          });
-        } else {
-          // Free Period
-          daySubjects.push({
-            id: `${day}-${slotIdx}-free`,
-            subject: "Self Study",
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            room: studentClass.room || "Library",
-            teacher: "Supervising Staff",
-            code: "FREE",
-            isBreak: false,
-            isFree: true,
-          });
-        }
-      }
-    });
-
-    weekly[day] = daySubjects;
-  });
-
-  const todayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
-  const todayTimetable = weekly[todayName] || weekly.Monday;
-
-  return {
-    today: todayTimetable,
-    weekly: weekly,
-  };
+  return await studentTimetableProjectionService.buildStudentTimetableProjection(studentId);
 };
 
 /**

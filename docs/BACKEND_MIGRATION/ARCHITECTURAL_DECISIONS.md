@@ -903,3 +903,13 @@ The notice system is designed as an **institution operating system**, not just a
 - **Reliability** through robust error handling and retry logic
 
 The most critical decision is the **Notice Orchestrator + Workflow Events** pattern. This is what transforms a simple dashboard into a powerful, event-driven operating system for institutional communication.
+
+## AD-005: Decoupling of Timetable Services
+**Context**: Timetable generation and validation became too complex for a single service.
+**Decision**: Split into domain-specific sub-services (dmin, alidation, student, override).
+**Consequence**: Backend should mirror this modularity.
+
+## AD-006: Separation of Notices and Communications
+**Context**: Notice Management was overloaded with both passive announcements and active email/SMS workflows.
+**Decision**: Created a distinct Communication Center for active outbound marketing/alerts.
+**Consequence**: Backend needs separate tables (erp_notices vs erp_campaigns) and separate processing queues.

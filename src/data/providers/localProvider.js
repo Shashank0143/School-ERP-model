@@ -603,61 +603,89 @@ const localProvider = {
   },
 
   // === TIMETABLE DATA ===
-  getTimetable: async () => {
-    const TIMETABLE_KEY = "erp_timetable_v1";
+  getTimetables: async () => {
+    const TIMETABLE_KEY = "erp_timetables_v2";
     try {
-      return getItem(TIMETABLE_KEY) || {};
+      return getItem(TIMETABLE_KEY) || [];
     } catch {
-      return {};
+      return [];
     }
   },
 
-  setTimetable: async (data) => {
-    const TIMETABLE_KEY = "erp_timetable_v1";
+  getTimetableByClass: async (classId) => {
+    const timetables = await localProvider.getTimetables();
+    return timetables.find((t) => t.classId === classId) || null;
+  },
+
+  setTimetables: async (dataArray) => {
+    const TIMETABLE_KEY = "erp_timetables_v2";
     try {
-      setItem(TIMETABLE_KEY, data);
+      setItem(TIMETABLE_KEY, dataArray);
       return true;
     } catch {
       return false;
     }
+  },
+
+  updateTimetable: async (classId, updates) => {
+    const TIMETABLE_KEY = "erp_timetables_v2";
+    const timetables = await localProvider.getTimetables();
+    const idx = timetables.findIndex((t) => t.classId === classId);
+    if (idx === -1) return null;
+    
+    timetables[idx] = { ...timetables[idx], ...updates, updatedAt: new Date().toISOString() };
+    setItem(TIMETABLE_KEY, timetables);
+    return timetables[idx];
   },
 
   getTimetableSlot: async (classId, day, period) => {
-    const TIMETABLE_KEY = "erp_timetable_v1";
-    try {
-      const data = getItem(TIMETABLE_KEY) || {};
-      return data[classId]?.[day]?.[period] || null;
-    } catch {
-      return null;
-    }
+    const timetable = await localProvider.getTimetableByClass(classId);
+    if (!timetable || !timetable.weeklySchedule) return null;
+    const daySchedule = timetable.weeklySchedule[day.toLowerCase()] || [];
+    return daySchedule.find((p) => p.periodNumber === period) || null;
   },
 
   setTimetableSlot: async (classId, day, period, slotData) => {
-    const TIMETABLE_KEY = "erp_timetable_v1";
-    try {
-      const data = getItem(TIMETABLE_KEY) || {};
-      if (!data[classId]) data[classId] = {};
-      if (!data[classId][day]) data[classId][day] = {};
-      data[classId][day][period] = slotData;
-      setItem(TIMETABLE_KEY, data);
-      return true;
-    } catch {
-      return false;
+    const TIMETABLE_KEY = "erp_timetables_v2";
+    const timetables = await localProvider.getTimetables();
+    let idx = timetables.findIndex((t) => t.classId === classId);
+    
+    if (idx === -1) return false;
+    
+    const dayKey = day.toLowerCase();
+    const daySchedule = timetables[idx].weeklySchedule[dayKey] || [];
+    const periodIdx = daySchedule.findIndex((p) => p.periodNumber === period);
+    
+    if (periodIdx !== -1) {
+      daySchedule[periodIdx] = { ...daySchedule[periodIdx], ...slotData };
+    } else {
+      daySchedule.push({ periodNumber: period, ...slotData });
     }
+    
+    timetables[idx].weeklySchedule[dayKey] = daySchedule;
+    timetables[idx].updatedAt = new Date().toISOString();
+    
+    setItem(TIMETABLE_KEY, timetables);
+    return true;
   },
 
   clearTimetableSlot: async (classId, day, period) => {
-    const TIMETABLE_KEY = "erp_timetable_v1";
-    try {
-      const data = getItem(TIMETABLE_KEY) || {};
-      if (data[classId]?.[day]?.[period]) {
-        delete data[classId][day][period];
-        setItem(TIMETABLE_KEY, data);
-      }
-      return true;
-    } catch {
-      return false;
-    }
+    const TIMETABLE_KEY = "erp_timetables_v2";
+    const timetables = await localProvider.getTimetables();
+    const idx = timetables.findIndex((t) => t.classId === classId);
+    
+    if (idx === -1) return false;
+    
+    const dayKey = day.toLowerCase();
+    let daySchedule = timetables[idx].weeklySchedule[dayKey] || [];
+    
+    // Remove the slot entirely
+    daySchedule = daySchedule.filter((p) => p.periodNumber !== period);
+    timetables[idx].weeklySchedule[dayKey] = daySchedule;
+    timetables[idx].updatedAt = new Date().toISOString();
+    
+    setItem(TIMETABLE_KEY, timetables);
+    return true;
   },
 
   // === DOCUMENT DATA ===
