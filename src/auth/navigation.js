@@ -77,6 +77,7 @@ export const ROLE_NAVIGATION = {
     { id: "admin_manage_departments", icon: "Layers" },
     { id: "admin_communication_center", icon: "Send" },
     { id: "admin_profile", icon: "User" },
+    { id: "admin_access_control", icon: "ShieldCheck" },
     { id: "admin_school_settings", icon: "Settings" },
     { id: "logout", icon: "LogOut" },
   ],
