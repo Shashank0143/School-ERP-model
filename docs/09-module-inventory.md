@@ -21,7 +21,8 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 📢 Notice Board (✔ Complete)
 ├── 🏆 Achievements (✔ Complete)
 ├── ⚙️ School Settings (🚧 Planned)
-└── ✉️ Communication Center (⚠ Partial)
+├── ✉️ Communication Center (⚠ Partial)
+└── 🎧 Support Management (✔ Complete)
 
 ## Teacher Portal
 ├── 📅 My Schedule (✔ Complete)
@@ -30,7 +31,8 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 🎯 Exam Grading (✔ Complete)
 ├── 📢 Class Updates (✔ Complete)
 ├── 📬 Leaves (✔ Complete)
-└── 📝 Question Papers (🚧 Planned)
+├── 📝 Question Papers (🚧 Planned)
+└── 🎧 Support Center (✔ Complete)
 
 ## Student & Parent Portals
 ├── 📊 Dashboard (✔ Complete)
@@ -39,4 +41,5 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 🎯 Results (✔ Complete)
 ├── 💸 Fees (✔ Complete)
 ├── 🚌 Transport (✔ Complete)
-└── 📬 Leaves (✔ Complete)
+├── 📬 Leaves (✔ Complete)
+└── 🎧 Support Center (✔ Complete)

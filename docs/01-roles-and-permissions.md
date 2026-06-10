@@ -190,6 +190,30 @@ graph TD
 
 ---
 
+### 🎧 1.9 Support Center Module
+```mermaid
+graph TD
+    subgraph "Roles"
+        Admin["👑 System Admin"]
+        Teacher["👨‍🏫 Teacher"]
+        Student["🎓 Student"]
+        Parent["👪 Parent"]
+    end
+
+    subgraph "Module Data"
+        M_Support["🎧 Support & Feedback Hub"]
+    end
+
+    Teacher -->|💬 Submits Help Requests, Feedback, Complaints| M_Support
+    Student -->|💬 Submits Help Requests, Feedback, Complaints| M_Support
+    Parent -->|💬 Submits Help Requests, Feedback, Complaints| M_Support
+    Admin -->|✍️ Reviews, Resolves & Responds to Requests| M_Support
+
+    style M_Support fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px
+```
+
+---
+
 ## 📊 2. Permissions Matrix Grid
 
 This grid maps features to roles using permissions. You can easily add rows for new features or update cell symbols.
@@ -211,6 +235,7 @@ This grid maps features to roles using permissions. You can easily add rows for 
 | **Fees & Payments Ledger** | `✍️ Manage` | `❌ None` | `👁️ View` | `👁️ View` |
 | **Transport & Routes** | `✍️ Manage` | `❌ None` | `👁️ View` | `👁️ View` |
 | **Leave Request System** | `✍️ Manage (Approve)` | `💬 Interact (Self)` | `💬 Interact (Self)` | `💬 Interact (Child)` |
+| **Support Center** | `✍️ Manage (Resolve)` | `💬 Interact (Self)` | `💬 Interact (Self)` | `💬 Interact (Self)` |
 | **Clubs & Co-curricular** | `✍️ Manage` | `👁️ View` | `👁️ View` | `👁️ View` |
 | **Notices & Announcements** | `✍️ Manage` | `✍️ Manage (Class)` | `👁️ View` | `👁️ View` |
 | **Workload Analytics** | `👁️ View` | `❌ None` | `❌ None` | `❌ None` |

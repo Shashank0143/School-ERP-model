@@ -324,3 +324,19 @@ flowchart TD
     Master -->|Used by| Modules[Timetable, Assignments, Examination & Results]
     Master -->|Provides details for| Curriculum[Subject Curriculum: Objectives, Units, Textbooks & Outcomes]
 ```
+
+# Support Center Workflow
+
+```mermaid
+flowchart LR
+    A[Student / Parent / Teacher] -->|Submits Help/Feedback/Complaint| B[Support Center Hub]
+    B -->|Logs Request| C[Pending Open Request]
+    C -->|Monitored by| D[Designated Support Admin]
+    D -->|Reviews Details| E{Action Taken}
+    E -->|Updates Status| F[In Review]
+    E -->|Adds Remarks| G[Resolution Details Appended]
+    F -->|Solves Issue| H[Resolved]
+    G --> H
+    H -->|Closes Ticket| I[Closed]
+    I -->|Visible to| A
+```

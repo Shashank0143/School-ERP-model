@@ -225,11 +225,13 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
 | `erp_mentorAssignments` | `MENTOR_ASSIGNMENTS` | Array | Teacher-student mentor pairing |
 | `erp_mentorSessions` | `MENTOR_SESSIONS` | Array | Scheduled mentorship sessions |
 
-### Communication
+### Communication & Support
 | Key | Constant | Type | Description |
 |---|---|---|---|
 | `erp_classUpdates` | `CLASS_UPDATES` | Array | Teacher class announcements |
 | `erp_leaveRequests` | `LEAVE_REQUESTS` | Array | Student/teacher leave applications |
+| `erp_supportRequests` | `SUPPORT_REQUESTS` | Array | Help, feedback, and complaint submissions |
+| `erp_supportSettings` | `SUPPORT_SETTINGS` | Object | Configurations for support handlers |
 
 ### Schema Versioning
 | Key | Current Version | Purpose |
@@ -574,6 +576,35 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
 }
 ```
 
+### SupportRequest
+
+```js
+{
+  id: "req-{timestamp}",
+  requesterType: "Student",       // Student | Parent | Teacher | Employee
+  requesterId: "stud-001",
+  requesterName: "Rohan Kumar",
+  category: "Help Request",       // Help Request | Complaint | Feedback | Suggestion | Technical Support
+  title: "Cannot access assignment",
+  description: "The physics assignment is giving a 404 error.",
+  anonymous: false,
+  complaintAgainstType: "System",
+  complaintAgainstId: "System",
+  priority: "High",               // Low | Medium | High
+  status: "Open",                 // Open | In Review | Resolved | Closed
+  remarks: [
+    {
+      id: "rmk-{timestamp}",
+      message: "Looking into this now.",
+      createdAt: "2026-05-26T10:00:00Z",
+      createdBy: "EMP-001"
+    }
+  ],
+  createdAt: "2026-05-26T08:00:00Z",
+  updatedAt: "2026-05-26T10:00:00Z"
+}
+```
+
 ### MentorAssignment
 
 ```js
@@ -773,6 +804,15 @@ Every service is an `async` function that reads/writes through `MockDB`. Service
 - `updateNotice(id, updates)` → patch notice
 - `markNoticeRead(noticeId, userId)` → append to readReceipts
 - `getNoticesForRole(role, entityId)` → role-filtered notice feed
+
+### `supportService.js`
+- `getMySupportRequests(requesterId)` → requests for current user
+- `getSupportRequestById(id)` → fetch single request
+- `createSupportRequest(data)` → insert new request, resolves requester name
+- `getAllSupportRequests()` → admin: fetch all requests
+- `updateSupportRequestStatus(id, status)` → update status
+- `addSupportRemark(id, message, createdBy)` → append remark
+- `getSupportHandler()` → fetch configured admin handler
 
 ### `noticeActionService.js`
 - `publishNotice(noticeId)`, `archiveNotice(noticeId)`, `scheduleNotice(noticeId, date)`
