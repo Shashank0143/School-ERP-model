@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import MainCard from "../../components/MainCard";
-import localProvider from "../../data/providers/localProvider";
+import employeeService from "../../services/employeeService";
+import departmentService from "../../services/departmentService";
 import { ROLES } from "../../auth/roles";
 
 // We import the seeds to cross-reference roles since they aren't fully in localProvider yet
@@ -67,8 +68,8 @@ const EmployeeDirectoryPage = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const fetchedEmps = await localProvider.getEmployees();
-      const fetchedDepts = await localProvider.getDepartments();
+      const fetchedEmps = await employeeService.getEmployees();
+      const fetchedDepts = await departmentService.getDepartments();
       setEmployees(fetchedEmps);
       setDepartments(fetchedDepts);
     } catch (error) {
@@ -144,9 +145,9 @@ const EmployeeDirectoryPage = () => {
 
     try {
       if (editingEmp) {
-        await localProvider.updateEmployee(editingEmp.employeeId, formData);
+        await employeeService.updateEmployee(editingEmp.employeeId, formData);
       } else {
-        await localProvider.createEmployee(formData);
+        await employeeService.createEmployee(formData);
       }
       fetchData();
       handleCloseModal();
@@ -158,7 +159,7 @@ const EmployeeDirectoryPage = () => {
 
   const handleDelete = async (empId) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
-      await localProvider.deleteEmployee(empId);
+      await employeeService.deleteEmployee(empId);
       fetchData();
     }
   };

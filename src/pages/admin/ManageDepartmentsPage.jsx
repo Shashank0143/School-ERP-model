@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import MainCard from "../../components/MainCard";
-import localProvider from "../../data/providers/localProvider";
+import departmentService from "../../services/departmentService";
+import employeeService from "../../services/employeeService";
 
 const ManageDepartmentsPage = () => {
   const [departments, setDepartments] = useState([]);
@@ -34,8 +35,8 @@ const ManageDepartmentsPage = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const fetchedDepts = await localProvider.getDepartments();
-      const fetchedEmps = await localProvider.getEmployees();
+      const fetchedDepts = await departmentService.getDepartments();
+      const fetchedEmps = await employeeService.getEmployees();
       setDepartments(fetchedDepts);
       setEmployees(fetchedEmps);
     } catch (error) {
@@ -94,13 +95,13 @@ const ManageDepartmentsPage = () => {
 
     try {
       if (editingDept) {
-        await localProvider.updateDepartment(editingDept.departmentId, {
+        await departmentService.updateDepartment(editingDept.departmentId, {
           departmentName: formData.departmentName,
           departmentHead: formData.departmentHead || null,
           status: formData.status
         });
       } else {
-        await localProvider.createDepartment({
+        await departmentService.createDepartment({
           departmentName: formData.departmentName,
           departmentHead: formData.departmentHead || null,
           status: formData.status
@@ -116,7 +117,7 @@ const ManageDepartmentsPage = () => {
 
   const handleDelete = async (deptId) => {
     if (window.confirm("Are you sure you want to delete this department?")) {
-      await localProvider.deleteDepartment(deptId);
+      await departmentService.deleteDepartment(deptId);
       fetchData();
     }
   };

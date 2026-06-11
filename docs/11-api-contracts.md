@@ -3,6 +3,7 @@
 This document formalizes the exact request/response boundaries that the frontend expects from the backend. The backend must strictly implement these boundaries.
 
 ## 1. Authentication
+**Current State:** localProvider | **Future:** apiProvider
 Endpoints governing user sessions and access control.
 
 ### `POST /api/v1/auth/login`
@@ -28,6 +29,7 @@ Endpoints governing user sessions and access control.
 ---
 
 ## 2. Students
+**Current State:** localProvider | **Future:** apiProvider
 Endpoints governing student data.
 
 ### `GET /api/v1/students/:id`
@@ -50,6 +52,7 @@ Endpoints governing student data.
 ---
 
 ## 3. Teachers
+**Current State:** localProvider | **Future:** apiProvider
 Endpoints governing faculty operations.
 
 ### `GET /api/v1/teachers/:id`
@@ -71,6 +74,7 @@ Endpoints governing faculty operations.
 ---
 
 ## 4. Academics
+**Current State:** localProvider | **Future:** apiProvider
 Endpoints for assignments, exams, and question papers.
 
 ### `POST /api/v1/academics/question-papers`
@@ -111,6 +115,7 @@ Endpoints for assignments, exams, and question papers.
 ---
 
 ## 5. Parents
+**Current State:** localProvider | **Future:** apiProvider
 Endpoints for parent portal access.
 
 ### `GET /api/v1/parents/:id`
@@ -124,3 +129,62 @@ Endpoints for parent portal access.
   "children": ["stud-123"]
 }
 ```
+
+## 6. Classes
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/classes`
+- **Response Shape:** `ClassDTO[]`
+
+## 7. Attendance
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/attendance`
+- **Response Shape:** `AttendanceRecordDTO[]`
+### `POST /api/v1/attendance/bulk`
+- **Response Shape:** `AttendanceSessionDTO`
+
+## 8. Fees
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/fees`
+- **Response Shape:** `FeeLedgerDTO[]`
+### `GET /api/v1/fees/invoices`
+- **Response Shape:** `InvoiceDTO[]`
+
+## 9. Transport
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/transport/routes`
+- **Response Shape:** `TransportRouteDTO[]`
+
+## 10. Notices
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/notices`
+- **Response Shape:** `NoticeDTO[]`
+### `POST /api/v1/notices`
+- **Response Shape:** `NoticeDTO`
+
+## 11. Leave Management
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/leaves`
+- **Response Shape:** `LeaveRequestDTO[]`
+### `POST /api/v1/leaves`
+- **Response Shape:** `LeaveRequestDTO`
+
+## 12. Clubs
+**Current State:** localProvider | **Future:** apiProvider
+*(Note: Leadership/Proposals are Planned - Not Implemented in Contract)*
+### `GET /api/v1/clubs`
+- **Response Shape:** `ClubDTO[]`
+
+## 13. Mentorship
+**Current State:** Planned - Not Implemented | **Future:** apiProvider
+### `GET /api/v1/mentorship/remarks`
+- **Response Shape:** `MentorRemarkDTO[]`
+
+## 14. Duty Management
+**Current State:** Planned - Not Implemented | **Future:** apiProvider
+### `GET /api/v1/duties`
+- **Response Shape:** `DutyRequestDTO[]`
+
+## 15. Employee Directory
+**Current State:** Planned - Not Implemented | **Future:** apiProvider
+### `GET /api/v1/employees`
+- **Response Shape:** `EmployeeDTO[]`

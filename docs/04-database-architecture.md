@@ -30,6 +30,7 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 *   **`permissions`**: Granular access rights (e.g., `fees.view`, `attendance.mark`).
 *   **`role_permissions`** (Junction): Maps Roles to Permissions.
     *   *PK*: Composite(`role_id`, `permission_id`).
+*   **`access_control`**: *[PLANNED MODULE]* Current State: UI Only. Backend Status: Not Defined.
 
 ### Schema: `core` (Global Masters & Profiles)
 *   **`profiles`**: Personal details linked 1:1 with `users`. Separating auth from profile data increases security.
@@ -39,6 +40,9 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 *   **`classes`**: Master list (Nursery, LKG, 1...12).
 *   **`sections`**: Master list (A, B, Science Non-Medical).
 *   **`subjects`**: Master subjects list.
+*   **`employees`**: Staff directory for teachers, admins, and support staff.
+    *   *PK*: `id` (UUID). *FK*: `user_id`. *Fields*: `employee_id`, `designation`, `department_id`.
+*   **`departments`**: *[PLANNED MODULE]* Current State: UI Only. Backend Status: Not Defined.
 
 ### Schema: `academic` (Academics & Enrolment)
 *   **`class_sections`** (Junction/Master): The cornerstone entity connecting a Class, Section, and Academic Year.
@@ -72,6 +76,9 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 
 ### Schema: `communication`
 *   **`notices`**: Announcements with `target_roles` and `target_classes` JSONB filters.
+*   **`class_updates`**: Class-specific announcements created by teachers.
+    *   *Fields*: `class_id`, `teacher_id`, `content`.
+*   **`communication_center`**: *[PLANNED MODULE]* Current State: UI Only. Backend Status: Not Defined.
 
 ### Schema: `documents`
 *   **`documents`**: Centralized file tracking.
@@ -81,6 +88,18 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 *   **`clubs`**: Extracurricular clubs and committees.
 *   **`club_enrollments`**: Maps students to clubs.
 *   **`student_duties`**: Duty requests assigned to students by teachers.
+*   **`achievements`**: Student and institutional achievements.
+
+### Schema: `operations`
+*   **`support_requests`**: Help, feedback, and complaint submissions.
+    *   *Fields*: `requester_id`, `category`, `priority`, `status`.
+*   **`leave_requests`**: Student and teacher absence requests.
+    *   *Fields*: `requester_id`, `from_date`, `to_date`, `status`.
+
+### Schema: `mentorship`
+*   **`mentor_assignments`**: Teacher-student mentor pairing.
+*   **`mentor_remarks`**: Teacher remarks on students.
+*   **`mentor_sessions`**: Scheduled mentorship sessions.
 
 ---
 
@@ -139,6 +158,14 @@ erDiagram
     CLUBS ||--o{ CLUB_ENROLLMENTS : "has members"
     TEACHERS ||--o{ STUDENT_DUTIES : "assigns"
     STUDENTS ||--o{ STUDENT_DUTIES : "performs"
+
+    %% Operations & Mentorship
+    EMPLOYEES ||--o| USERS : "links to"
+    EMPLOYEES ||--o{ SUPPORT_REQUESTS : "resolves"
+    USERS ||--o{ SUPPORT_REQUESTS : "raises"
+    USERS ||--o{ LEAVE_REQUESTS : "applies"
+    TEACHERS ||--o{ MENTOR_SESSIONS : "conducts"
+    STUDENTS ||--o{ MENTOR_SESSIONS : "attends"
 ```
 
 ---

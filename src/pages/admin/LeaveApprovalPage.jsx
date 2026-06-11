@@ -45,8 +45,10 @@ const LeaveApprovalPage = () => {
       // 2. Fetch Approver Info (Display Only)
       const provider = getDataProvider();
       const settings = await provider.getApprovalSettings();
-      if (settings?.leave_management?.approverEmployeeId) {
-        const empId = settings.leave_management.approverEmployeeId;
+      const leaveSetting = settings?.find(s => s.moduleName === "Leave Management" || s.module === "leave_management");
+      
+      if (leaveSetting && leaveSetting.approverEmployeeId) {
+        const empId = leaveSetting.approverEmployeeId;
         const allEmp = await provider.getEmployees();
         const approver = allEmp.find(e => e.employeeId === empId);
         if (approver) {

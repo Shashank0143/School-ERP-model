@@ -134,7 +134,7 @@ const SupportManagementPage = lazy(() => import("./pages/admin/SupportManagement
 const ManageDepartmentsPage = lazy(
   () => import("./pages/admin/ManageDepartmentsPage"),
 );
-const AccessControlPage = lazy(() => import("./pages/admin/AccessControlPage"));
+const SystemAdministrationPage = lazy(() => import("./pages/admin/SystemAdministrationPage"));
 const CommunicationCenterPage = lazy(
   () => import("./pages/admin/CommunicationCenterPage"),
 );
@@ -1048,7 +1048,7 @@ function AppContent() {
         />
         <Route
           path="access-control"
-          element={<LazyRoute Component={AccessControlPage} />}
+          element={<LazyRoute Component={SystemAdministrationPage} />}
         />
         <Route
           path="communication-center"

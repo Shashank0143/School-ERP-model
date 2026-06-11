@@ -871,6 +871,22 @@ Every service is an `async` function that reads/writes through `MockDB`. Service
 - `enrollStudent(studentId, clubId)` → insert enrollment
 - `unenrollStudent(enrollmentId)` → delete enrollment
 
+### `adminService.js`
+- `getAdminProfile(adminId)` → fetch admin details
+- `getEmployees()` → fetch all employees/staff
+- `getDepartments()` → fetch departments
+
+### `parentService.js`
+- `getParentProfile(parentId)` → fetch parent and linked children
+- `getChildren(parentId)` → fetch child profiles
+
+### `studentDutyService.js`
+- `getStudentDutyRequests(studentId)` → fetch assigned duties
+- `createStudentDutyRequest(data)` → create a duty request
+- `updateStudentDutyRequest(id, data)` → update a request
+- `cancelStudentDutyRequest(id)` → cancel request
+- `completeStudentDutyRequest(id)` → mark as completed
+
 ### `studentDashboardService.js`
 - Aggregation service for student home page:
   - `getDashboardData(studentId)` → { attendance, assignments, notices, fees, exams }
@@ -1250,6 +1266,41 @@ PUT  /api/leaves/:id          { status, decidedBy, adminRemarks } → LeaveReque
 ```
 POST /api/events/emit         { eventType, payload } → { noticesGenerated[] }
 // This replaces the in-browser workflowEventEmitter with a server-side queue
+```
+
+#### Transport
+```
+GET  /api/transport/routes    → Route[]
+GET  /api/transport/vehicles  → Vehicle[]
+GET  /api/transport/alerts    → Alert[]
+```
+
+#### Clubs
+```
+GET  /api/clubs               → Club[]
+GET  /api/clubs/enrollments   { studentId } → Enrollment[]
+POST /api/clubs/enroll        { studentId, clubId } → Enrollment
+```
+
+#### Mentorship
+```
+GET  /api/mentorship/assignments { teacherId } → Assignment[]
+GET  /api/mentorship/remarks     { studentId } → Remark[]
+POST /api/mentorship/remarks     Remark → Remark
+```
+
+#### Support Center
+```
+GET  /api/support/requests    { requesterId? } → SupportRequest[]
+POST /api/support/requests    SupportRequest → SupportRequest
+PUT  /api/support/requests/:id/status { status } → SupportRequest
+```
+
+#### Duty Management
+```
+GET  /api/duties/requests     { studentId? | teacherId? } → DutyRequest[]
+POST /api/duties/requests     DutyRequest → DutyRequest
+PUT  /api/duties/requests/:id/status { status } → DutyRequest
 ```
 
 #### Communication (new module — Communication Center)

@@ -1,196 +1,104 @@
-# Provider Contracts (Frontend Interface Freeze)
+# 12 - Provider Contracts & Implementation Gap Analysis
 
-This document formalizes the exact Provider interface signatures. When we swap out `localProvider` with `apiProvider`, the API provider MUST implement exactly these methods and return the DTOs defined in the API contracts. The UI components must NEVER call `apiProvider` or `localProvider` directly; they call the generic `provider.*` facade.
+This document maps the exact state of the Data Provider methods across the three critical layers:
+1. `providerInterface.js` (The Formal Contract)
+2. `src/services/*` (The Consumer)
+3. `localProvider.js` (The Current Implementation)
 
-## Core Design Principle
-- **Consumer:** Frontend Service (`src/services/*`)
-- **Implementer:** `apiProvider.js` (Future) / `localProvider.js` (Current)
-- **Constraint:** All methods are asynchronous and return Promises wrapping their respective DTOs.
+When migrating to the backend, the future `apiProvider` MUST satisfy the **Implemented + Contracted** and **Implemented + Not Contracted** methods, or the frontend will break.
 
----
-
-## 1. Auth Provider Interface
-
-```javascript
-/**
- * @interface AuthProvider
- */
-export const AuthProviderContract = {
-  /**
-   * @param {Object} credentials - { username, password }
-   * @returns {Promise<LoginResponseDTO>}
-   */
-  async login(credentials) {},
-
-  /**
-   * @returns {Promise<CurrentUserDTO>}
-   */
-  async getCurrentUser() {},
-
-  /**
-   * @returns {Promise<void>}
-   */
-  async logout() {}
-};
-```
+## Classification Legend
+- 🟢 **Implemented + Contracted**: Exists in localProvider, used by Services, and explicitly defined in `providerInterface.js`.
+- 🔴 **Implemented + Not Contracted**: Exists in localProvider, used by Services, but **MISSING** from `providerInterface.js`. (Architectural gap).
+- ⚪ **Planned + Not Implemented**: Does not exist in localProvider or Services. Exists only as UI stubs or theoretical requirements.
 
 ---
 
-## 2. Student Provider Interface
+## 1. Authentication & Users
+| Method | Classification | Status |
+|---|---|---|
+| `login` | 🟢 Implemented + Contracted | Active |
+| `getCurrentUser` | 🟢 Implemented + Contracted | Active |
+| `logout` | 🟢 Implemented + Contracted | Active |
 
-```javascript
-/**
- * @interface StudentProvider
- */
-export const StudentProviderContract = {
-  /**
-   * @param {string} id
-   * @returns {Promise<StudentProfileDTO>}
-   */
-  async getStudentById(id) {},
+## 2. Students, Teachers & Parents
+| Method | Classification | Status |
+|---|---|---|
+| `getStudents`, `getStudentById` | 🟢 Implemented + Contracted | Active |
+| `updateStudent` | 🟢 Implemented + Contracted | Active |
+| `getTeachers`, `getTeacherById` | 🟢 Implemented + Contracted | Active |
+| `getParents`, `getParentById` | 🟢 Implemented + Contracted | Active |
+| `getEmployees` | 🔴 Implemented + Not Contracted | Used by `EmployeeDirectoryPage.jsx` directly |
 
-  /**
-   * @param {Object} filters - e.g. { classId: "class-10a" }
-   * @returns {Promise<StudentProfileDTO[]>}
-   */
-  async getStudents(filters) {},
+## 3. Academics (Classes, Subjects, Timetable)
+| Method | Classification | Status |
+|---|---|---|
+| `getClasses`, `getClassById` | 🟢 Implemented + Contracted | Active |
+| `getSubjects`, `getStreams` | 🟢 Implemented + Contracted | Active |
+| `getTimetables`, `setTimetables` | 🟢 Implemented + Contracted | Active |
 
-  /**
-   * @param {string} id
-   * @returns {Promise<StudentDashboardDTO>}
-   */
-  async getStudentDashboard(id) {}
-};
-```
+## 4. Attendance
+| Method | Classification | Status |
+|---|---|---|
+| `getDailyAttendance` | 🟢 Implemented + Contracted | Active |
+| `markAttendance` | 🟢 Implemented + Contracted | Active |
+| `getAttendanceSessions` | 🟢 Implemented + Contracted | Active |
 
----
+## 5. Assignments & Exams
+| Method | Classification | Status |
+|---|---|---|
+| `getAssignments`, `createAssignment` | 🟢 Implemented + Contracted | Active |
+| `getSubmissions`, `updateSubmission` | 🟢 Implemented + Contracted | Active |
+| `getExams`, `createExam` | 🟢 Implemented + Contracted | Active |
+| `getResults`, `createResult` | 🟢 Implemented + Contracted | Active |
 
-## 3. Teacher Provider Interface
+## 6. Finance
+| Method | Classification | Status |
+|---|---|---|
+| `getFees`, `getFeesByStudent` | 🟢 Implemented + Contracted | Active |
+| `getInvoices`, `getReceipts` | 🟢 Implemented + Contracted | Active |
 
-```javascript
-/**
- * @interface TeacherProvider
- */
-export const TeacherProviderContract = {
-  /**
-   * @param {string} id
-   * @returns {Promise<TeacherProfileDTO>}
-   */
-  async getTeacherById(id) {},
+## 7. Transport
+| Method | Classification | Status |
+|---|---|---|
+| `getTransportRoutes`, `getTransportVehicles` | 🟢 Implemented + Contracted | Active |
+| `getTransportAlerts` | 🟢 Implemented + Contracted | Active |
 
-  /**
-   * @param {string} id
-   * @returns {Promise<TeacherDashboardDTO>}
-   */
-  async getTeacherDashboard(id) {}
-};
-```
+## 8. Support Center
+| Method | Classification | Status |
+|---|---|---|
+| `getSupportRequests` | 🔴 Implemented + Not Contracted | Used heavily by `supportService.js` |
+| `createSupportRequest` | 🔴 Implemented + Not Contracted | Used heavily by `supportService.js` |
+| `updateSupportRequest` | 🔴 Implemented + Not Contracted | Used heavily by `supportService.js` |
+| `addSupportRemark` | 🔴 Implemented + Not Contracted | Used heavily by `supportService.js` |
+| `getSupportSettings` | 🔴 Implemented + Not Contracted | Used heavily by `supportService.js` |
 
----
+## 9. Student Duty Management
+| Method | Classification | Status |
+|---|---|---|
+| `getStudentDutyRequests` | 🔴 Implemented + Not Contracted | Used heavily by `studentDutyService.js` |
+| `createStudentDutyRequest` | 🔴 Implemented + Not Contracted | Used heavily by `studentDutyService.js` |
+| `updateStudentDutyRequest` | 🔴 Implemented + Not Contracted | Used heavily by `studentDutyService.js` |
+| `cancelStudentDutyRequest` | 🔴 Implemented + Not Contracted | Used heavily by `studentDutyService.js` |
+| `completeStudentDutyRequest`| 🔴 Implemented + Not Contracted | Used heavily by `studentDutyService.js` |
 
-## 4. Academic Provider Interface
+## 10. Clubs & Committees
+| Method | Classification | Status |
+|---|---|---|
+| `getClubs`, `getClubById` | 🟢 Implemented + Contracted | Active |
+| `getClubEnrollments` | 🟢 Implemented + Contracted | Active |
+| `getClubAnnouncements` | 🔴 Implemented + Not Contracted | Used by `clubsService.js` |
+| `getClubCreationProposals` | 🔴 Implemented + Not Contracted | Used by `clubsService.js` |
+| `assignClubRole`, `demote` | 🔴 Implemented + Not Contracted | Used by `clubsService.js` |
 
-```javascript
-/**
- * @interface AcademicProvider
- */
-export const AcademicProviderContract = {
-  // --- Question Papers ---
-
-  /**
-   * @param {QuestionPaperDTO} data
-   * @returns {Promise<QuestionPaperDTO>}
-   */
-  async createQuestionPaper(data) {},
-
-  /**
-   * @param {string} teacherId
-   * @returns {Promise<QuestionPaperDTO[]>}
-   */
-  async getTeacherQuestionPapers(teacherId) {},
-
-  /**
-   * @returns {Promise<QuestionPaperDTO[]>}
-   */
-  async getAdminPendingQuestionPapers() {},
-
-  /**
-   * @param {string} id
-   * @param {Object} update - { status: "Approved", remarks: "" }
-   * @returns {Promise<QuestionPaperDTO>}
-   */
-  async updateQuestionPaperStatus(id, update) {},
-
-  // --- Assignments ---
-
-  /**
-   * @param {string} classId
-   * @returns {Promise<AssignmentDTO[]>}
-   */
-  async getAssignments(classId) {},
-
-  // --- Results ---
-
-  /**
-   * @param {string} examId
-   * @param {string} studentId
-   * @returns {Promise<ExamResultDTO>}
-   */
-  async getExamResult(examId, studentId) {}
-};
-```
+## 11. Departments & Access Control
+| Method | Classification | Status |
+|---|---|---|
+| `getDepartments`, `createDepartment`, `updateDepartment`, `deleteDepartment` | 🔴 Implemented + Not Contracted | Bypasses service layer, used by `ManageDepartmentsPage.jsx` directly |
+| `getApprovalSettings`, `updateApprovalSetting` | 🔴 Implemented + Not Contracted | Bypasses service layer, used by `AccessControlPage.jsx` directly |
+| `getCampaigns`, `createCampaign` | ⚪ Planned + Not Implemented | UI Stub Only in `CommunicationCenterPage.jsx` |
 
 ---
 
-## 5. Parent Provider Interface
-
-```javascript
-/**
- * @interface ParentProvider
- */
-export const ParentProviderContract = {
-  /**
-   * @param {string} id
-   * @returns {Promise<ParentProfileDTO>}
-   */
-  async getParentById(id) {}
-};
-
----
-
-## 6. Transport Provider Interface
-
-```javascript
-/**
- * @interface TransportProvider
- */
-export const TransportProviderContract = {
-  // --- Routes & Vehicles ---
-  async getTransportRoutes() {},
-  async getTransportRouteById(id) {},
-  async createTransportRoute(data) {},
-  
-  async getTransportVehicles() {},
-  async getTransportVehicleById(id) {},
-  async createTransportVehicle(data) {},
-  
-  // --- Stops ---
-  async getTransportStops() {},
-  async getTransportStopsByRoute(routeId) {},
-  async createTransportStop(data) {},
-  async deleteTransportStop(id) {},
-  
-  // --- Allocations ---
-  async getTransportAllocations() {},
-  async getTransportAllocationsByRoute(routeId) {},
-  async getTransportAssignmentByStudent(studentId) {},
-  async createTransportAllocation(data) {},
-  async deleteTransportAllocation(id) {},
-  
-  // --- Alerts ---
-  async getTransportAlerts() {},
-  async createTransportAlert(data) {},
-  async deleteTransportAlert(id) {}
-};
-```
-```
+## Action Plan for Backend Migration
+The backend team MUST ensure that the future `apiProvider.js` implements all 🟢 **and** 🔴 methods. Before backend work begins, the frontend team should backport all 🔴 methods into `providerInterface.js` to properly formally document the expected signatures.

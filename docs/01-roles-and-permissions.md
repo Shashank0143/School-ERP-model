@@ -238,6 +238,98 @@ graph TD
 
 ---
 
+### 👥 1.11 User Accounts Directory & Employee Management Module
+```mermaid
+graph TD
+    subgraph "Roles"
+        Admin["👑 System Admin"]
+        Teacher["👨‍🏫 Teacher"]
+        Student["🎓 Student"]
+        Parent["👪 Parent"]
+    end
+
+    subgraph "Module Data"
+        M_Users["👥 User & Employee Directory"]
+    end
+
+    Admin -->|✍️ Manages Users, Employees & Departments| M_Users
+    Teacher -->|👁️ Views Basic Directory| M_Users
+    Student -->|👁️ Views Self Profile| M_Users
+    Parent -->|👁️ Views Child Profile| M_Users
+
+    style M_Users fill:#f3f4f6,stroke:#9ca3af,stroke-width:2px
+```
+
+---
+
+### 🎨 1.12 Clubs & Co-curricular Module
+```mermaid
+graph TD
+    subgraph "Roles"
+        Admin["👑 System Admin"]
+        Teacher["👨‍🏫 Teacher"]
+        Student["🎓 Student"]
+        Parent["👪 Parent"]
+    end
+
+    subgraph "Module Data"
+        M_Clubs["🎨 Clubs & Co-curricular"]
+    end
+
+    Admin -->|✍️ Manages Clubs & Coordinators| M_Clubs
+    Teacher -->|✍️ Manages Club Activities & Enrollments| M_Clubs
+    Student -->|💬 Requests Membership & Participates| M_Clubs
+    Parent -->|👁️ Monitors Child's Club Activities| M_Clubs
+
+    style M_Clubs fill:#fce7f3,stroke:#db2777,stroke-width:2px
+```
+
+---
+
+### 📢 1.13 Notices & Announcements Module
+```mermaid
+graph TD
+    subgraph "Roles"
+        Admin["👑 System Admin"]
+        Teacher["👨‍🏫 Teacher"]
+        Student["🎓 Student"]
+        Parent["👪 Parent"]
+    end
+
+    subgraph "Module Data"
+        M_Notices["📢 Notices & Announcements"]
+    end
+
+    Admin -->|✍️ Publishes School-Wide Notices| M_Notices
+    Teacher -->|✍️ Publishes Class-Specific Updates| M_Notices
+    Student -->|👁️ Reads Notices| M_Notices
+    Parent -->|👁️ Reads Notices| M_Notices
+
+    style M_Notices fill:#cffafe,stroke:#06b6d4,stroke-width:2px
+```
+
+---
+
+### 📊 1.14 Workload & Performance Analytics Module
+```mermaid
+graph TD
+    subgraph "Roles"
+        Admin["👑 System Admin"]
+        Teacher["👨‍🏫 Teacher"]
+    end
+
+    subgraph "Module Data"
+        M_Analytics["📊 Analytics & Workload"]
+    end
+
+    Admin -->|👁️ Views Institutional Workload & Performance| M_Analytics
+    Teacher -->|👁️ Views Class Performance Reports| M_Analytics
+
+    style M_Analytics fill:#fef08a,stroke:#eab308,stroke-width:2px
+```
+
+---
+
 ## 📊 2. Permissions Matrix Grid
 
 This grid maps features to roles using permissions. You can easily add rows for new features or update cell symbols.
@@ -251,6 +343,7 @@ This grid maps features to roles using permissions. You can easily add rows for 
 | Feature / Module | Admin (`ADMIN`) | Teacher (`TEACHER`) | Student (`STUDENT`) | Parent (`PARENT`) |
 | :--- | :---: | :---: | :---: | :---: |
 | **User Accounts Directory** | `✍️ Manage` | `👁️ View (Basic)` | `👁️ View (Self)` | `👁️ View (Child)` |
+| **Employee & Department Management** | `✍️ Manage` | `❌ None` | `❌ None` | `❌ None` |
 | **Academics, Classes & Timetables** | `✍️ Manage` | `👁️ View (Own)` | `👁️ View (Own)` | `👁️ View (Child)` |
 | **Attendance Logs** | `👁️ View (Global)` | `✍️ Manage` | `👁️ View (Self)` | `👁️ View (Child)` |
 | **Assignments & Homework** | `❌ None` | `✍️ Manage` | `💬 Interact` | `👁️ View` |

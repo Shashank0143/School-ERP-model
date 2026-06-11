@@ -10,6 +10,8 @@ This document tracks the completion status of all modules across the ERP portals
 ## Admin Portal
 ├── 👨‍🎓 Students (✔ Complete)
 ├── 👨‍🏫 Teachers (✔ Complete)
+├── 👥 Employee Directory (✔ Complete)
+├── 🏢 Manage Departments (⚠ Partial/UI Stub)
 ├── 👪 Parents (✔ Complete)
 ├── 🏫 Classes (✔ Complete)
 ├── 📅 Timetable (✔ Complete)
@@ -21,7 +23,8 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 📢 Notice Board (✔ Complete)
 ├── 🏆 Achievements (✔ Complete)
 ├── ⚙️ School Settings (🚧 Planned)
-├── ✉️ Communication Center (⚠ Partial)
+├── ✉️ Communication Center (⚠ Partial/UI Stub)
+├── 🔒 Access Control (⚠ Partial/UI Stub)
 ├── 🎧 Support Management (✔ Complete)
 ├── 🎭 Clubs & Committees (✔ Complete)
 └── 🛡️ Student Duty Management (✔ Complete)
