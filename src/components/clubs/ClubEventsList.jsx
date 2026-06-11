@@ -1,7 +1,7 @@
 import React from "react";
 import { Calendar, Clock, MapPin, Plus, CheckCircle, HelpCircle } from "lucide-react";
 
-export default function ClubEventsList({ events = [], onOpenScheduleModal }) {
+export default function ClubEventsList({ events = [], onOpenScheduleModal, onOpenManageParticipants }) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-50">
@@ -38,14 +38,24 @@ export default function ClubEventsList({ events = [], onOpenScheduleModal }) {
                   <h5 className="font-black text-xs text-[#03045e]">{evt.title}</h5>
                   <p className="text-[10px] text-gray-500 font-medium mt-0.5">{evt.description}</p>
                 </div>
-                <span className={`inline-flex items-center gap-1 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                  evt.status === "Upcoming"
-                    ? "bg-amber-50 text-amber-600 border border-amber-100"
-                    : "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                }`}>
-                  {evt.status === "Upcoming" ? <HelpCircle className="w-2.5 h-2.5" /> : <CheckCircle className="w-2.5 h-2.5" />}
-                  {evt.status}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={`inline-flex items-center gap-1 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                    evt.status === "Upcoming"
+                      ? "bg-amber-50 text-amber-600 border border-amber-100"
+                      : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                  }`}>
+                    {evt.status === "Upcoming" ? <HelpCircle className="w-2.5 h-2.5" /> : <CheckCircle className="w-2.5 h-2.5" />}
+                    {evt.status}
+                  </span>
+                  {onOpenManageParticipants && (
+                    <button
+                      onClick={() => onOpenManageParticipants(evt)}
+                      className="text-[9px] font-black text-white bg-[#03045e] hover:bg-[#0077b6] px-2.5 py-1.5 rounded-lg shadow-sm transition-colors uppercase tracking-wider"
+                    >
+                      Manage Participants
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-50/50 mt-2 text-[10px] font-bold text-gray-500">

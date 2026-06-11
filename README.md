@@ -45,10 +45,10 @@ We have consolidated and standardized all architectural and technical documentat
 | Module                      | Sub-System                                                                                                                           | Status      |
 | :-------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :---------- |
 | **Authentication**          | Unified login, RBAC, session persistence                                                                                             | ✅ Complete |
-| **Student Portal**          | Dashboard, timetable, profile, attendance, fees, transport, docs, achievements, mentor, clubs, leave                                 | ✅ Complete |
-| **Parent Portal**           | Multi-child switcher, fee details, transport monitoring                                                                              | ✅ Complete |
-| **Teacher Portal**          | Dashboard, attendance, marks/exams, assignments, question papers, timetable, student perf, leave, mentor, clubs, reports             | ✅ Complete |
-| **Admin Portal**            | Students 360, Teachers, Parents, Classes, Subjects, Timetable, Attendance, Fee Mgmt, Transport, Notices, Clubs, Workload Analytics   | ✅ Complete |
+| **Student Portal**          | Dashboard, timetable, profile, attendance, fees, transport, docs, achievements, mentor, clubs, leave, student duty                   | ✅ Complete |
+| **Parent Portal**           | Multi-child switcher, fee details, transport monitoring, duty records                                                                | ✅ Complete |
+| **Teacher Portal**          | Dashboard, attendance, marks/exams, assignments, question papers, timetable, student perf, leave, mentor, clubs, reports, duty mgmt  | ✅ Complete |
+| **Admin Portal**            | Students 360, Teachers, Parents, Classes, Subjects, Timetable, Attendance, Fee Mgmt, Transport, Notices, Clubs, Duty Mgmt, Analytics | ✅ Complete |
 | **Seed System**             | Institutional data generation for all entities                                                                                       | ✅ Complete |
 | **Database Architecture**   | SQL schema models and relationships defined                                                                                          | ✅ Complete |
 | **Documentation Update**    | Consolidation and standardization of technical guides                                                                                | ✅ Complete |
@@ -145,19 +145,19 @@ EduDash is currently in the **Contract Freeze Phase**, ensuring it is fully prep
 
 ### 🧑‍🎓 Student Portal
 **Role**: Data consumer and task executor.
-*Dashboard, Courses, Weekly Timetable, Examinations, Assignments, Achievements, Leave Requests, Clubs, Mentor Support.*
+*Dashboard, Courses, Weekly Timetable, Examinations, Assignments, Achievements, Leave Requests, Clubs, Student Duty, Mentor Support.*
 
 ### 🧑‍👩‍👦 Parent Portal
 **Role**: Auditor and supervisor.
-Uses `ChildScopeSwitcher` to view multiple children. Dedicated features for Fee Details and Transport Tracking.
+Uses `ChildScopeSwitcher` to view multiple children. Dedicated features for Fee Details, Transport Tracking, and Duty Records.
 
 ### 🧑‍🏫 Teacher Portal
 **Role**: Primary data writer.
-*Attendance Mgmt, Assignments, Marks & Exams, Question Papers, Class Timetable, Student Performance, Reports & Analytics, Leave Mgmt.*
+*Attendance Mgmt, Assignments, Marks & Exams, Question Papers, Class Timetable, Student Performance, Reports & Analytics, Leave Mgmt, Student Duty.*
 
 ### ⚙️ Admin Portal
 **Role**: System governance and master data management.
-*Student 360, Teachers, Parents, Classes, Subjects, Subject Allocation, Timetable, Examinations, Attendance Overview, Leave Approvals, Fee & Transport Mgmt, Workload Analytics.*
+*Student 360, Teachers, Parents, Classes, Subjects, Subject Allocation, Timetable, Examinations, Attendance Overview, Leave Approvals, Fee & Transport Mgmt, Clubs, Duty Mgmt, Workload Analytics.*
 
 > **Note:** All 23+ admin pages have been fully refactored to use async Services and Data Providers. Direct `MockDB` imports have been eliminated, paying down earlier architectural debt.
 

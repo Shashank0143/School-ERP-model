@@ -77,6 +77,11 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 *   **`documents`**: Centralized file tracking.
     *   *Fields*: `entity_type`, `entity_id`, `doc_type`, `file_url`, `verification_status`.
 
+### Schema: `extracurricular`
+*   **`clubs`**: Extracurricular clubs and committees.
+*   **`club_enrollments`**: Maps students to clubs.
+*   **`student_duties`**: Duty requests assigned to students by teachers.
+
 ---
 
 ## III. ER Diagram (Deliverable 2)
@@ -128,6 +133,12 @@ erDiagram
     STUDENTS ||--o{ ALLOCATIONS : "assigned"
     ROUTES ||--o{ ALLOCATIONS : "serves"
     STOPS ||--o{ ALLOCATIONS : "pickup at"
+
+    %% Extracurricular
+    STUDENTS ||--o{ CLUB_ENROLLMENTS : "joins"
+    CLUBS ||--o{ CLUB_ENROLLMENTS : "has members"
+    TEACHERS ||--o{ STUDENT_DUTIES : "assigns"
+    STUDENTS ||--o{ STUDENT_DUTIES : "performs"
 ```
 
 ---

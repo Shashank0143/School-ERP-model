@@ -883,13 +883,11 @@ const FeeManagementPage = () => {
                   <select
                     value={selectedSection}
                     onChange={(e) => setSelectedSection(e.target.value)}
-                    className="border-2 border-[#03045e]/10 hover:border-[#0077b6] px-3 py-2 rounded-2xl text-xs font-black text-[#03045e] transition-colors bg-white outline-none min-w-[100px]"
+                    disabled={!selectedLevel}
+                    className="border-2 border-[#03045e]/10 hover:border-[#0077b6] px-3 py-2 rounded-2xl text-xs font-black text-[#03045e] transition-colors bg-white outline-none min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">All Sections</option>
-                    {(selectedLevel
-                      ? availableSections
-                      : ["A", "B", "C", "D"]
-                    ).map((s) => (
+                    {availableSections.map((s) => (
                       <option key={s} value={s}>
                         Section {s}
                       </option>

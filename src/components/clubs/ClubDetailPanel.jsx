@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Compass, Users, Calendar, Megaphone, ArrowLeft, Info, HelpCircle } from "lucide-react";
+import { Compass, Users, Calendar, Megaphone, ArrowLeft, Info, HelpCircle, Award } from "lucide-react";
 import ClubMembersTable from "./ClubMembersTable";
 import ClubEventsList from "./ClubEventsList";
-import ClubUpdatesFeed from "./ClubUpdatesFeed";
+import ClubAnnouncementsTab from "./ClubAnnouncementsTab";
+import ClubLeadershipTab from "./ClubLeadershipTab";
 import CreateEventModal from "./CreateEventModal";
+import ActivityParticipantsModal from "./ActivityParticipantsModal";
 import { clubsService } from "../../services/clubsService";
 
 export default function ClubDetailPanel({ club, onBack, teacherId, isReadOnly = false }) {
   const [activeTab, setActiveTab] = useState("members");
   const [members, setMembers] = useState([]);
   const [events, setEvents] = useState([]);
-  const [updates, setUpdates] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [mLoading, setMLoading] = useState(false);
   const [eLoading, setELoading] = useState(false);
-  const [uLoading, setULoading] = useState(false);
+  const [aLoading, setALoading] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
+  const [selectedEventForParticipants, setSelectedEventForParticipants] = useState(null);
 
   const loadClubData = async () => {
     if (!club) return;
@@ -41,15 +45,15 @@ export default function ClubDetailPanel({ club, onBack, teacherId, isReadOnly = 
       setELoading(false);
     }
 
-    // 3. Updates
-    setULoading(true);
+    // 3. Announcements
+    setALoading(true);
     try {
-      const upds = await clubsService.getClubUpdates(club.id);
-      setUpdates(upds);
+      const anns = await clubsService.getClubAnnouncements(club.id);
+      setAnnouncements(anns);
     } catch (e) {
       console.error(e);
     } finally {
-      setULoading(false);
+      setALoading(false);
     }
   };
 
@@ -68,23 +72,32 @@ export default function ClubDetailPanel({ club, onBack, teacherId, isReadOnly = 
     setEvents(evts);
   };
 
-  const handlePostUpdate = async (updateDetails) => {
-    await clubsService.createClubUpdate({
+  const handlePostAnnouncement = async (announcementDetails) => {
+    await clubsService.createClubAnnouncement({
       clubId: club.id,
-      teacherId,
-      ...updateDetails
+      createdByTeacherId: teacherId,
+      createdByTeacherName: "Coordinator", // Simplification; could fetch proper name
+      ...announcementDetails
     });
-    // Reload updates list
-    const upds = await clubsService.getClubUpdates(club.id);
-    setUpdates(upds);
+    // Reload announcements list
+    const anns = await clubsService.getClubAnnouncements(club.id);
+    setAnnouncements(anns);
+  };
+
+  const handleArchiveAnnouncement = async (announcementId) => {
+    await clubsService.archiveClubAnnouncement(announcementId);
+    // Reload announcements list
+    const anns = await clubsService.getClubAnnouncements(club.id);
+    setAnnouncements(anns);
   };
 
   if (!club) return null;
 
   const tabs = [
     { id: "members", label: "Members", icon: Users, badge: members.length },
+    { id: "leadership", label: "Leadership", icon: Award },
     { id: "events", label: "Activities", icon: Calendar, badge: events.length },
-    { id: "updates", label: "Advisories", icon: Megaphone, badge: updates.length }
+    { id: "announcements", label: "Announcements", icon: Megaphone, badge: announcements.length }
   ];
 
   return (
@@ -167,13 +180,29 @@ export default function ClubDetailPanel({ club, onBack, teacherId, isReadOnly = 
           <ClubEventsList 
             events={events} 
             onOpenScheduleModal={isReadOnly ? undefined : () => setIsScheduleModalOpen(true)} 
+            onOpenManageParticipants={isReadOnly ? undefined : (evt) => {
+              setSelectedEventForParticipants(evt);
+              setIsParticipantsModalOpen(true);
+            }}
           />
         )}
 
-        {activeTab === "updates" && (
-          <ClubUpdatesFeed 
-            updates={updates} 
-            onPostUpdate={isReadOnly ? undefined : handlePostUpdate} 
+        {activeTab === "leadership" && (
+          <ClubLeadershipTab 
+            clubId={club.id} 
+            teacherId={teacherId} 
+            members={members} 
+            onRolesUpdated={loadClubData}
+            isReadOnly={isReadOnly}
+          />
+        )}
+
+        {activeTab === "announcements" && (
+          <ClubAnnouncementsTab 
+            announcements={announcements} 
+            onPostAnnouncement={isReadOnly ? undefined : handlePostAnnouncement}
+            onArchiveAnnouncement={isReadOnly ? undefined : handleArchiveAnnouncement}
+            isReadOnly={isReadOnly}
           />
         )}
       </div>
@@ -183,6 +212,16 @@ export default function ClubDetailPanel({ club, onBack, teacherId, isReadOnly = 
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
         onSubmit={handleScheduleEvent}
+      />
+
+      {/* Participants Modal */}
+      <ActivityParticipantsModal
+        isOpen={isParticipantsModalOpen}
+        onClose={() => setIsParticipantsModalOpen(false)}
+        activity={selectedEventForParticipants}
+        members={members}
+        teacherId={teacherId}
+        teacherName={club.coordinatorTeacherName || club.coordinator}
       />
     </div>
   );

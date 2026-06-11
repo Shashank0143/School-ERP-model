@@ -255,7 +255,10 @@ const ParentsPage = () => {
               {/* Grade Filter */}
               <select
                 value={selectedGrade}
-                onChange={(e) => setSelectedGrade(e.target.value)}
+                onChange={(e) => {
+                  setSelectedGrade(e.target.value);
+                  setSelectedSection("");
+                }}
                 className="px-3 py-2.5 rounded-2xl bg-[#caf0f8]/20 border border-[#caf0f8]/50 text-xs text-gray-700 font-bold focus:outline-none focus:border-[#0077b6] cursor-pointer"
               >
                 <option value="">All Grades</option>
@@ -270,7 +273,8 @@ const ParentsPage = () => {
               <select
                 value={selectedSection}
                 onChange={(e) => setSelectedSection(e.target.value)}
-                className="px-3 py-2.5 rounded-2xl bg-[#caf0f8]/20 border border-[#caf0f8]/50 text-xs text-gray-700 font-bold focus:outline-none focus:border-[#0077b6] cursor-pointer"
+                disabled={!selectedGrade}
+                className="px-3 py-2.5 rounded-2xl bg-[#caf0f8]/20 border border-[#caf0f8]/50 text-xs text-gray-700 font-bold focus:outline-none focus:border-[#0077b6] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">All Sections</option>
                 {uniqueSections.map((section) => (

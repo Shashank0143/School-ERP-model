@@ -1060,6 +1060,26 @@ const localProvider = {
     const clubs = getItem(STORAGE_KEYS.CLUBS) || [];
     return clubs.find((c) => c.id === clubId) || null;
   },
+  createClub: async (clubData) => {
+    const clubs = getItem(STORAGE_KEYS.CLUBS) || [];
+    const newClub = {
+      id: clubData.id || `club-${Date.now()}`,
+      ...clubData,
+      status: clubData.status || "Active",
+      createdAt: clubData.createdAt || new Date().toISOString(),
+    };
+    clubs.push(newClub);
+    setItem(STORAGE_KEYS.CLUBS, clubs);
+    return newClub;
+  },
+  updateClub: async (clubId, updates) => {
+    const clubs = getItem(STORAGE_KEYS.CLUBS) || [];
+    const idx = clubs.findIndex((c) => c.id === clubId);
+    if (idx === -1) throw new Error("Club not found");
+    clubs[idx] = { ...clubs[idx], ...updates, updatedAt: new Date().toISOString() };
+    setItem(STORAGE_KEYS.CLUBS, clubs);
+    return clubs[idx];
+  },
   getClubEnrollments: async () => {
     return getItem(STORAGE_KEYS.CLUB_ENROLLMENTS) || [];
   },
@@ -1441,8 +1461,8 @@ const localProvider = {
         { employeeId: "EMP-006", employeeName: "Sunita Singh", departmentId: "dept-finance", roleId: "role-accountant", designation: "Accountant", phone: "+91-9876543215", email: "sunita.singh@school.edu", joiningDate: "2023-06-01", status: "active" },
         { employeeId: "EMP-007", employeeName: "Priya Gupta", departmentId: "dept-administration", roleId: "role-receptionist", designation: "Receptionist", phone: "+91-9876543216", email: "priya.gupta@school.edu", joiningDate: "2023-07-10", status: "active" },
         { employeeId: "EMP-008", employeeName: "Lakshmi Mehta", departmentId: "dept-library", roleId: "role-librarian", designation: "Library Officer", phone: "+91-9876543217", email: "lakshmi.mehta@school.edu", joiningDate: "2023-08-05", status: "active" },
-        { employeeId: "EMP-009", employeeName: "Krishna Reddy", departmentId: "dept-it", roleId: "role-super-admin", designation: "IT Support", phone: "+91-9876543218", email: "krishna.reddy@school.edu", joiningDate: "2023-09-12", status: "active" },
-        { employeeId: "EMP-010", employeeName: "Suresh Kumar", departmentId: "dept-administration", roleId: "role-super-admin", designation: "Administrative Executive", phone: "+91-9876543219", email: "suresh.kumar@school.edu", joiningDate: "2023-10-01", status: "active" },
+        { employeeId: "EMP-009", employeeName: "Krishna Reddy", departmentId: "dept-it", roleId: "role-super-admin", designation: "IT Support", phone: "+91-9876543218", email: "krishna.reddy@school.edu", joiningDate: "2023-09-12", status: "active", systemAccess: true },
+        { employeeId: "EMP-010", employeeName: "Suresh Kumar", departmentId: "dept-administration", roleId: "role-super-admin", designation: "Administrative Executive", phone: "+91-9876543219", email: "suresh.kumar@school.edu", joiningDate: "2023-10-01", status: "active", systemAccess: true, linkedAuthUserId: "auth-admin-001" },
         { employeeId: "EMP-011", employeeName: "Ramesh Chand", departmentId: "dept-transport", roleId: "role-driver", designation: "Driver", phone: "+91-9876543220", email: "ramesh.chand@school.edu", joiningDate: "2021-04-10", status: "active" },
         { employeeId: "EMP-012", employeeName: "Sunita Devi", departmentId: "dept-transport", roleId: "role-driver", designation: "Driver", phone: "+91-9876543221", email: "sunita.devi@school.edu", joiningDate: "2021-05-15", status: "active" },
         { employeeId: "EMP-013", employeeName: "Mohammad Ali", departmentId: "dept-transport", roleId: "role-driver", designation: "Driver", phone: "+91-9876543222", email: "mohammad.ali@school.edu", joiningDate: "2022-01-20", status: "active" },
@@ -1860,6 +1880,655 @@ const localProvider = {
     setItem(STORAGE_KEYS.SUPPORT_REQUESTS, requests);
     return requests[idx];
   },
+  // === STUDENT DUTY REQUESTS ===
+  _initializeStudentDutyRequests: async () => {
+    let requests = getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS);
+    if (requests && requests.length > 0) return; // Already initialized
+
+    requests = [];
+    const students = getItem(STORAGE_KEYS.STUDENTS) || [];
+    const teachers = getItem(STORAGE_KEYS.TEACHERS) || [];
+
+    if (students.length > 0 && teachers.length > 0) {
+      const demoTitles = [
+        "Football Practice",
+        "Assembly Preparation",
+        "Science Exhibition Setup",
+        "Inter-House Debate Preparation",
+        "Library Volunteer Duty",
+        "Annual Function Rehearsal",
+        "Choir Practice",
+        "Basketball Selection",
+        "Art Competition Setup",
+        "Discipline Committee Meeting",
+      ];
+
+      const demoCategories = ["Sports", "Assembly", "Academic", "Academic", "Administrative", "Competition", "Competition", "Sports", "Competition", "Administrative"];
+
+      // Create 10 demo records
+      const numRecords = 10;
+      for (let i = 0; i < numRecords; i++) {
+        const teacher = teachers[i % teachers.length];
+        
+        // Pick 2-4 random students
+        const numStudents = Math.floor(Math.random() * 3) + 2;
+        const targetStudents = [];
+        for (let j = 0; j < numStudents; j++) {
+          const student = students[(i * numStudents + j) % students.length];
+          const studentName = student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'Unknown Student';
+          targetStudents.push({
+            studentId: student.id || student.studentId,
+            studentName: studentName,
+            className: student.className || "N/A",
+            section: student.section || "N/A",
+          });
+        }
+
+        const request = {
+          id: `duty-${Date.now()}-${i}`,
+          title: demoTitles[i % demoTitles.length],
+          category: demoCategories[i % demoCategories.length],
+          reason: `Official requirement for ${demoTitles[i % demoTitles.length].toLowerCase()}`,
+          location: i % 2 === 0 ? "Main Ground" : "Auditorium",
+          dutyDate: new Date(Date.now() + i * 86400000).toISOString().split('T')[0], // future dates
+          startTime: "10:30",
+          endTime: "11:15",
+          requestedByTeacherId: teacher.id || teacher.teacherId,
+          requestedByTeacherName: teacher.teacherName || teacher.name || "Unknown Teacher",
+          targetStudents,
+          status: i < 2 ? "Completed" : i === 2 ? "Cancelled" : "Active",
+          createdAt: new Date(Date.now() - i * 3600000).toISOString(),
+          updatedAt: new Date(Date.now() - i * 3600000).toISOString()
+        };
+        requests.push(request);
+      }
+    }
+    
+    setItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS, requests);
+  },
+
+  getStudentDutyRequests: async () => {
+    await localProvider._initializeStudentDutyRequests();
+    return getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS) || [];
+  },
+
+  getStudentDutyRequestById: async (id) => {
+    await localProvider._initializeStudentDutyRequests();
+    const requests = getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS) || [];
+    return requests.find(r => r.id === id) || null;
+  },
+
+  createStudentDutyRequest: async (data) => {
+    await localProvider._initializeStudentDutyRequests();
+    const requests = getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS) || [];
+    const newRequest = {
+      ...data,
+      id: `duty-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      status: data.status || "Active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    requests.unshift(newRequest);
+    setItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS, requests);
+    return newRequest;
+  },
+
+  updateStudentDutyRequest: async (id, updates) => {
+    await localProvider._initializeStudentDutyRequests();
+    const requests = getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS) || [];
+    const idx = requests.findIndex(r => r.id === id);
+    if (idx === -1) throw new Error("Duty request not found");
+    
+    // Status guard
+    if (requests[idx].status !== "Active") {
+      throw new Error("Only Active duty requests can be edited");
+    }
+
+    requests[idx] = { ...requests[idx], ...updates, updatedAt: new Date().toISOString() };
+    setItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS, requests);
+    return requests[idx];
+  },
+
+  cancelStudentDutyRequest: async (id) => {
+    await localProvider._initializeStudentDutyRequests();
+    const requests = getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS) || [];
+    const idx = requests.findIndex(r => r.id === id);
+    if (idx === -1) throw new Error("Duty request not found");
+
+    if (requests[idx].status !== "Active") {
+      throw new Error("Only Active duty requests can be cancelled");
+    }
+    
+    requests[idx].status = "Cancelled";
+    requests[idx].updatedAt = new Date().toISOString();
+    setItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS, requests);
+    return requests[idx];
+  },
+
+  completeStudentDutyRequest: async (id) => {
+    await localProvider._initializeStudentDutyRequests();
+    const requests = getItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS) || [];
+    const idx = requests.findIndex(r => r.id === id);
+    if (idx === -1) throw new Error("Duty request not found");
+
+    if (requests[idx].status !== "Active") {
+      throw new Error("Only Active duty requests can be completed");
+    }
+    
+    requests[idx].status = "Completed";
+    requests[idx].updatedAt = new Date().toISOString();
+    setItem(STORAGE_KEYS.STUDENT_DUTY_REQUESTS, requests);
+    return requests[idx];
+  },
+
+  // ==========================================
+  // CLUB MEMBERSHIP REQUESTS
+  // ==========================================
+  _initializeClubMembershipRequests: async () => {
+    let requests = getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS);
+    if (!requests || requests.length === 0) {
+      const students = getItem(STORAGE_KEYS.STUDENTS) || [];
+      const clubs = getItem(STORAGE_KEYS.CLUBS) || [];
+      const teachers = getItem(STORAGE_KEYS.TEACHERS) || [];
+
+      if (students.length > 0 && clubs.length > 0 && teachers.length > 0) {
+        requests = [
+          {
+            requestId: "req-001",
+            studentId: students[0].id,
+            studentName: students[0].name,
+            className: "10-A",
+            section: "A",
+            clubId: clubs[0].id,
+            clubName: clubs[0].name,
+            coordinatorTeacherId: clubs[0].clubHeadTeacherId,
+            coordinatorTeacherName: teachers.find(t => t.id === clubs[0].clubHeadTeacherId)?.teacherName || "Coordinator",
+            requestDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "Pending",
+            remarks: "I have always been passionate about science.",
+            decisionDate: null
+          },
+          {
+            requestId: "req-002",
+            studentId: students[1].id,
+            studentName: students[1].name,
+            className: "10-B",
+            section: "B",
+            clubId: clubs[1].id,
+            clubName: clubs[1].name,
+            coordinatorTeacherId: clubs[1].clubHeadTeacherId,
+            coordinatorTeacherName: teachers.find(t => t.id === clubs[1].clubHeadTeacherId)?.teacherName || "Coordinator",
+            requestDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "Approved",
+            remarks: "I want to participate in the upcoming debate.",
+            decisionDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            requestId: "req-003",
+            studentId: students[2].id,
+            studentName: students[2].name,
+            className: "11-A",
+            section: "A",
+            clubId: clubs[2].id,
+            clubName: clubs[2].name,
+            coordinatorTeacherId: clubs[2].clubHeadTeacherId,
+            coordinatorTeacherName: teachers.find(t => t.id === clubs[2].clubHeadTeacherId)?.teacherName || "Coordinator",
+            requestDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "Rejected",
+            remarks: "I'd like to join.",
+            decisionDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            requestId: "req-004",
+            studentId: students[3].id,
+            studentName: students[3].name,
+            className: "11-B",
+            section: "B",
+            clubId: clubs[0].id,
+            clubName: clubs[0].name,
+            coordinatorTeacherId: clubs[0].clubHeadTeacherId,
+            coordinatorTeacherName: teachers.find(t => t.id === clubs[0].clubHeadTeacherId)?.teacherName || "Coordinator",
+            requestDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "Withdrawn",
+            remarks: "Will apply next semester.",
+            decisionDate: new Date().toISOString()
+          },
+          {
+            requestId: "req-005",
+            studentId: students[4].id,
+            studentName: students[4].name,
+            className: "10-C",
+            section: "C",
+            clubId: clubs[1].id,
+            clubName: clubs[1].name,
+            coordinatorTeacherId: clubs[1].clubHeadTeacherId,
+            coordinatorTeacherName: teachers.find(t => t.id === clubs[1].clubHeadTeacherId)?.teacherName || "Coordinator",
+            requestDate: new Date().toISOString(),
+            status: "Pending",
+            remarks: "Very interested in public speaking.",
+            decisionDate: null
+          }
+        ];
+        setItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS, requests);
+      }
+    }
+  },
+
+  getClubMembershipRequests: async () => {
+    await localProvider._initializeClubMembershipRequests();
+    return getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS) || [];
+  },
+
+  getClubMembershipRequestById: async (id) => {
+    await localProvider._initializeClubMembershipRequests();
+    const requests = getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS) || [];
+    return requests.find((r) => r.requestId === id) || null;
+  },
+
+  createClubMembershipRequest: async (data) => {
+    await localProvider._initializeClubMembershipRequests();
+    const requests = getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS) || [];
+    const newRequest = {
+      requestId: `req-${Date.now()}`,
+      requestDate: new Date().toISOString(),
+      status: "Pending",
+      decisionDate: null,
+      ...data
+    };
+    requests.push(newRequest);
+    setItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS, requests);
+    return newRequest;
+  },
+
+  updateClubMembershipRequest: async (id, updates) => {
+    await localProvider._initializeClubMembershipRequests();
+    const requests = getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS) || [];
+    const idx = requests.findIndex((r) => r.requestId === id);
+    if (idx === -1) throw new Error("Club membership request not found");
+
+    requests[idx] = { ...requests[idx], ...updates };
+    setItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS, requests);
+    return requests[idx];
+  },
+
+  // ==========================================
+  // CLUB LEADERSHIP ASSIGNMENTS
+  // ==========================================
+  _initializeClubLeadershipAssignments: async () => {
+    let assignments = getItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS);
+    if (!assignments) {
+      assignments = [
+        {
+          id: "CLA-001",
+          clubId: "club-1",
+          studentId: "STU001",
+          role: "President",
+          assignedByTeacherId: "T001",
+          assignedAt: new Date().toISOString()
+        },
+        {
+          id: "CLA-002",
+          clubId: "club-2",
+          studentId: "STU002",
+          role: "Secretary",
+          assignedByTeacherId: "T002",
+          assignedAt: new Date().toISOString()
+        }
+      ];
+      setItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS, assignments);
+    }
+  },
+
+  getClubLeadershipAssignments: async () => {
+    await localProvider._initializeClubLeadershipAssignments();
+    return getItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS) || [];
+  },
+
+  assignClubRole: async (data) => {
+    await localProvider._initializeClubLeadershipAssignments();
+    const assignments = getItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS) || [];
+    
+    // Check if the student already has a leadership role in this club
+    const existingIndex = assignments.findIndex(
+      (a) => a.clubId === data.clubId && a.studentId === data.studentId
+    );
+    
+    if (existingIndex !== -1) {
+      // Update existing role
+      assignments[existingIndex] = {
+        ...assignments[existingIndex],
+        role: data.role,
+        assignedByTeacherId: data.assignedByTeacherId,
+        assignedAt: new Date().toISOString()
+      };
+    } else {
+      // Create new role assignment
+      const newAssignment = {
+        id: `cla-${Date.now()}`,
+        assignedAt: new Date().toISOString(),
+        ...data
+      };
+      assignments.push(newAssignment);
+    }
+    
+    setItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS, assignments);
+    return true;
+  },
+
+  demoteToMember: async (clubId, studentId) => {
+    await localProvider._initializeClubLeadershipAssignments();
+    let assignments = getItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS) || [];
+    
+    // Filter out the assignment (which drops them back to their default "Member" status)
+    assignments = assignments.filter(
+      (a) => !(a.clubId === clubId && a.studentId === studentId)
+    );
+    
+    setItem(STORAGE_KEYS.CLUB_LEADERSHIP_ASSIGNMENTS, assignments);
+    return true;
+  },
+
+  // ==========================================
+  // CLUB ANNOUNCEMENTS (Phase 3)
+  // ==========================================
+  _initializeClubAnnouncements: async () => {
+    const existingAnnouncements = getItem(STORAGE_KEYS.CLUB_ANNOUNCEMENTS);
+    if (existingAnnouncements) return; // Already initialized/migrated
+
+    const newAnnouncements = [];
+    const legacyUpdates = getItem(STORAGE_KEYS.CLUB_UPDATES);
+
+    if (legacyUpdates && legacyUpdates.length > 0) {
+      // Migrate legacy updates
+      legacyUpdates.forEach(upd => {
+        // Find club name if possible (not strictly required if we just fallback)
+        newAnnouncements.push({
+          announcementId: `ann-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          clubId: upd.clubId,
+          clubName: "Migrated Club", 
+          title: upd.title || "Club Update",
+          content: upd.content || upd.message || "",
+          category: "General", // Default for legacy
+          isPinned: false,
+          createdByTeacherId: upd.teacherId || upd.createdByTeacherId || "T001",
+          createdByTeacherName: "Coordinator",
+          createdAt: upd.date || new Date().toISOString(),
+          status: "Published"
+        });
+      });
+    } else {
+      // Seed fresh data if no legacy updates exist
+      newAnnouncements.push(
+        {
+          announcementId: `ann-${Date.now()}-1`,
+          clubId: "club-1",
+          clubName: "Science & Innovation Club",
+          title: "Meeting Tomorrow",
+          content: "We will be discussing our upcoming projects. Please be on time.",
+          category: "Meeting",
+          isPinned: true,
+          createdByTeacherId: "T001",
+          createdByTeacherName: "Anjali Verma",
+          createdAt: new Date().toISOString(),
+          status: "Published"
+        },
+        {
+          announcementId: `ann-${Date.now()}-2`,
+          clubId: "club-1",
+          clubName: "Science & Innovation Club",
+          title: "Science Exhibition Preparation",
+          content: "Please gather in the main lab after school to start building our exhibition models.",
+          category: "Practice Session",
+          isPinned: false,
+          createdByTeacherId: "T001",
+          createdByTeacherName: "Anjali Verma",
+          createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          status: "Published"
+        },
+        {
+          announcementId: `ann-${Date.now()}-3`,
+          clubId: "club-2",
+          clubName: "Debate Society",
+          title: "Debate Competition Registration Open",
+          content: "Registration for the inter-school debate is now open. Submit your names to the coordinator.",
+          category: "Registration",
+          isPinned: true,
+          createdByTeacherId: "T002",
+          createdByTeacherName: "Rahul Sharma",
+          createdAt: new Date().toISOString(),
+          status: "Published"
+        }
+      );
+    }
+    
+    setItem(STORAGE_KEYS.CLUB_ANNOUNCEMENTS, newAnnouncements);
+  },
+
+  getClubAnnouncements: async () => {
+    await localProvider._initializeClubAnnouncements();
+    return getItem(STORAGE_KEYS.CLUB_ANNOUNCEMENTS) || [];
+  },
+
+  getClubAnnouncementById: async (announcementId) => {
+    const announcements = await localProvider.getClubAnnouncements();
+    return announcements.find((a) => a.announcementId === announcementId);
+  },
+
+  createClubAnnouncement: async (data) => {
+    const announcements = await localProvider.getClubAnnouncements();
+    const newAnnouncement = {
+      announcementId: `ann-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: "Published",
+      isPinned: false,
+      ...data
+    };
+    announcements.push(newAnnouncement);
+    setItem(STORAGE_KEYS.CLUB_ANNOUNCEMENTS, announcements);
+    return newAnnouncement;
+  },
+
+  updateClubAnnouncement: async (announcementId, updates) => {
+    const announcements = await localProvider.getClubAnnouncements();
+    const index = announcements.findIndex(a => a.announcementId === announcementId);
+    if (index === -1) throw new Error("Announcement not found");
+    
+    announcements[index] = { ...announcements[index], ...updates };
+    setItem(STORAGE_KEYS.CLUB_ANNOUNCEMENTS, announcements);
+    return announcements[index];
+  },
+
+  archiveClubAnnouncement: async (announcementId) => {
+    return await localProvider.updateClubAnnouncement(announcementId, { status: "Archived" });
+  },
+
+  // ==========================================
+  // CLUB CREATION PROPOSALS (Phase 4)
+  // ==========================================
+  _initializeClubCreationProposals: async () => {
+    if (getItem(STORAGE_KEYS.CLUB_CREATION_PROPOSALS)) return;
+
+    const proposals = [
+      {
+        proposalId: `prop-${Date.now()}-1`,
+        proposedByStudentId: "stud-001",
+        proposedByStudentName: "Amit Kumar",
+        clubName: "AI Club",
+        category: "Technology",
+        purpose: "Machine Learning workshops and AI awareness sessions.",
+        status: "Pending",
+        remarks: "",
+        interestCount: 1,
+        submittedAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+      },
+      {
+        proposalId: `prop-${Date.now()}-2`,
+        proposedByStudentId: "stud-002",
+        proposedByStudentName: "Priya Sharma",
+        clubName: "Photography Club",
+        category: "Arts",
+        purpose: "Creative photography and exhibitions.",
+        status: "Approved",
+        remarks: "Approved. Strong student interest.",
+        interestCount: 5,
+        submittedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        reviewedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        reviewedBy: "Admin"
+      },
+      {
+        proposalId: `prop-${Date.now()}-3`,
+        proposedByStudentId: "stud-003",
+        proposedByStudentName: "Rahul Verma",
+        clubName: "Astronomy Club",
+        category: "Science & Tech",
+        purpose: "Night sky observation and science activities.",
+        status: "Rejected",
+        remarks: "Rejected. Overlaps with existing Science & Technology club.",
+        interestCount: 2,
+        submittedAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+        reviewedAt: new Date(Date.now() - 86400000 * 8).toISOString(),
+        reviewedBy: "Admin"
+      },
+      {
+        proposalId: `prop-${Date.now()}-4`,
+        proposedByStudentId: "stud-004",
+        proposedByStudentName: "Sneha Patel",
+        clubName: "Creative Writing Society",
+        category: "Literary & Debate",
+        purpose: "Workshops on fiction, poetry, and storytelling.",
+        status: "Pending",
+        remarks: "",
+        interestCount: 1,
+        submittedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+      },
+      {
+        proposalId: `prop-${Date.now()}-5`,
+        proposedByStudentId: "stud-005",
+        proposedByStudentName: "Vikram Singh",
+        clubName: "E-Sports Club",
+        category: "Sports",
+        purpose: "Competitive gaming and strategy analysis.",
+        status: "Pending",
+        remarks: "",
+        interestCount: 12,
+        submittedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+      },
+      {
+        proposalId: `prop-${Date.now()}-6`,
+        proposedByStudentId: "stud-001",
+        proposedByStudentName: "Amit Kumar",
+        clubName: "Robotics Society",
+        category: "Technology",
+        purpose: "Building robots for national competitions.",
+        status: "Rejected",
+        remarks: "Rejected. Existing Robotics Club already serves this exact purpose.",
+        interestCount: 4,
+        submittedAt: new Date(Date.now() - 86400000 * 15).toISOString(),
+        reviewedAt: new Date(Date.now() - 86400000 * 14).toISOString(),
+        reviewedBy: "Admin"
+      },
+      {
+        proposalId: `prop-${Date.now()}-7`,
+        proposedByStudentId: "stud-006",
+        proposedByStudentName: "Kavya Menon",
+        clubName: "Culinary Arts Club",
+        category: "Cultural & Arts",
+        purpose: "Exploring international cuisines and cooking techniques.",
+        status: "Approved",
+        remarks: "Approved. Great initiative.",
+        interestCount: 8,
+        submittedAt: new Date(Date.now() - 86400000 * 20).toISOString(),
+        reviewedAt: new Date(Date.now() - 86400000 * 18).toISOString(),
+        reviewedBy: "Admin"
+      },
+      {
+        proposalId: `prop-${Date.now()}-8`,
+        proposedByStudentId: "stud-007",
+        proposedByStudentName: "Arjun Reddy",
+        clubName: "Blockchain & Web3",
+        category: "Technology",
+        purpose: "Learning about decentralized systems and smart contracts.",
+        status: "Pending",
+        remarks: "",
+        interestCount: 3,
+        submittedAt: new Date().toISOString(),
+      }
+    ];
+    setItem(STORAGE_KEYS.CLUB_CREATION_PROPOSALS, proposals);
+  },
+
+  getClubCreationProposals: async () => {
+    await localProvider._initializeClubCreationProposals();
+    return getItem(STORAGE_KEYS.CLUB_CREATION_PROPOSALS) || [];
+  },
+
+  getClubCreationProposalById: async (proposalId) => {
+    const proposals = await localProvider.getClubCreationProposals();
+    return proposals.find((p) => p.proposalId === proposalId);
+  },
+
+  createClubCreationProposal: async (data) => {
+    const proposals = await localProvider.getClubCreationProposals();
+    const newProposal = {
+      proposalId: `prop-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      submittedAt: new Date().toISOString(),
+      status: "Pending",
+      remarks: "",
+      interestCount: 1,
+      ...data
+    };
+    proposals.push(newProposal);
+    setItem(STORAGE_KEYS.CLUB_CREATION_PROPOSALS, proposals);
+    return newProposal;
+  },
+
+  updateClubCreationProposal: async (proposalId, updates) => {
+    const proposals = await localProvider.getClubCreationProposals();
+    const index = proposals.findIndex(p => p.proposalId === proposalId);
+    if (index === -1) throw new Error("Proposal not found");
+    
+    proposals[index] = { ...proposals[index], ...updates };
+    setItem(STORAGE_KEYS.CLUB_CREATION_PROPOSALS, proposals);
+    return proposals[index];
+  },
+
+  // === ACTIVITY PARTICIPATIONS ===
+  getActivityParticipations: async () => {
+    return getItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS) || [];
+  },
+
+  getParticipationsByActivity: async (activityId) => {
+    const list = getItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS) || [];
+    return list.filter((p) => p.activityId === activityId);
+  },
+
+  getParticipationsByStudent: async (studentId) => {
+    const list = getItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS) || [];
+    return list.filter((p) => p.studentId === studentId);
+  },
+
+  createParticipation: async (data) => {
+    const list = getItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS) || [];
+    const newRecord = {
+      participationId: `part-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      ...data
+    };
+    list.push(newRecord);
+    setItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS, list);
+    return newRecord;
+  },
+
+  updateParticipation: async (participationId, updates) => {
+    const list = getItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS) || [];
+    const index = list.findIndex(p => p.participationId === participationId);
+    if (index === -1) throw new Error("Participation record not found");
+    
+    list[index] = { ...list[index], ...updates };
+    setItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS, list);
+    return list[index];
+  },
+
 };
 
 export default localProvider;

@@ -478,7 +478,7 @@ function TimetableCard({ weeklyTimetable = {}, isConfigured = true }) {
             <div className="flex flex-col pb-4">
               {classes.map((classItem, index) => (
                 <ClassCard
-                  key={classItem.id}
+                  key={classItem.id || `${classItem.periodNumber || classItem.period || "class"}-${classItem.subject || ""}-${index}`}
                   classItem={classItem}
                   index={index}
                   isLast={index === classes.length - 1}

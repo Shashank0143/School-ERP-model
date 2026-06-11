@@ -51,15 +51,19 @@ export default function ClubMembersTable({ members = [], loading = false }) {
                   {member.class}
                 </td>
                 <td className="p-3">
-                  <span className={`inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                    member.role?.toLowerCase().includes("core")
+                  <span className={`inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider ${
+                    member.role === "President"
                       ? "bg-purple-50 text-purple-600 border border-purple-100"
-                      : member.role?.toLowerCase().includes("volunteer")
+                      : member.role === "Vice President"
                       ? "bg-blue-50 text-blue-600 border border-blue-100"
+                      : member.role === "Secretary"
+                      ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                      : member.role === "Core Member"
+                      ? "bg-amber-50 text-amber-600 border border-amber-100"
                       : "bg-gray-50 text-gray-600 border border-gray-100"
                   }`}>
                     <Shield className="w-2.5 h-2.5" />
-                    {member.role || "Member"}
+                    [{member.role?.toUpperCase() || "MEMBER"}]
                   </span>
                 </td>
                 <td className="p-3 text-xs text-gray-500 font-medium">

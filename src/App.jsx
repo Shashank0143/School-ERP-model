@@ -80,6 +80,9 @@ const ProfileSettingsPage = lazy(
 );
 const LeaveMgmtPage = lazy(() => import("./pages/teacher/LeaveMgmtPage"));
 const TeacherLeavePage = lazy(() => import("./pages/teacher/TeacherLeavePage"));
+const StudentDutyManagementPage = lazy(() => import("./pages/teacher/StudentDutyManagementPage"));
+const StudentDutyRecordsPage = lazy(() => import("./pages/student/StudentDutyRecordsPage"));
+const ParentDutyRecordsPage = lazy(() => import("./pages/parent/ParentDutyRecordsPage"));
 
 // Admin Portal Pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -87,7 +90,6 @@ const StudentsPage = lazy(() => import("./pages/admin/StudentsPage"));
 const StudentDetailsAdminPage = lazy(() => import("./pages/admin/StudentDetailsPage"));
 const TeachersPage = lazy(() => import("./pages/admin/TeachersPage"));
 const ParentsPage = lazy(() => import("./pages/admin/ParentsPage"));
-const AdminsPage = lazy(() => import("./pages/admin/AdminsPage"));
 const ClassesPage = lazy(() => import("./pages/admin/ClassesPage"));
 const SubjectsPage = lazy(() => import("./pages/admin/SubjectsPage"));
 const SubjectAllocationPage = lazy(
@@ -106,12 +108,14 @@ const FeeManagementPage = lazy(() => import("./pages/admin/FeeManagementPage"));
 const TransportManagementPage = lazy(
   () => import("./pages/admin/TransportManagementPage"),
 );
+const StudentDutyAdminPage = lazy(() => import("./pages/admin/StudentDutyAdminPage"));
 const AdminDocumentsPage = lazy(() => import("./pages/admin/DocumentsPage"));
 const NoticesPage = lazy(() => import("./pages/admin/NoticesPage"));
 const AdminAnnouncementsPage = lazy(
   () => import("./pages/admin/AnnouncementsPage"),
 );
 const AdminClubsPage = lazy(() => import("./pages/admin/ClubsPage"));
+const AdminClubManagementPage = lazy(() => import("./pages/admin/ClubManagementCenterPage"));
 const AdminCommitteesPage = lazy(() => import("./pages/admin/CommitteesPage"));
 const AdminAchievementsPage = lazy(
   () => import("./pages/admin/AchievementsPage"),
@@ -755,6 +759,10 @@ function AppContent() {
           element={<LazyRoute Component={SchoolCalendarPage} />}
         />
         <Route
+          path="my-duties"
+          element={<LazyRoute Component={StudentDutyRecordsPage} />}
+        />
+        <Route
           path="profile"
           element={
             <LazyRoute
@@ -810,6 +818,10 @@ function AppContent() {
           element={<LazyRoute Component={WeeklyTimetablePage} />}
         />
         <Route
+          path="duty-records"
+          element={<LazyRoute Component={ParentDutyRecordsPage} />}
+        />
+        <Route
           path="examinations"
           element={<LazyRoute Component={ExaminationPage} />}
         />
@@ -829,6 +841,10 @@ function AppContent() {
         <Route
           path="achievements"
           element={<LazyRoute Component={AchievementsPage} />}
+        />
+        <Route
+          path="clubs"
+          element={<LazyRoute Component={ClubsCommitteesPage} />}
         />
         <Route
           path="profile"
@@ -892,6 +908,10 @@ function AppContent() {
           element={<LazyRoute Component={AnnouncementsPage} />}
         />
         <Route
+          path="student-duty"
+          element={<LazyRoute Component={StudentDutyManagementPage} />}
+        />
+        <Route
           path="clubs"
           element={<LazyRoute Component={ClubsActivitiesPage} />}
         />
@@ -938,7 +958,6 @@ function AppContent() {
           element={<LazyRoute Component={TeachersPage} />}
         />
         <Route path="parents" element={<LazyRoute Component={ParentsPage} />} />
-        <Route path="admins" element={<LazyRoute Component={AdminsPage} />} />
         <Route path="employees" element={<LazyRoute Component={EmployeeDirectoryPage} />} />
         <Route path="employee-leaves" element={<LazyRoute Component={EmployeeLeavePage} />} />
         <Route path="classes" element={<LazyRoute Component={ClassesPage} />} />
@@ -987,8 +1006,16 @@ function AppContent() {
           element={<LazyRoute Component={AdminDocumentsPage} />}
         />
         <Route
+          path="student-duty"
+          element={<LazyRoute Component={StudentDutyAdminPage} />}
+        />
+        <Route
           path="clubs"
           element={<LazyRoute Component={AdminClubsPage} />}
+        />
+        <Route
+          path="club-management"
+          element={<LazyRoute Component={AdminClubManagementPage} />}
         />
         <Route
           path="committees"

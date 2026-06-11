@@ -38,6 +38,8 @@ export function getRouteForNavItem(id, role) {
         return "/student/leave";
       case "support_center":
         return "/student/support";
+      case "student_duty":
+        return "/student/my-duties";
       default:
         return "/student/dashboard";
     }
@@ -66,12 +68,16 @@ export function getRouteForNavItem(id, role) {
         return "/parent/documents";
       case "achievements":
         return "/parent/achievements";
+      case "clubsCommittees":
+        return "/parent/clubs";
       case "profile":
         return "/parent/profile";
       case "leave":
         return "/parent/leave";
       case "support_center":
         return "/parent/support";
+      case "duty_records":
+        return "/parent/duty-records";
       default:
         return "/parent/dashboard";
     }
@@ -108,6 +114,8 @@ export function getRouteForNavItem(id, role) {
         return "/teacher/leave-management";
       case "support_center":
         return "/teacher/support";
+      case "student_duty":
+        return "/teacher/student-duty";
       default:
         return "/teacher/dashboard";
     }
@@ -126,8 +134,6 @@ export function getRouteForNavItem(id, role) {
         return "/admin/teachers";
       case "admin_parents":
         return "/admin/parents";
-      case "admin_admins":
-        return "/admin/admins";
       case "admin_classes":
         return "/admin/classes";
       case "admin_timetable":
@@ -150,6 +156,8 @@ export function getRouteForNavItem(id, role) {
         return "/admin/documents";
       case "admin_clubs":
         return "/admin/clubs";
+      case "admin_club_management":
+        return "/admin/club-management";
       case "admin_achievements":
         return "/admin/achievements";
       case "admin_calendar":
@@ -172,6 +180,8 @@ export function getRouteForNavItem(id, role) {
         return "/admin/support-management";
       case "support_center":
         return "/admin/support";
+      case "student_duty":
+        return "/admin/student-duty";
       default:
         return "/admin/dashboard";
     }

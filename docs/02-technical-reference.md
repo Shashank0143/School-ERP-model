@@ -217,6 +217,7 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
 | `erp_clubActivities` | `CLUB_ACTIVITIES` | Array | Club activity records |
 | `erp_clubCoordinators` | `CLUB_COORDINATORS` | Array | Teacher-club coordinator links |
 | `erp_clubUpdates` | `CLUB_UPDATES` | Array | Club announcement/update posts |
+| `erp_studentDutyRequests` | `STUDENT_DUTY_REQUESTS` | Array | Student duty assignments and records |
 
 ### Mentorship
 | Key | Constant | Type | Description |
@@ -661,6 +662,29 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
 
 // ClubActivity
 { id: "act-{timestamp}", clubId, title, date, description, createdBy }
+```
+
+### StudentDutyRequest
+
+```js
+{
+  id: "duty-{timestamp}",
+  title: "Morning Assembly Setup",
+  description: "Arrange chairs for the morning assembly.",
+  dutyDate: "2026-05-28",
+  startTime: "07:30",
+  endTime: "08:15",
+  location: "Main Ground",
+  category: "Event Setup",
+  priority: "High",
+  status: "Active",               // Active | Completed | Cancelled
+  requestedByTeacherId: "teach-001", // FK → teachers.id
+  targetStudents: [
+    { studentId: "stud-001", name: "Rohan Kumar", classSection: "11-A" }
+  ],
+  createdAt: "2026-05-26T08:00:00Z",
+  updatedAt: "2026-05-26T08:00:00Z"
+}
 ```
 
 ---

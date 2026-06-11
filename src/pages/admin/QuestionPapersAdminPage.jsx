@@ -224,7 +224,7 @@ const QuestionPapersAdminPage = () => {
                     </td>
                     <td className="py-4 px-5">
                       <p className="text-xs font-black text-[#03045e]">{paper.subjectName}</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Class {paper.className}-{paper.section}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Class {paper.className}</p>
                     </td>
                     <td className="py-4 px-5">
                       <p className="text-xs font-black text-[#03045e]">{paper.examType}</p>
@@ -284,7 +284,7 @@ const QuestionPapersAdminPage = () => {
                     <StatusBadge status={viewPaper.status} />
                   </div>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">
-                    By {viewPaper.teacherName} • Class {viewPaper.className}-{viewPaper.section} • {viewPaper.subjectName}
+                    By {viewPaper.teacherName} • Class {viewPaper.className} • {viewPaper.subjectName}
                   </p>
                 </div>
                 <button

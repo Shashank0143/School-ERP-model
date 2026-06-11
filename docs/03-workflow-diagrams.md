@@ -340,3 +340,20 @@ flowchart LR
     H -->|Closes Ticket| I[Closed]
     I -->|Visible to| A
 ```
+
+# Student Duty Management Workflow
+
+```mermaid
+flowchart LR
+    A[Admin] -->|Monitors| B[Duty Management Board]
+    C[Teacher] -->|Creates| D[Duty Request]
+    D -->|Assigns| E[Students]
+    D -->|Specifies| F[Date, Time, Location & Instructions]
+    E -->|Receives Assignment| G[Student Duty Dashboard]
+    E -->|Parents Notified| H[Parent Duty Records]
+    G -->|Student Performs Duty| I[Execution]
+    C -->|Marks Completion| J[Status: Completed]
+    C -->|Or Cancels| K[Status: Cancelled]
+    J --> B
+    K --> B
+```

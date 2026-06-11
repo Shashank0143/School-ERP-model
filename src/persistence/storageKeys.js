@@ -58,6 +58,12 @@ export const STORAGE_KEYS = {
 
   // Notices & Events
   NOTICES: "erp_notices",
+  
+  // Clubs & Committees
+  CLUB_MEMBERSHIP_REQUESTS: "erp_clubMembershipRequests",
+  CLUB_LEADERSHIP_ASSIGNMENTS: "erp_clubLeadershipAssignments",
+  CLUB_ANNOUNCEMENTS: "erp_clubAnnouncements",
+  CLUB_CREATION_PROPOSALS: "erp_clubCreationProposals",
   EVENTS: "erp_events",
 
   // Clubs
@@ -66,6 +72,7 @@ export const STORAGE_KEYS = {
   CLUB_ACTIVITIES: "erp_clubActivities",
   CLUB_COORDINATORS: "erp_clubCoordinators",
   CLUB_UPDATES: "erp_clubUpdates",
+  CLUB_ACTIVITY_PARTICIPATIONS: "erp_clubActivityParticipations",
 
   // Mentorship
   MENTOR_REMARKS: "erp_mentorRemarks",
@@ -77,6 +84,9 @@ export const STORAGE_KEYS = {
 
   // Leave
   LEAVE_REQUESTS: "erp_leaveRequests",
+
+  // Duty Management
+  STUDENT_DUTY_REQUESTS: "erp_studentDutyRequests",
 
   // Support Center
   SUPPORT_REQUESTS: "erp_supportRequests",

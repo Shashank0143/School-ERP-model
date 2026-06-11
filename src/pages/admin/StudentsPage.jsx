@@ -191,11 +191,8 @@ const StudentsPage = () => {
 
   const handleClassChange = (cls) => {
     setFilterClass(cls);
-    if ((cls === "11" || cls === "12") && filterSection) {
-      setFilterStream(sectionToStream[filterSection] || "");
-    } else {
-      setFilterStream("");
-    }
+    setFilterSection("");
+    setFilterStream("");
   };
 
   const handleSectionChange = (sec) => {
@@ -461,7 +458,8 @@ const StudentsPage = () => {
               <select
                 value={filterSection}
                 onChange={(e) => handleSectionChange(e.target.value)}
-                className="flex items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none"
+                disabled={!filterClass}
+                className="flex items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">All Sections</option>
                 <option value="A">Section A</option>

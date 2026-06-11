@@ -18,12 +18,14 @@ import {
   MessageSquare,
   Building2,
   AlertCircle,
-  Smartphone
+  Smartphone,
+  Award
 } from "lucide-react";
 import MainCard from "../../components/MainCard";
 import HelperButton from "../../components/HelperButton";
 import HelperPopup from "../../components/HelperPopup";
 import { getStudentProfile } from "../../services/studentService";
+import { clubsService } from "../../services/clubsService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useStudent } from "../../context/StudentContext";
 import { useAuth } from "../../context/AuthContext";
@@ -102,7 +104,8 @@ const StudentProfilePage = ({ onNavigatePage }) => {
       setLoading(true);
       try {
         const profile = await getStudentProfile(activeStudentId);
-        setData(profile);
+        const participations = await clubsService.getStudentActivityHistory(activeStudentId);
+        setData({ ...profile, activityParticipations: participations || [] });
       } catch (error) {
         console.error("Failed to fetch student profile:", error);
       } finally {
@@ -328,6 +331,34 @@ const StudentProfilePage = ({ onNavigatePage }) => {
                     </div>
                   </div>
                 </div>
+              </MainCard>
+            </ProfileSection>
+
+            {/* 3. Co-Curricular & Club Participation */}
+            <ProfileSection icon={Award} title="Co-Curricular & Club Participation">
+              <MainCard borderColor="#00b4d8" className="p-6 md:p-8">
+                {data.activityParticipations?.length === 0 ? (
+                  <div className="text-center py-6 text-xs font-bold text-gray-400 italic bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    No activity participation history found.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {data.activityParticipations?.map(p => (
+                      <div key={p.participationId} className="p-4 rounded-2xl border border-gray-100 hover:border-[#00b4d8] hover:bg-[#caf0f8]/20 transition-all flex flex-col justify-between group">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-sm font-black text-[#03045e] leading-snug">{p.activityTitle}</h4>
+                          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${p.participationStatus === "Participated" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
+                            {p.participationStatus}
+                          </span>
+                        </div>
+                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-50">
+                          <div className="text-[10px] font-bold text-gray-400">{p.clubName}</div>
+                          <div className="text-[10px] font-bold text-gray-400">{p.participationDate}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </MainCard>
             </ProfileSection>
 

@@ -242,7 +242,7 @@ const QuestionPapersPage = () => {
                     </td>
                     <td className="py-4 px-5">
                       <p className="text-xs font-black text-[#03045e]">{paper.subjectName}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Class {paper.className}-{paper.section}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Class {paper.className}</p>
                     </td>
                     <td className="py-4 px-5">
                       <span className="px-2 py-1 bg-purple-50 text-purple-600 rounded-lg text-[9px] font-black uppercase tracking-widest">

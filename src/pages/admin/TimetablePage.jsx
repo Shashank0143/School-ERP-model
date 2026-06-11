@@ -371,7 +371,43 @@ const TimetablePage = () => {
   const [dbTsAssignments, setDbTsAssignments] = useState([]);
 
   const [viewerType, setViewerType] = useState("class");
-  const [selectedClassId, setSelectedClassId] = useState("class-11a");
+  const [selectedClassLevel, setSelectedClassLevel] = useState("11");
+  const [selectedSection, setSelectedSection] = useState("A");
+
+  const selectedClassId = useMemo(() => {
+    const cls = classes.find((c) => {
+      const level = c.level || c.classLevel || c.name?.split('-')[0];
+      const section = c.section || c.name?.split('-')[1];
+      return level === selectedClassLevel && section === selectedSection;
+    });
+    return cls ? cls.id : "";
+  }, [classes, selectedClassLevel, selectedSection]);
+
+  const classLevels = useMemo(() => {
+    const levels = new Set();
+    classes.forEach(c => {
+      const level = c.level || c.classLevel || c.name?.split('-')[0];
+      if (level) levels.add(level);
+    });
+    return Array.from(levels).sort((a,b) => {
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      return isNaN(numA) || isNaN(numB) ? a.localeCompare(b) : numA - numB;
+    });
+  }, [classes]);
+
+  const availableSections = useMemo(() => {
+    if (!selectedClassLevel) return [];
+    const sections = new Set();
+    classes.forEach(c => {
+      const level = c.level || c.classLevel || c.name?.split('-')[0];
+      if (level === selectedClassLevel) {
+        const sec = c.section || c.name?.split('-')[1];
+        if (sec) sections.add(sec);
+      }
+    });
+    return Array.from(sections).sort();
+  }, [classes, selectedClassLevel]);
   const [selectedTeacherId, setSelectedTeacherId] = useState("teach-001");
   const [currentSchedule, setCurrentSchedule] = useState([]);
   const [activeTab, setActiveTab] = useState("timetable");
@@ -781,17 +817,36 @@ const TimetablePage = () => {
                 {viewerType === "class" ? "Select Class:" : "Select Teacher:"}
               </span>
               {viewerType === "class" ? (
-                <select
-                  value={selectedClassId}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="w-full md:w-52 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer"
-                >
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    value={selectedClassLevel}
+                    onChange={(e) => {
+                      setSelectedClassLevel(e.target.value);
+                      setSelectedSection("");
+                    }}
+                    className="w-full md:w-32 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer"
+                  >
+                    <option value="">Class Level</option>
+                    {classLevels.map((l) => (
+                      <option key={l} value={l}>
+                        Class {l}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedSection}
+                    onChange={(e) => setSelectedSection(e.target.value)}
+                    disabled={!selectedClassLevel}
+                    className="w-full md:w-32 px-4 py-2.5 rounded-2xl border border-[#caf0f8] text-xs font-bold text-[#03045e] outline-none bg-white hover:border-[#0077b6] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Section</option>
+                    {availableSections.map((s) => (
+                      <option key={s} value={s}>
+                        Section {s}
+                      </option>
+                    ))}
+                  </select>
+                </>
               ) : (
                 <select
                   value={selectedTeacherId}

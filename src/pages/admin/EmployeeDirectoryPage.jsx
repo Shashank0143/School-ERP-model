@@ -57,7 +57,9 @@ const EmployeeDirectoryPage = () => {
     phone: "",
     email: "",
     joiningDate: new Date().toISOString().split("T")[0],
-    status: "active"
+    status: "active",
+    systemAccess: false,
+    linkedAuthUserId: ""
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -106,7 +108,9 @@ const EmployeeDirectoryPage = () => {
         phone: emp.phone || "",
         email: emp.email || "",
         joiningDate: emp.joiningDate || new Date().toISOString().split("T")[0],
-        status: emp.status || "active"
+        status: emp.status || "active",
+        systemAccess: emp.systemAccess || false,
+        linkedAuthUserId: emp.linkedAuthUserId || ""
       });
     } else {
       setEditingEmp(null);
@@ -118,7 +122,9 @@ const EmployeeDirectoryPage = () => {
         phone: "",
         email: "",
         joiningDate: new Date().toISOString().split("T")[0],
-        status: "active"
+        status: "active",
+        systemAccess: false,
+        linkedAuthUserId: ""
       });
     }
     setShowModal(true);
@@ -167,6 +173,14 @@ const EmployeeDirectoryPage = () => {
     return (
       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${isActive ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-50 text-gray-600 border-gray-200"}`}>
         {isActive ? "Active" : "Inactive"}
+      </span>
+    );
+  };
+
+  const getSystemAccessBadge = (hasAccess) => {
+    return (
+      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${hasAccess ? "bg-[#caf0f8] text-[#0077b6] border-[#90e0ef]" : "bg-gray-50 text-gray-600 border-gray-200"}`}>
+        {hasAccess ? "Access Granted" : "No Access"}
       </span>
     );
   };
@@ -266,7 +280,7 @@ const EmployeeDirectoryPage = () => {
                 <th className="text-left py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Employee</th>
                 <th className="text-left py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Department</th>
                 <th className="text-left py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Role & Designation</th>
-                <th className="text-left py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="text-left py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Access & Status</th>
                 <th className="text-right py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -286,7 +300,12 @@ const EmployeeDirectoryPage = () => {
                       <p className="text-[10px] text-gray-400">{getRoleName(emp.roleId)}</p>
                     </div>
                   </td>
-                  <td className="py-4 px-4">{getStatusBadge(emp.status)}</td>
+                  <td className="py-4 px-4">
+                    <div className="flex flex-col gap-1 items-start">
+                      {getStatusBadge(emp.status)}
+                      {getSystemAccessBadge(emp.systemAccess)}
+                    </div>
+                  </td>
                   <td className="py-4 px-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => openDetails(emp)} className="p-1.5 rounded-lg hover:bg-[#caf0f8] text-gray-400 hover:text-[#0077b6] transition-colors">
@@ -411,7 +430,7 @@ const EmployeeDirectoryPage = () => {
                     />
                   </div>
                   
-                  <div className="col-span-2">
+                  <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Status</label>
                     <select
                       value={formData.status}
@@ -421,6 +440,36 @@ const EmployeeDirectoryPage = () => {
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
+                  </div>
+                  
+                  <div className="col-span-2 pt-2 border-t border-gray-100 mt-2">
+                    <p className="text-xs font-black text-[#03045e] mb-3">System Access Configuration</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="flex items-center gap-2 cursor-pointer mt-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.systemAccess}
+                            onChange={(e) => setFormData({ ...formData, systemAccess: e.target.checked })}
+                            className="w-4 h-4 text-[#0077b6] rounded border-gray-300 focus:ring-[#0077b6]"
+                          />
+                          <span className="text-sm font-bold text-gray-700">Grant Admin Portal Access</span>
+                        </label>
+                      </div>
+                      
+                      {formData.systemAccess && (
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Linked Auth User ID (Optional)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. auth-admin-001"
+                            value={formData.linkedAuthUserId}
+                            onChange={(e) => setFormData({ ...formData, linkedAuthUserId: e.target.value })}
+                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-[#03045e] outline-none focus:border-[#0077b6]"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </form>
@@ -484,6 +533,22 @@ const EmployeeDirectoryPage = () => {
                   <p className="text-xs text-gray-500">{getRoleName(activeEmp.roleId)}</p>
                 </div>
               </div>
+              
+              {activeEmp.systemAccess && (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#caf0f8] text-[#0077b6] rounded-lg"><Shield size={16} /></div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">System Access</p>
+                    <p className="text-sm font-bold text-[#0077b6]">Access Granted</p>
+                    {activeEmp.linkedAuthUserId && (
+                      <p className="text-[10px] font-bold text-gray-400 mt-0.5 font-mono bg-gray-100 px-1 rounded inline-block">
+                        {activeEmp.linkedAuthUserId}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-50 text-green-600 rounded-lg"><Mail size={16} /></div>
                 <div>

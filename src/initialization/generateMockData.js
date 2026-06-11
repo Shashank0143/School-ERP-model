@@ -16,8 +16,12 @@ export const generateMissingMockData = () => {
       category: c.category,
       description: c.description || "A club for students to engage in extracurricular activities.",
       coordinator: c.coordinator || "Faculty Member",
+      coordinatorTeacherId: "teach-001",
+      coordinatorTeacherName: c.coordinator || "Faculty Member",
       clubHeadTeacherId: "teach-001",
       logo: c.logo || "award",
+      status: "Active",
+      createdAt: new Date().toISOString()
     }));
     setItem(STORAGE_KEYS.CLUBS, allClubs);
     console.log(`[InitializationEngine] Generated and Seeded Clubs`);

@@ -22,7 +22,9 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 🏆 Achievements (✔ Complete)
 ├── ⚙️ School Settings (🚧 Planned)
 ├── ✉️ Communication Center (⚠ Partial)
-└── 🎧 Support Management (✔ Complete)
+├── 🎧 Support Management (✔ Complete)
+├── 🎭 Clubs & Committees (✔ Complete)
+└── 🛡️ Student Duty Management (✔ Complete)
 
 ## Teacher Portal
 ├── 📅 My Schedule (✔ Complete)
@@ -32,7 +34,9 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 📢 Class Updates (✔ Complete)
 ├── 📬 Leaves (✔ Complete)
 ├── 📝 Question Papers (🚧 Planned)
-└── 🎧 Support Center (✔ Complete)
+├── 🎧 Support Center (✔ Complete)
+├── 🎭 Clubs & Activities (✔ Complete)
+└── 🛡️ Student Duty Management (✔ Complete)
 
 ## Student & Parent Portals
 ├── 📊 Dashboard (✔ Complete)
@@ -42,4 +46,5 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 💸 Fees (✔ Complete)
 ├── 🚌 Transport (✔ Complete)
 ├── 📬 Leaves (✔ Complete)
-└── 🎧 Support Center (✔ Complete)
+├── 🎧 Support Center (✔ Complete)
+└── 🛡️ Duty Records (✔ Complete)

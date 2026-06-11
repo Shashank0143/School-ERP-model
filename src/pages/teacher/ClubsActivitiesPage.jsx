@@ -16,8 +16,14 @@ const ClubsActivitiesPage = () => {
   const [upcomingEventsCount, setUpcomingEventsCount] = useState(0);
   const [selectedClub, setSelectedClub] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Membership Requests State
+  const [activeTab, setActiveTab] = useState("clubs"); // "clubs", "requests"
+  const [requests, setRequests] = useState([]);
+  const [filterStatus, setFilterStatus] = useState("Pending"); // "All", "Pending", "Approved", "Rejected", "Withdrawn"
+  const [actionModal, setActionModal] = useState({ isOpen: false, request: null, remark: "" });
 
-  const loadTeacherWorkspace = async () => {
+  const loadTeacherWorkspace = async (clearSelected = false) => {
     setLoading(true);
     try {
       // 1. Get clubs managed by this teacher
@@ -39,8 +45,14 @@ const ClubsActivitiesPage = () => {
       setTotalMembers(memberCountAcc);
       setUpcomingEventsCount(eventCountAcc);
 
+      // 3. Get membership requests for this coordinator
+      const reqs = await clubsService.getClubMembershipRequestsByCoordinator(teacherId);
+      setRequests(reqs);
+
       // Refresh currently selected club reference if it exists
-      if (selectedClub) {
+      if (clearSelected) {
+        setSelectedClub(null);
+      } else if (selectedClub) {
         const refreshed = managedClubs.find(c => c.id === selectedClub.id);
         if (refreshed) {
           setSelectedClub(refreshed);
@@ -56,6 +68,30 @@ const ClubsActivitiesPage = () => {
   useEffect(() => {
     loadTeacherWorkspace();
   }, [teacherId]);
+
+  const handleApprove = async () => {
+    if (!actionModal.request) return;
+    try {
+      await clubsService.approveClubMembershipRequest(actionModal.request.requestId, actionModal.remark);
+      await loadTeacherWorkspace();
+      setActionModal({ isOpen: false, request: null, remark: "" });
+    } catch (err) {
+      alert("Failed to approve: " + err.message);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!actionModal.request) return;
+    try {
+      await clubsService.rejectClubMembershipRequest(actionModal.request.requestId, actionModal.remark);
+      await loadTeacherWorkspace();
+      setActionModal({ isOpen: false, request: null, remark: "" });
+    } catch (err) {
+      alert("Failed to reject: " + err.message);
+    }
+  };
+
+  const filteredRequests = requests.filter(r => filterStatus === "All" || r.status === filterStatus);
 
   return (
     <div className="space-y-6 pb-12">
@@ -77,12 +113,45 @@ const ClubsActivitiesPage = () => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Top Summary Metrics */}
-          <ClubSummaryCards 
-            clubs={clubs} 
-            totalMembers={totalMembers} 
-            upcomingEventsCount={upcomingEventsCount} 
-          />
+          {/* Main Navigation Tabs */}
+          <div className="flex items-center gap-6 border-b border-gray-100 mb-6">
+            <button
+              onClick={() => setActiveTab("clubs")}
+              className={`pb-3 text-sm font-black transition-colors relative ${
+                activeTab === "clubs" ? "text-[#03045e]" : "text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              My Clubs
+              {activeTab === "clubs" && (
+                <span className="absolute bottom-0 left-0 w-full h-1 bg-[#03045e] rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`pb-3 text-sm font-black transition-colors relative flex items-center gap-2 ${
+                activeTab === "requests" ? "text-[#03045e]" : "text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              Membership Requests
+              {requests.filter(r => r.status === "Pending").length > 0 && (
+                <span className="bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                  {requests.filter(r => r.status === "Pending").length}
+                </span>
+              )}
+              {activeTab === "requests" && (
+                <span className="absolute bottom-0 left-0 w-full h-1 bg-[#03045e] rounded-t-full" />
+              )}
+            </button>
+          </div>
+
+          {activeTab === "clubs" ? (
+            <>
+              {/* Top Summary Metrics */}
+              <ClubSummaryCards 
+                clubs={clubs} 
+                totalMembers={totalMembers} 
+                upcomingEventsCount={upcomingEventsCount} 
+              />
 
           <AnimatePresence mode="wait">
             {!selectedClub ? (
@@ -112,15 +181,201 @@ const ClubsActivitiesPage = () => {
                   club={selectedClub} 
                   onBack={() => {
                     setSelectedClub(null);
-                    loadTeacherWorkspace(); // Refresh metrics when going back
+                    loadTeacherWorkspace(true); // Refresh metrics and clear selection when going back
                   }} 
                   teacherId={teacherId}
                 />
               </motion.div>
             )}
           </AnimatePresence>
+            </>
+          ) : (
+            <div className="space-y-6">
+              {/* Request Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-amber-50 border border-amber-100 p-5 rounded-3xl">
+                  <div className="text-amber-600 text-[10px] font-black uppercase tracking-wider mb-1">Pending Requests</div>
+                  <div className="text-3xl font-black text-amber-700">{requests.filter(r => r.status === "Pending").length}</div>
+                </div>
+                <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-3xl">
+                  <div className="text-emerald-600 text-[10px] font-black uppercase tracking-wider mb-1">Approved</div>
+                  <div className="text-3xl font-black text-emerald-700">{requests.filter(r => r.status === "Approved").length}</div>
+                </div>
+                <div className="bg-rose-50 border border-rose-100 p-5 rounded-3xl">
+                  <div className="text-rose-600 text-[10px] font-black uppercase tracking-wider mb-1">Rejected</div>
+                  <div className="text-3xl font-black text-rose-700">{requests.filter(r => r.status === "Rejected").length}</div>
+                </div>
+              </div>
+
+              {/* Requests Filter & Table */}
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="text-sm font-black text-[#03045e]">Student Requests</h3>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="text-xs font-bold bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 focus:outline-none focus:border-[#0077b6]"
+                  >
+                    <option value="All">All Requests</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Withdrawn">Withdrawn</option>
+                  </select>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50/50">
+                        <th className="py-4 px-5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100">Student</th>
+                        <th className="py-4 px-5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100">Club</th>
+                        <th className="py-4 px-5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100">Date</th>
+                        <th className="py-4 px-5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100">Status</th>
+                        <th className="py-4 px-5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRequests.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="py-8 text-center text-xs font-bold text-gray-400 italic">No {filterStatus !== "All" ? filterStatus.toLowerCase() : ""} membership requests found.</td>
+                        </tr>
+                      ) : (
+                        filteredRequests.map((req) => (
+                          <tr key={req.requestId} className="border-b border-gray-50 hover:bg-gray-50/30 transition-colors">
+                            <td className="py-4 px-5">
+                              <span className="text-xs font-black text-[#03045e]">{req.studentName}</span>
+                              <div className="text-[10px] font-bold text-gray-400 mt-0.5">Class {req.className}-{req.section}</div>
+                            </td>
+                            <td className="py-4 px-5 text-xs font-bold text-gray-600">{req.clubName}</td>
+                            <td className="py-4 px-5 text-xs font-bold text-gray-600">
+                              {new Date(req.requestDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                            </td>
+                            <td className="py-4 px-5">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                                req.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                req.status === 'Rejected' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                req.status === 'Pending' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                'bg-gray-100 text-gray-500 border border-gray-200'
+                              }`}>
+                                {req.status}
+                              </span>
+                            </td>
+                            <td className="py-4 px-5 text-right">
+                              {req.status === 'Pending' ? (
+                                <button
+                                  onClick={() => setActionModal({ isOpen: true, request: req, remark: "" })}
+                                  className="text-[10px] font-black text-white bg-[#03045e] hover:bg-[#0077b6] px-4 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                                >
+                                  Review
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setActionModal({ isOpen: true, request: req, remark: req.remarks || "" })}
+                                  className="text-[10px] font-black text-gray-500 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                                >
+                                  View
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
+
+      {/* Approval Modal */}
+      <AnimatePresence>
+        {actionModal.isOpen && actionModal.request && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActionModal({ isOpen: false, request: null, remark: "" })}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <span className="text-xs font-black uppercase tracking-widest text-[#03045e]">
+                  {actionModal.request.status === 'Pending' ? 'Review Membership Request' : 'Request Details'}
+                </span>
+                <button
+                  onClick={() => setActionModal({ isOpen: false, request: null, remark: "" })}
+                  className="w-8 h-8 rounded-lg bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors font-bold text-gray-500"
+                >
+                  X
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                    <p className="text-[9px] font-black text-gray-400 uppercase">Student</p>
+                    <p className="text-sm font-black text-[#03045e] mt-1">{actionModal.request.studentName}</p>
+                    <p className="text-[10px] font-bold text-gray-500 mt-0.5">Class {actionModal.request.className}-{actionModal.request.section}</p>
+                  </div>
+                  <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                    <p className="text-[9px] font-black text-gray-400 uppercase">Target Club</p>
+                    <p className="text-sm font-black text-[#03045e] mt-1">{actionModal.request.clubName}</p>
+                    <p className="text-[10px] font-bold text-gray-500 mt-0.5">Requested on {new Date(actionModal.request.requestDate).toLocaleDateString('en-GB')}</p>
+                  </div>
+                </div>
+
+                {actionModal.request.decisionDate && (
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <p className="text-[9px] font-black text-gray-400 uppercase">Decision Log</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                        actionModal.request.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                      }`}>{actionModal.request.status}</span>
+                      <span className="text-[10px] font-bold text-gray-500">on {new Date(actionModal.request.decisionDate).toLocaleDateString('en-GB')}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase">Remarks / Notes</label>
+                  <textarea
+                    value={actionModal.remark}
+                    onChange={(e) => setActionModal({ ...actionModal, remark: e.target.value })}
+                    placeholder="Add an optional note to the student..."
+                    readOnly={actionModal.request.status !== 'Pending'}
+                    className="w-full text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 min-h-[80px] focus:outline-none focus:border-[#0077b6] focus:bg-white transition-colors disabled:opacity-70"
+                  />
+                </div>
+              </div>
+
+              {actionModal.request.status === 'Pending' && (
+                <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3">
+                  <button
+                    onClick={handleReject}
+                    className="px-5 py-2.5 rounded-xl text-[11px] font-black text-rose-600 bg-rose-50 hover:bg-rose-100 uppercase tracking-widest transition-colors"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    onClick={handleApprove}
+                    className="px-5 py-2.5 rounded-xl text-[11px] font-black text-white bg-[#03045e] hover:bg-[#0077b6] uppercase tracking-widest transition-colors shadow-sm"
+                  >
+                    Approve Request
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

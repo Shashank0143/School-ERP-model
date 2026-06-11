@@ -634,6 +634,7 @@ const TeachersPage = () => {
                       onClick={() =>
                         setPreviewTeacher({
                           ...tch,
+                          name: tch.teacherName || tch.name,
                           subjects,
                           isClassTeacher: !!classTeacherRole,
                           classAssigned: classTeacherRole?.name,
@@ -643,7 +644,7 @@ const TeachersPage = () => {
                       }
                       className="hover:text-[#0077b6] text-left transition-colors font-extrabold focus:outline-none"
                     >
-                      {tch.name}
+                      {tch.teacherName || tch.name}
                     </button>
                   </td>
                   <td className="py-4 px-3">

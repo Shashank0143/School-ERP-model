@@ -214,6 +214,30 @@ graph TD
 
 ---
 
+### 🛡️ 1.10 Student Duty Management Module
+```mermaid
+graph TD
+    subgraph "Roles"
+        Admin["👑 System Admin"]
+        Teacher["👨‍🏫 Teacher"]
+        Student["🎓 Student"]
+        Parent["👪 Parent"]
+    end
+
+    subgraph "Module Data"
+        M_Duty["🛡️ Duty Management Board"]
+    end
+
+    Teacher -->|✍️ Assigns & Evaluates Duties| M_Duty
+    Student -->|👁️ Views Assigned Duties| M_Duty
+    Parent -->|👁️ Monitors Child's Duties| M_Duty
+    Admin -->|👁️ Monitors Overall Duty Distribution| M_Duty
+
+    style M_Duty fill:#d8b4fe,stroke:#9333ea,stroke-width:2px
+```
+
+---
+
 ## 📊 2. Permissions Matrix Grid
 
 This grid maps features to roles using permissions. You can easily add rows for new features or update cell symbols.
@@ -238,4 +262,5 @@ This grid maps features to roles using permissions. You can easily add rows for 
 | **Support Center** | `✍️ Manage (Resolve)` | `💬 Interact (Self)` | `💬 Interact (Self)` | `💬 Interact (Self)` |
 | **Clubs & Co-curricular** | `✍️ Manage` | `👁️ View` | `👁️ View` | `👁️ View` |
 | **Notices & Announcements** | `✍️ Manage` | `✍️ Manage (Class)` | `👁️ View` | `👁️ View` |
+| **Student Duty Management** | `👁️ View` | `✍️ Manage` | `👁️ View (Self)` | `👁️ View (Child)` |
 | **Workload Analytics** | `👁️ View` | `❌ None` | `❌ None` | `❌ None` |
