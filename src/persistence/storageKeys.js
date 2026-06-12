@@ -84,6 +84,8 @@ export const STORAGE_KEYS = {
 
   // Leave
   LEAVE_REQUESTS: "erp_leaveRequests",
+  LEAVE_PORTFOLIOS: "erp_leavePortfolios",
+
 
   // Duty Management
   STUDENT_DUTY_REQUESTS: "erp_studentDutyRequests",

@@ -27,6 +27,9 @@ import {
 } from "../data/mockDB";
 import { ROLES } from "../auth/roles";
 import { generateMissingMockData } from "./generateMockData";
+import { runGenderMigration } from "../services/profileMigrationService";
+import { runLeavePortfolioMigration } from "../services/leavePortfolioMigrationService";
+
 
 /**
  * Executes startup checks synchronously to block rendering and
@@ -46,6 +49,14 @@ export const initializeERP = () => {
   try {
     // 1. Storage Layout setup
     initializeStorage.ensureRequiredKeys();
+
+    // ── Gender Migration (Phase 1) ──────────────────────────────────────────────
+    runGenderMigration();
+
+    // ── Leave Portfolio Migration (Phase 2) ─────────────────────────────────────
+    runLeavePortfolioMigration();
+
+
 
     // ── Schema Version Check (Phase 9: Student normalization) ──────────────────
     // If student records are from schema v1 (missing id/classId/streamId fields),
@@ -195,6 +206,10 @@ export const resetERPData = () => {
   console.warn("[InitializationEngine] Re-seeding ERP Demo Data...");
 
   try {
+    // 4. Run Legacy System Schema Migrations
+    runGenderMigration();
+    runLeavePortfolioMigration();
+
     // Clear all existing ERP collections
     clearAllData();
 

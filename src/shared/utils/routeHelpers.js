@@ -146,8 +146,8 @@ export function getRouteForNavItem(id, role) {
         return "/admin/academic-performance";
       case "admin_attendance":
         return "/admin/attendance";
-      case "admin_leave_approval":
-        return "/admin/leave-approval";
+      case "admin_leave_management":
+        return "/admin/leave-management";
       case "admin_transport":
         return "/admin/transport";
       case "admin_fees":

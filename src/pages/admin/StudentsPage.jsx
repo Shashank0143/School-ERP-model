@@ -29,6 +29,7 @@ import {
   getStudentDependencies,
 } from "../../services/studentService";
 import { formatClassName, isSeniorSecondary } from "../../shared/utils/classIdentity";
+import { GENDER_OPTIONS, DEFAULT_GENDER } from "../../constants/genderConstants";
 
 const StudentsPage = () => {
   const navigate = useNavigate();
@@ -176,7 +177,7 @@ const StudentsPage = () => {
     section: "A",
     stream: "",
     phoneNumber: "",
-    gender: "Male",
+    gender: DEFAULT_GENDER,
     category: "General",
     nationality: "Indian",
     dob: "",
@@ -336,7 +337,7 @@ const StudentsPage = () => {
       name: "gender",
       label: "Gender",
       type: "select",
-      options: ["Male", "Female", "Other"],
+      options: GENDER_OPTIONS,
     },
     {
       name: "category",

@@ -7,6 +7,7 @@ import { getBrandingInfo, getNoticesAndEvents } from "./sharedService";
 import { getAcademicProgress, getAcademicTimeline } from "./assignmentService";
 import { getExamData } from "./examService";
 import { getUpdatesForStudent } from "./classUpdatesService";
+import { normalizeGender } from "../utils/genderUtils";
 
 /**
  * Fetches the student profile (Purely Relational via storage)
@@ -242,6 +243,10 @@ export const updateStudentProfile = async (id, updates) => {
   if (idx === -1) throw new Error("Student not found");
 
   const finalUpdates = { ...updates };
+  if (finalUpdates.gender) {
+    finalUpdates.gender = normalizeGender(finalUpdates.gender);
+  }
+  
   if (updates.classLevel && updates.section) {
     finalUpdates.classId = `class-${updates.classLevel.toLowerCase()}${updates.section.toLowerCase()}`;
   }
@@ -270,6 +275,7 @@ export const addStudent = async (studentData) => {
   const provider = getDataProvider();
   const newStudent = {
     ...studentData,
+    gender: normalizeGender(studentData.gender),
     id: `stu-${Date.now()}`,
     admissionNo: studentData.admissionNo || `ADM${Date.now()}`,
     createdAt: new Date().toISOString(),

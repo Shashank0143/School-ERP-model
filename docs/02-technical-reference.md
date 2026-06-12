@@ -563,8 +563,9 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
 ```js
 {
   id: "leave-{timestamp}",
-  requesterId: "stud-001",        // FK → students.id or teachers.id
-  requesterType: "student",       // student | teacher
+  requesterId: "stud-001",        // FK → students.id or teachers.id or employees.id
+  requesterType: "student",       // student | teacher | employee
+  leaveType: "Sick",              // Sick | Casual | Maternity | Paternity | Other
   classId: "class-11a",          // FK → classes.id (for student)
   fromDate: "2026-05-28",
   toDate: "2026-05-29",
@@ -573,7 +574,8 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
   appliedAt: "2026-05-26T08:00:00Z",
   decidedBy: null,                // FK → teachers.id | admin id
   decidedAt: null,
-  adminRemarks: ""
+  adminRemarks: "",               // Required for rejection
+  attachmentUrl: null
 }
 ```
 
@@ -817,10 +819,12 @@ Every service is an `async` function that reads/writes through `MockDB`. Service
 
 ### `leaveService.js`
 - `applyForLeave(data)` → insert leave request
-- `getLeaveRequests(requesterId)` → for student/teacher
+- `getLeaveRequests(requesterId)` → for student/teacher/employee
 - `getAllPendingLeaves()` → admin/teacher: all pending
-- `approveLeave(leaveId, decidedBy)` → update status
-- `rejectLeave(leaveId, decidedBy, remarks)` → update status
+- `approveLeave(leaveId, decidedBy)` → update status, computes dynamic limits
+- `rejectLeave(leaveId, decidedBy, remarks)` → update status, requires remarks
+- `getLeavePortfolio(userId, role, gender)` → calculate available, consumed, and implicit balances based on role and gender
+- `getAvailableLeaveTypes(role, gender)` → valid leave types for the user
 
 ### `noticeService.js`
 - `getNotices(filters)` → filtered notices with audience resolution

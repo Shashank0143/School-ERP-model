@@ -9,6 +9,7 @@ import {
   sessionHistory,
   supportCategories,
 } from "../data/teachers/mentors";
+import { normalizeGender } from "../utils/genderUtils";
 
 /**
  * services/teacherService.js
@@ -321,7 +322,11 @@ export const updateTeacherProfile = async (teacherId, updates) => {
 
   editableKeys.forEach((key) => {
     if (updates[key] !== undefined) {
-      allowedUpdates[key] = updates[key];
+      if (key === "gender") {
+        allowedUpdates[key] = normalizeGender(updates[key]);
+      } else {
+        allowedUpdates[key] = updates[key];
+      }
     }
   });
 
@@ -341,6 +346,7 @@ export const addTeacher = async (teacherData) => {
   const provider = getDataProvider();
   const newTeacher = {
     ...teacherData,
+    gender: normalizeGender(teacherData.gender),
     id: `teach-${Date.now()}`,
     employeeId: teacherData.employeeId || `EMP${Date.now()}`,
     createdAt: new Date().toISOString(),

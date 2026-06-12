@@ -120,11 +120,16 @@ Must be returned as a nested structure or flat list filterable by `classId` or `
 {
   "id": "string (UUID)",
   "requesterId": "string (UUID)",
-  "requesterType": "string (student | teacher)",
+  "requesterType": "string (student | teacher | employee)",
+  "leaveType": "string (Sick | Casual | Maternity | Paternity | Other)",
   "fromDate": "string (YYYY-MM-DD)",
   "toDate": "string (YYYY-MM-DD)",
   "reason": "string",
-  "status": "string (pending | approved | rejected)"
+  "status": "string (pending | approved | rejected)",
+  "approvedBy": "string (UUID) | null",
+  "adminRemarks": "string | null",
+  "attachmentUrl": "string | null",
+  "appliedAt": "string (ISO-8601)"
 }
 ```
 

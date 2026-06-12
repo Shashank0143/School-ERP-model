@@ -164,9 +164,16 @@ Endpoints for parent portal access.
 ## 11. Leave Management
 **Current State:** localProvider | **Future:** apiProvider
 ### `GET /api/v1/leaves`
+- **Query Params:** `?requesterId=UUID`, `?status=Pending`
 - **Response Shape:** `LeaveRequestDTO[]`
 ### `POST /api/v1/leaves`
+- **Request Body:** `{ leaveType, fromDate, toDate, reason }`
 - **Response Shape:** `LeaveRequestDTO`
+### `PUT /api/v1/leaves/:id`
+- **Request Body:** `{ status: "Approved" | "Rejected", adminRemarks: "String", decidedBy: "UUID" }`
+- **Response Shape:** `LeaveRequestDTO`
+### `GET /api/v1/leaves/portfolio/:userId`
+- **Response Shape:** `LeavePortfolioDTO` (Dynamic structure with implicit balances for specific leave types based on gender and role)
 
 ## 12. Clubs
 **Current State:** localProvider | **Future:** apiProvider

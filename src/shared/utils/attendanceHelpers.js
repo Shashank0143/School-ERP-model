@@ -62,8 +62,10 @@ export function getNoticePriorityStyle(priority) {
 }
 
 export function formatDate(date, lang = "en") {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
   const locale = lang === "hi" ? "hi-IN" : "en-IN";
-  return date.toLocaleDateString(locale, {
+  return d.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",

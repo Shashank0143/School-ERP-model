@@ -19,12 +19,18 @@ import {
   createTeacherLeaveRequest,
   cancelTeacherLeaveRequest
 } from "../../services/leaveService";
+import { getLeaveTypes } from "../../services/leavePortfolioService";
+import { getBalanceByUser } from "../../services/leaveBalanceService";
+import { calculateLeaveDays } from "../../shared/utils/leaveCalculations";
 import OperationsStatCard from "../../components/admin/operations/OperationsStatCard";
 import TeacherModuleHeader from "../../components/teacher/TeacherModuleHeader";
+import LeavePortfolioDashboard from "../../components/leave/LeavePortfolioDashboard";
 
 const TeacherLeavePage = () => {
   const { user } = useAuth(); // Has teacher id etc.
   const [leaves, setLeaves] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [leaveBalances, setLeaveBalances] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Modals
@@ -32,7 +38,7 @@ const TeacherLeavePage = () => {
   const [viewLeave, setViewLeave] = useState(null);
 
   // Apply Form State
-  const [leaveType, setLeaveType] = useState("Casual Leave");
+  const [leaveTypeId, setLeaveTypeId] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [reason, setReason] = useState("");
@@ -48,6 +54,27 @@ const TeacherLeavePage = () => {
       const data = await getTeacherLeaveRequests(user?.linkedEntityId);
       // Sort by descending createdAt
       setLeaves(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+
+      const types = await getLeaveTypes();
+      const balances = await getBalanceByUser(user?.linkedEntityId, "teacher");
+
+      const isFemale = user?.profile?.gender === "Female";
+      const isMale = user?.profile?.gender === "Male";
+
+      const filteredTypes = types.filter(t => {
+        if (!t.isActive) return false;
+        if (!t.applicableTo.includes("teacher")) return false;
+        if (t.leaveTypeName.toLowerCase().includes("maternity") && !isFemale) return false;
+        if (t.leaveTypeName.toLowerCase().includes("paternity") && !isMale) return false;
+        return true;
+      });
+
+      setLeaveTypes(filteredTypes);
+      setLeaveBalances(balances);
+
+      if (filteredTypes.length > 0 && !leaveTypeId) {
+        setLeaveTypeId(filteredTypes[0].leaveTypeId);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,13 +90,17 @@ const TeacherLeavePage = () => {
     e.preventDefault();
     setFormError("");
     setSubmitting(true);
+
+    const selectedPortfolio = leaveTypes.find(t => t.leaveTypeId === leaveTypeId);
+
     try {
       await createTeacherLeaveRequest({
         teacherId: user?.linkedEntityId,
         fromDate,
         toDate,
         reason,
-        leaveType
+        leaveTypeId,
+        leaveTypeNameSnapshot: selectedPortfolio?.leaveTypeName
       });
       
       setSuccessMsg("Leave application submitted successfully!");
@@ -77,7 +108,6 @@ const TeacherLeavePage = () => {
       setFromDate("");
       setToDate("");
       setReason("");
-      setLeaveType("Casual Leave");
       fetchLeaves();
       setTimeout(() => setSuccessMsg(""), 5000);
     } catch (err) {
@@ -97,15 +127,6 @@ const TeacherLeavePage = () => {
     } catch (err) {
       alert(err.message);
     }
-  };
-
-  // Helper resolvers
-  const calculateDays = (start, end) => {
-    const s = new Date(start);
-    const e = new Date(end);
-    const diff = e - s;
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
-    return days === 1 ? "1 Day" : `${days} Days`;
   };
 
   const formatDate = (dateStr) => {
@@ -161,7 +182,9 @@ const TeacherLeavePage = () => {
         icon={CalendarDays}
       />
 
-      <div className="flex justify-between items-center">
+      <LeavePortfolioDashboard userId={user?.linkedEntityId} userType="teacher" gender={user?.profile?.gender} />
+
+      <div className="flex justify-between items-center mt-8">
         <h2 className="text-lg font-black text-[#03045e]">Leave Dashboard</h2>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -263,7 +286,7 @@ const TeacherLeavePage = () => {
                       {formatDate(leave.fromDate)} - {formatDate(leave.toDate)}
                     </td>
                     <td className="px-6 py-4 text-xs font-bold text-gray-500">
-                      {calculateDays(leave.fromDate, leave.toDate)}
+                      {leave.requestedDays || calculateLeaveDays(leave.fromDate, leave.toDate)} Days
                     </td>
                     <td className="px-6 py-4">
                       {getStatusBadge(leave.status)}
@@ -339,16 +362,23 @@ const TeacherLeavePage = () => {
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-[#03045e] uppercase tracking-wider">Leave Type</label>
                     <select
-                      value={leaveType}
-                      onChange={(e) => setLeaveType(e.target.value)}
+                      value={leaveTypeId}
+                      onChange={(e) => setLeaveTypeId(e.target.value)}
                       className="w-full px-4 py-2.5 text-xs font-bold text-[#03045e] bg-gray-50 border border-gray-100 rounded-xl focus:border-[#00b4d8] focus:bg-white outline-none transition-all"
                     >
-                      <option value="Sick Leave">Sick Leave</option>
-                      <option value="Casual Leave">Casual Leave</option>
-                      <option value="Personal Leave">Personal Leave</option>
-                      <option value="Emergency Leave">Emergency Leave</option>
-                      <option value="Official Duty">Official Duty</option>
+                      {leaveTypes.map(t => (
+                        <option key={t.leaveTypeId} value={t.leaveTypeId}>{t.leaveTypeName}</option>
+                      ))}
                     </select>
+                    {leaveTypeId && (
+                      <div className="mt-1">
+                        {(() => {
+                          const b = leaveBalances.find(x => x.leaveTypeId === leaveTypeId);
+                          if (!b) return <span className="text-[10px] font-bold text-rose-500">No Leave Allocation Assigned. Contact Administration.</span>;
+                          return <span className="text-[10px] font-bold text-[#0077b6]">Remaining Balance: {b.remaining} Days</span>;
+                        })()}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -373,6 +403,12 @@ const TeacherLeavePage = () => {
                       />
                     </div>
                   </div>
+                  
+                  {fromDate && toDate && (
+                    <div className="text-[10px] font-bold text-[#0077b6]">
+                      Requested Days: {calculateLeaveDays(fromDate, toDate)} Days
+                    </div>
+                  )}
 
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-[#03045e] uppercase tracking-wider">Reason</label>
@@ -461,6 +497,9 @@ const TeacherLeavePage = () => {
                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Duration</span>
                     <p className="text-xs font-bold text-[#03045e] mt-1">
                       {formatDate(viewLeave.fromDate)} - {formatDate(viewLeave.toDate)}
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-500 mt-1">
+                      {viewLeave.requestedDays || calculateLeaveDays(viewLeave.fromDate, viewLeave.toDate)} Days
                     </p>
                   </div>
                 </div>

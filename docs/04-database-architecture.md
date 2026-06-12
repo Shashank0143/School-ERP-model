@@ -93,8 +93,8 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 ### Schema: `operations`
 *   **`support_requests`**: Help, feedback, and complaint submissions.
     *   *Fields*: `requester_id`, `category`, `priority`, `status`.
-*   **`leave_requests`**: Student and teacher absence requests.
-    *   *Fields*: `requester_id`, `from_date`, `to_date`, `status`.
+*   **`leave_requests`**: Comprehensive absence management for students, teachers, and employees.
+    *   *Fields*: `requester_id`, `leave_type` (Sick, Casual, Maternity, Paternity, Other), `from_date`, `to_date`, `reason`, `status` (Pending, Approved, Rejected), `approved_by`, `admin_remarks`, `attachment_url`.
 
 ### Schema: `mentorship`
 *   **`mentor_assignments`**: Teacher-student mentor pairing.

@@ -1,4 +1,23 @@
 import { getDataProvider } from "../data";
+import { getBalanceSnapshotForUser, getBalanceByUser } from "./leaveBalanceService";
+import { calculateLeaveDays } from "../shared/utils/leaveCalculations";
+import { getItem, setItem } from "../persistence/storage";
+
+const ACTIVITY_LOGS_KEY = "erp_activityLogs";
+
+const logSystemActivity = (user, employeeId, action, module) => {
+  const logs = getItem(ACTIVITY_LOGS_KEY, []);
+  logs.unshift({
+    id: Date.now(),
+    user,
+    employeeId,
+    action,
+    module,
+    timestamp: new Date().toLocaleString(),
+    status: "success"
+  });
+  setItem(ACTIVITY_LOGS_KEY, logs.slice(0, 100)); // Keep last 100
+};
 
 // Compatibility Layer - Temporary - Remove after Leave Module Migration
 const mapToLegacy = (l) => {
@@ -109,15 +128,80 @@ export const getLeaveRequestsForTeacher = async (teacherId) => {
 /**
  * approveLeave
  */
-export const approveLeave = async (leaveId) => {
+export const approveLeave = async (leaveId, reviewerId = "System") => {
   const provider = getDataProvider();
-  const updated = await provider.updateLeaveRequest(leaveId, {
-    status: "Approved",
-    approvedAt: new Date().toISOString(),
-    // Legacy compat
-    reviewedAt: new Date().toISOString(),
-  });
-  return mapToLegacy(updated);
+  const leave = await provider.getLeaveRequestById(leaveId);
+  
+  if (!leave) throw new Error("Leave request not found.");
+  if (leave.status === "Approved") throw new Error("Leave is already approved.");
+
+  const isStudent = leave.applicantType === "Student" || !leave.applicantType; // legacy compatibility
+
+  let originalBalance = null;
+  let requestedDays = Number(leave.requestedDays) || calculateLeaveDays(leave.fromDate, leave.toDate);
+
+  if (requestedDays <= 0) {
+    throw new Error("Requested days must be greater than 0.");
+  }
+
+  try {
+    if (!isStudent && leave.leaveTypeId) {
+      // 1. Snapshot original balance for audit log
+      const applicantType = leave.applicantType.toLowerCase();
+      originalBalance = await getBalanceSnapshotForUser(leave.applicantId, applicantType, leave.leaveTypeId);
+    }
+
+    // 2. Update Leave Status
+    const metadata = {
+      status: "Approved",
+      approvedAt: new Date().toISOString(),
+      reviewedAt: new Date().toISOString(), // Legacy compat
+      approvedBy: reviewerId,
+      reviewedBy: reviewerId,
+    };
+
+    if (!isStudent && leave.leaveTypeId) {
+      metadata.requestedDays = requestedDays; // ensure legacy records have it
+    }
+
+    const updated = await provider.updateLeaveRequest(leaveId, metadata);
+    
+    // 4. Audit Log
+    if (!isStudent) {
+      const balanceText = originalBalance 
+        ? `Before: ${originalBalance.remaining} | Consumed: ${requestedDays} | After: ${originalBalance.remaining - requestedDays}`
+        : `Consumed: ${requestedDays} (No balance tracking)`;
+        
+      logSystemActivity(
+        "Admin", 
+        reviewerId, 
+        `${reviewerId} approved leave request. ${leave.leaveTypeNameSnapshot || 'Leave'} - ${balanceText}`, 
+        "Leave Management"
+      );
+    } else {
+      logSystemActivity(
+        "Admin", 
+        reviewerId, 
+        `${reviewerId} approved leave request for student ${leave.studentId || leave.applicantId}`, 
+        "Leave Management"
+      );
+    }
+
+    return mapToLegacy(updated);
+  } catch (error) {
+    // 5. Rollback if needed
+    if (originalBalance && !isStudent) {
+      try {
+        await updateBalance(originalBalance.balanceId, {
+          used: originalBalance.used,
+          remaining: originalBalance.remaining
+        });
+      } catch (rollbackError) {
+        console.error("CRITICAL: Failed to rollback leave balance!", rollbackError);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -324,12 +408,28 @@ export const getTeacherLeaveRequests = async (teacherId) => {
   );
 };
 
+export const validateLeaveBalance = async (userId, userType, leaveTypeId, requestedDays) => {
+  const balances = await getBalanceByUser(userId, userType);
+  const userBalance = balances.find((b) => b.leaveTypeId === leaveTypeId);
+  
+  if (!userBalance) {
+    throw new Error("No leave allocation assigned for this leave type. Contact administration.");
+  }
+  
+  if (requestedDays > userBalance.remaining) {
+    throw new Error(`Insufficient leave balance. Requested: ${requestedDays}, Remaining: ${userBalance.remaining}.`);
+  }
+  
+  return userBalance;
+};
+
 export const createTeacherLeaveRequest = async ({
   teacherId,
   fromDate,
   toDate,
   reason,
-  leaveType,
+  leaveTypeId,
+  leaveTypeNameSnapshot,
 }) => {
   if (!reason || reason.trim() === "") throw new Error("Reason cannot be empty.");
   if (!fromDate || !toDate) throw new Error("Dates are required.");
@@ -342,6 +442,9 @@ export const createTeacherLeaveRequest = async ({
 
   const name = teacher.teacherName || `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim() || "Unknown Teacher";
 
+  const requestedDays = calculateLeaveDays(fromDate, toDate);
+  const balance = await validateLeaveBalance(teacherId, "teacher", leaveTypeId, requestedDays);
+
   const newRequest = {
     applicantType: "Teacher",
     applicantId: teacherId,
@@ -349,7 +452,11 @@ export const createTeacherLeaveRequest = async ({
     department: teacher.department || "Academic Affairs", // dynamic resolution
     source: "Teacher Portal",
     status: "Pending",
-    leaveType: leaveType || "Casual Leave",
+    leaveTypeId,
+    leaveTypeNameSnapshot: leaveTypeNameSnapshot || "Casual Leave",
+    leaveType: leaveTypeNameSnapshot || "Casual Leave", // maintain compatibility
+    requestedDays,
+    balanceAtApplication: balance.remaining,
     fromDate,
     toDate,
     reason,
@@ -394,7 +501,8 @@ export const createEmployeeLeaveRequest = async ({
   fromDate,
   toDate,
   reason,
-  leaveType,
+  leaveTypeId,
+  leaveTypeNameSnapshot,
 }) => {
   if (!reason || reason.trim() === "") throw new Error("Reason cannot be empty.");
   if (!fromDate || !toDate) throw new Error("Dates are required.");
@@ -409,6 +517,9 @@ export const createEmployeeLeaveRequest = async ({
   const dept = departments.find((d) => d.departmentId === employee.departmentId);
   const departmentName = dept ? dept.departmentName : "General Administration";
 
+  const requestedDays = calculateLeaveDays(fromDate, toDate);
+  const balance = await validateLeaveBalance(employeeId, "employee", leaveTypeId, requestedDays);
+
   const newRequest = {
     applicantType: "Employee",
     applicantId: employeeId,
@@ -416,7 +527,11 @@ export const createEmployeeLeaveRequest = async ({
     department: departmentName,
     source: "Employee Portal",
     status: "Pending",
-    leaveType: leaveType || "Casual Leave",
+    leaveTypeId,
+    leaveTypeNameSnapshot: leaveTypeNameSnapshot || "Casual Leave",
+    leaveType: leaveTypeNameSnapshot || "Casual Leave", // maintain compatibility
+    requestedDays,
+    balanceAtApplication: balance.remaining,
     fromDate,
     toDate,
     reason,

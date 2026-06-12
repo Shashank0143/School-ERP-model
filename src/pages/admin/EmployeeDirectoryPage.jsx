@@ -18,14 +18,12 @@ import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import MainCard from "../../components/MainCard";
 import employeeService from "../../services/employeeService";
 import departmentService from "../../services/departmentService";
-import { ROLES } from "../../auth/roles";
+
+import { GENDER_OPTIONS, DEFAULT_GENDER } from "../../constants/genderConstants";
 
 // We import the seeds to cross-reference roles since they aren't fully in localProvider yet
 import { ROLE_NAVIGATION } from "../../auth/navigation";
-// We'll mock the roles fetch to use the existing roles for demonstration
-const ROLES_SEED = [
-  { id: "role-super-admin", name: "Super Administrator" },
-  { id: "role-principal", name: "Principal" },
+const MOCK_ROLES = [
   { id: "role-vice-principal", name: "Vice Principal" },
   { id: "role-academic-coordinator", name: "Academic Coordinator" },
   { id: "role-exam-controller", name: "Examination Controller" },
@@ -57,6 +55,7 @@ const EmployeeDirectoryPage = () => {
     designation: "",
     phone: "",
     email: "",
+    gender: DEFAULT_GENDER,
     joiningDate: new Date().toISOString().split("T")[0],
     status: "active",
     systemAccess: false,
@@ -108,6 +107,7 @@ const EmployeeDirectoryPage = () => {
         designation: emp.designation || "",
         phone: emp.phone || "",
         email: emp.email || "",
+        gender: emp.gender || DEFAULT_GENDER,
         joiningDate: emp.joiningDate || new Date().toISOString().split("T")[0],
         status: emp.status || "active",
         systemAccess: emp.systemAccess || false,
@@ -122,6 +122,7 @@ const EmployeeDirectoryPage = () => {
         designation: "",
         phone: "",
         email: "",
+        gender: DEFAULT_GENDER,
         joiningDate: new Date().toISOString().split("T")[0],
         status: "active",
         systemAccess: false,
@@ -382,6 +383,18 @@ const EmployeeDirectoryPage = () => {
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-[#03045e] outline-none focus:border-[#0077b6]"
                     />
                   </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Gender</label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-[#03045e] outline-none focus:border-[#0077b6] cursor-pointer"
+                    >
+                      {GENDER_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
                   
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Department</label>
@@ -524,6 +537,13 @@ const EmployeeDirectoryPage = () => {
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Department</p>
                   <p className="text-sm font-bold text-gray-700">{getDeptName(activeEmp.departmentId)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-pink-50 text-pink-600 rounded-lg"><UserPlus size={16} /></div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Gender</p>
+                  <p className="text-sm font-bold text-gray-700">{activeEmp.gender || DEFAULT_GENDER}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

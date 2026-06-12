@@ -101,9 +101,7 @@ const QuestionPapersAdminPage = lazy(() => import("./pages/admin/QuestionPapersA
 const AttendanceOverviewPage = lazy(
   () => import("./pages/admin/AttendanceOverviewPage"),
 );
-const LeaveApprovalsPage = lazy(
-  () => import("./pages/admin/LeaveApprovalsPage"),
-);
+
 const FeeManagementPage = lazy(() => import("./pages/admin/FeeManagementPage"));
 const TransportManagementPage = lazy(
   () => import("./pages/admin/TransportManagementPage"),
@@ -144,8 +142,8 @@ const EmployeeDirectoryPage = lazy(
 const EmployeeLeavePage = lazy(
   () => import("./pages/admin/EmployeeLeavePage"),
 );
-const LeaveApprovalPage = lazy(
-  () => import("./pages/admin/LeaveApprovalPage"),
+const LeaveManagementPage = lazy(
+  () => import("./pages/admin/LeaveManagementPage"),
 );
 
 import { formatDate } from "./shared/utils/attendanceHelpers";
@@ -990,8 +988,8 @@ function AppContent() {
           element={<LazyRoute Component={AttendanceOverviewPage} />}
         />
         <Route
-          path="leave-approval"
-          element={<LazyRoute Component={LeaveApprovalPage} />}
+          path="leave-management"
+          element={<LazyRoute Component={LeaveManagementPage} />}
         />
         <Route
           path="transport"

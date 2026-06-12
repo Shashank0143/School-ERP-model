@@ -31,6 +31,7 @@ import {
 } from "../../services/teacherService";
 import { getItem } from "../../persistence/storage";
 import { STORAGE_KEYS } from "../../persistence/storageKeys";
+import { GENDER_OPTIONS, DEFAULT_GENDER } from "../../constants/genderConstants";
 
 // Class levels supported by the institution
 const CLASS_LEVELS = [
@@ -225,6 +226,7 @@ const TeachersPage = () => {
     phoneNumber: "",
     email: "",
     department: "Science",
+    gender: DEFAULT_GENDER,
     qualification: "",
     experience: "",
   };
@@ -464,6 +466,12 @@ const TeachersPage = () => {
       type: "text",
     },
     { name: "experience", label: "Years of Experience", type: "text" },
+    {
+      name: "gender",
+      label: "Gender",
+      type: "select",
+      options: GENDER_OPTIONS,
+    },
   ];
 
   if (loading) {

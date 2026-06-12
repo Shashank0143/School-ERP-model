@@ -209,7 +209,7 @@ const generatePerformance = (level, stream, index) => {
 // HELPER: Build a fully normalized student record
 // ============================================================================
 
-const makeStudent = ({ studentId, name, classLevel, section, className, stream, parentId }, index) => {
+const makeStudent = ({ studentId, name, gender, classLevel, section, className, stream, parentId }, index) => {
   const classId = CLASS_ID_MAP[className] || null;
   const streamId = stream ? (STREAM_ID_MAP[stream] || null) : null;
   const admissionNo = String(2024000 + index + 1); // e.g., "2024001"
@@ -224,6 +224,7 @@ const makeStudent = ({ studentId, name, classLevel, section, className, stream, 
 
     // ── Profile fields ────────────────────────────────────────────────────
     name,
+    gender,
     classLevel,
     section,
     className,                // "10-A" format — still used by some filters
@@ -245,36 +246,36 @@ const makeStudent = ({ studentId, name, classLevel, section, className, stream, 
 
 export const studentsSeed = [
   // Class 10-A
-  makeStudent({ studentId: "stud-001", name: "Arjun Sharma",  classLevel: "10", section: "A", className: "10-A", stream: null, parentId: "parent-1" }, 0),
-  makeStudent({ studentId: "stud-002", name: "Aarohi Verma",  classLevel: "10", section: "A", className: "10-A", stream: null, parentId: "parent-2" }, 1),
+  makeStudent({ studentId: "stud-001", name: "Arjun Sharma",  gender: "Male",   classLevel: "10", section: "A", className: "10-A", stream: null, parentId: "parent-1" }, 0),
+  makeStudent({ studentId: "stud-002", name: "Aarohi Verma",  gender: "Female", classLevel: "10", section: "A", className: "10-A", stream: null, parentId: "parent-2" }, 1),
 
   // Class 10-B
-  makeStudent({ studentId: "stud-003", name: "Aryan Gupta",   classLevel: "10", section: "B", className: "10-B", stream: null, parentId: "parent-3" }, 2),
-  makeStudent({ studentId: "stud-004", name: "Ananya Singh",  classLevel: "10", section: "B", className: "10-B", stream: null, parentId: "parent-4" }, 3),
+  makeStudent({ studentId: "stud-003", name: "Aryan Gupta",   gender: "Male",   classLevel: "10", section: "B", className: "10-B", stream: null, parentId: "parent-3" }, 2),
+  makeStudent({ studentId: "stud-004", name: "Ananya Singh",  gender: "Female", classLevel: "10", section: "B", className: "10-B", stream: null, parentId: "parent-4" }, 3),
 
   // Class 10-C
-  makeStudent({ studentId: "stud-005", name: "Rohan Kumar",   classLevel: "10", section: "C", className: "10-C", stream: null, parentId: "parent-5" }, 4),
-  makeStudent({ studentId: "stud-006", name: "Diya Patel",    classLevel: "10", section: "C", className: "10-C", stream: null, parentId: "parent-6" }, 5),
+  makeStudent({ studentId: "stud-005", name: "Rohan Kumar",   gender: "Male",   classLevel: "10", section: "C", className: "10-C", stream: null, parentId: "parent-5" }, 4),
+  makeStudent({ studentId: "stud-006", name: "Diya Patel",    gender: "Female", classLevel: "10", section: "C", className: "10-C", stream: null, parentId: "parent-6" }, 5),
 
   // Class 10-D
-  makeStudent({ studentId: "stud-007", name: "Aditya Reddy",  classLevel: "10", section: "D", className: "10-D", stream: null, parentId: "parent-7" }, 6),
-  makeStudent({ studentId: "stud-008", name: "Ishita Nair",   classLevel: "10", section: "D", className: "10-D", stream: null, parentId: "parent-8" }, 7),
+  makeStudent({ studentId: "stud-007", name: "Aditya Reddy",  gender: "Male",   classLevel: "10", section: "D", className: "10-D", stream: null, parentId: "parent-7" }, 6),
+  makeStudent({ studentId: "stud-008", name: "Ishita Nair",   gender: "Female", classLevel: "10", section: "D", className: "10-D", stream: null, parentId: "parent-8" }, 7),
 
   // Class 11-A: Science Non-Medical
-  makeStudent({ studentId: "stud-009", name: "Vihaan Sharma", classLevel: "11", section: "A", className: "11-A", stream: "Science Non-Medical", parentId: "parent-9"  }, 8),
-  makeStudent({ studentId: "stud-010", name: "Kavya Verma",   classLevel: "11", section: "A", className: "11-A", stream: "Science Non-Medical", parentId: "parent-10" }, 9),
+  makeStudent({ studentId: "stud-009", name: "Vihaan Sharma", gender: "Male",   classLevel: "11", section: "A", className: "11-A", stream: "Science Non-Medical", parentId: "parent-9"  }, 8),
+  makeStudent({ studentId: "stud-010", name: "Kavya Verma",   gender: "Female", classLevel: "11", section: "A", className: "11-A", stream: "Science Non-Medical", parentId: "parent-10" }, 9),
 
   // Class 11-B: Science Medical
-  makeStudent({ studentId: "stud-011", name: "Kabir Gupta",   classLevel: "11", section: "B", className: "11-B", stream: "Science Medical",     parentId: "parent-11" }, 10),
-  makeStudent({ studentId: "stud-012", name: "Myra Singh",    classLevel: "11", section: "B", className: "11-B", stream: "Science Medical",     parentId: "parent-12" }, 11),
+  makeStudent({ studentId: "stud-011", name: "Kabir Gupta",   gender: "Male",   classLevel: "11", section: "B", className: "11-B", stream: "Science Medical",     parentId: "parent-11" }, 10),
+  makeStudent({ studentId: "stud-012", name: "Myra Singh",    gender: "Female", classLevel: "11", section: "B", className: "11-B", stream: "Science Medical",     parentId: "parent-12" }, 11),
 
   // Class 11-C: Commerce
-  makeStudent({ studentId: "stud-013", name: "Aarav Kumar",   classLevel: "11", section: "C", className: "11-C", stream: "Commerce",            parentId: "parent-13" }, 12),
-  makeStudent({ studentId: "stud-014", name: "Navya Patel",   classLevel: "11", section: "C", className: "11-C", stream: "Commerce",            parentId: "parent-14" }, 13),
+  makeStudent({ studentId: "stud-013", name: "Aarav Kumar",   gender: "Male",   classLevel: "11", section: "C", className: "11-C", stream: "Commerce",            parentId: "parent-13" }, 12),
+  makeStudent({ studentId: "stud-014", name: "Navya Patel",   gender: "Female", classLevel: "11", section: "C", className: "11-C", stream: "Commerce",            parentId: "parent-14" }, 13),
 
   // Class 11-D: Humanities
-  makeStudent({ studentId: "stud-015", name: "Reyansh Reddy", classLevel: "11", section: "D", className: "11-D", stream: "Humanities",          parentId: "parent-15" }, 14),
-  makeStudent({ studentId: "stud-016", name: "Prisha Nair",   classLevel: "11", section: "D", className: "11-D", stream: "Humanities",          parentId: "parent-16" }, 15),
+  makeStudent({ studentId: "stud-015", name: "Reyansh Reddy", gender: "Male",   classLevel: "11", section: "D", className: "11-D", stream: "Humanities",          parentId: "parent-15" }, 14),
+  makeStudent({ studentId: "stud-016", name: "Prisha Nair",   gender: "Female", classLevel: "11", section: "D", className: "11-D", stream: "Humanities",          parentId: "parent-16" }, 15),
 ];
 
 // ============================================================================
