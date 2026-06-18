@@ -198,7 +198,7 @@ const StudentDetailsPage = () => {
 
       {/* 1. OVERVIEW */}
       <AdminSectionCard title="Overview" icon={User}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-6">
           <div className="space-y-1">
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Student ID</p>
             <p className="text-sm font-black text-[#03045e]">{profile.personal?.studentId}</p>
@@ -398,7 +398,7 @@ const StudentDetailsPage = () => {
       {/* 5. TRANSPORT */}
       <AdminSectionCard title="Transport" icon={Car}>
         {transport ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-6">
             <div className="space-y-1">
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Route</p>
               <p className="text-sm font-black text-[#03045e]">{transport.summary?.routeName || "Route 4A"}</p>
@@ -450,7 +450,7 @@ const StudentDetailsPage = () => {
 
       {/* 7. ACCOUNT INFORMATION */}
       <AdminSectionCard title="Account Information" icon={Shield}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-[#caf0f8]/10 p-6 rounded-3xl border border-[#caf0f8]/40">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-6 bg-[#caf0f8]/10 p-6 rounded-3xl border border-[#caf0f8]/40">
           <div className="space-y-1">
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Username</p>
             <p className="text-sm font-black text-[#03045e]">{profile.personal?.email?.split('@')[0] || "student123"}</p>

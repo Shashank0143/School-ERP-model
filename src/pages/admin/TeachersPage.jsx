@@ -487,7 +487,7 @@ const TeachersPage = () => {
           description="Manage institutional teacher records, class teacher mappings, and academic assignments."
           breadcrumbs={["Admin Portal", "User Management", "Teachers"]}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
@@ -513,7 +513,7 @@ const TeachersPage = () => {
         actionButton={
           <button
             onClick={() => setAddTeacherOpen(true)}
-            className="flex items-center gap-2 bg-[#0077b6] hover:bg-[#0096c7] text-white px-5 py-2.5 rounded-2xl shadow-sm text-xs font-black transition-colors"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#0077b6] hover:bg-[#0096c7] text-white px-5 py-2.5 rounded-2xl shadow-sm text-xs font-black transition-colors"
           >
             <UserPlus size={16} />
             <span>ADD FACULTY MEMBER</span>
@@ -522,7 +522,7 @@ const TeachersPage = () => {
       />
 
       {/* Stats Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <AdminStatCard
           title="Active Faculty"
           value={analytics.total.toString()}
@@ -560,7 +560,7 @@ const TeachersPage = () => {
           onSearchChange={setSearchTerm}
           placeholder="Search faculty by name, employee ID, subject, class..."
           filterButton={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {/* Class Filter */}
               <select
                 value={selectedClass}
@@ -568,7 +568,7 @@ const TeachersPage = () => {
                   setSelectedClass(e.target.value);
                   setSelectedSection(""); // Reset section when class changes
                 }}
-                className="flex items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none cursor-pointer"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none cursor-pointer"
               >
                 <option value="">All Classes</option>
                 {CLASS_LEVELS.map((level) => (
@@ -583,7 +583,7 @@ const TeachersPage = () => {
                 value={selectedSection}
                 onChange={(e) => setSelectedSection(e.target.value)}
                 disabled={!selectedClass}
-                className="flex items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] transition-colors bg-white outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">All Sections</option>
                 {SECTIONS.map((sec) => (
@@ -656,7 +656,7 @@ const TeachersPage = () => {
                     </button>
                   </td>
                   <td className="py-4 px-3">
-                    <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                    <div className="flex flex-wrap gap-1.5 w-full flex-1 min-w-0 md:max-w-[200px]">
                       {classSections.length > 0 ? (
                         classSections.slice(0, 3).map((cs, i) => (
                           <span
@@ -691,7 +691,7 @@ const TeachersPage = () => {
                     )}
                   </td>
                   <td className="py-4 px-3">
-                    <div className="flex flex-wrap gap-1 max-w-[180px]">
+                    <div className="flex flex-wrap gap-1 w-full flex-1 min-w-0 md:max-w-[180px]">
                       {subjects.slice(0, 4).map((sub, i) => (
                         <span
                           key={i}

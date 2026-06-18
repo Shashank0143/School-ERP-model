@@ -207,7 +207,7 @@ const LeavePage = () => {
                 )}
               </AnimatePresence>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-[#03045e] uppercase tracking-wider">From Date</label>
                   <input
@@ -291,7 +291,7 @@ const LeavePage = () => {
 
         {/* Right: History & Visual Status Roster (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-6">
             {/* History List */}
             <MainCard className="p-6 h-[500px] flex flex-col">
               <h2 className="text-lg font-black text-[#03045e] mb-4 flex items-center gap-2">

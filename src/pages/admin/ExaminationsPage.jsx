@@ -1552,7 +1552,7 @@ const ExaminationsPage = () => {
       />
 
       {/* Top operational metric stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <AdminStatCard
           title="Total Exam Cycles"
           value={sessions.length.toString()}
@@ -1622,7 +1622,7 @@ const ExaminationsPage = () => {
             {/* ── TAB 1: SESSIONS ── */}
             {activeTab === "sessions" && (
               <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {sessions.map((sess) => (
                     <MainCard
                       key={sess.id}
@@ -1741,7 +1741,7 @@ const ExaminationsPage = () => {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
                       <div className="bg-white p-4 rounded-2xl border border-gray-100 space-y-2 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2">
@@ -1865,7 +1865,7 @@ const ExaminationsPage = () => {
                 ) : (
                   <>
                     <MainCard className="p-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                             Active Exam Cycle
@@ -1949,7 +1949,7 @@ const ExaminationsPage = () => {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-3">
                         <button
                           onClick={handleBulkAutoSpace}
                           className="p-3 rounded-2xl border flex items-center gap-2.5 text-left transition-all shadow-sm bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-[#0077b6]/30 active:scale-[0.98] group"
@@ -2056,7 +2056,7 @@ const ExaminationsPage = () => {
 
                               {paper ? (
                                 <div className="flex flex-col md:flex-row md:items-center gap-6">
-                                  <div className="grid grid-cols-2 md:flex items-center gap-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 md:flex items-center gap-4">
                                     <div className="space-y-0.5">
                                       <span className="text-[9px] uppercase font-bold text-gray-400">
                                         Date
@@ -2232,7 +2232,7 @@ const ExaminationsPage = () => {
                       />
                     ) : (
                       /* Progress Grid */
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
                         {classProgressStats.map((clsStat) => (
                           <MainCard
                             key={clsStat.classId}
@@ -2386,7 +2386,7 @@ const ExaminationsPage = () => {
                               <h3 className="text-lg font-black tracking-tight leading-none">
                                 {activeSession?.name || "Term Exam"}
                               </h3>
-                              <p className="text-xs text-white/70 font-semibold max-w-lg leading-relaxed">
+                              <p className="text-xs text-white/70 font-semibold w-[95vw] md:w-[90vw] lg:max-w-lg leading-relaxed">
                                 Toggle student and parent dashboard visibility.
                                 When published, report cards are dynamically
                                 rendered using relational marks.
@@ -2463,8 +2463,8 @@ const ExaminationsPage = () => {
                               </p>
                             </div>
 
-                            <MainCard className="p-0 overflow-hidden">
-                              <table className="w-full border-collapse text-left text-xs font-bold text-gray-700">
+                            <MainCard className="p-0 overflow-x-auto w-full">
+                              <table className="w-full min-w-[800px] border-collapse text-left text-xs font-bold text-gray-700">
                                 <thead className="bg-gray-50/50 text-[10px] text-gray-400 font-black uppercase tracking-wider border-b border-gray-100">
                                   <tr>
                                     <th className="p-4 w-28">Admission No</th>
@@ -2533,7 +2533,7 @@ const ExaminationsPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white max-w-xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30"
+              className="bg-white w-[95vw] md:w-[90vw] lg:max-w-xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30"
             >
               <div className="p-6 bg-gradient-to-r from-[#03045e] to-[#023e8a] text-white flex justify-between items-center">
                 <div>
@@ -2571,7 +2571,7 @@ const ExaminationsPage = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
                       Cycle Template
@@ -2609,7 +2609,7 @@ const ExaminationsPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
                       Start Date
@@ -2992,7 +2992,7 @@ const ExaminationsPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30 flex flex-col md:flex-row"
+              className="bg-white w-[95vw] md:w-[90vw] lg:max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30 flex flex-col md:flex-row"
             >
               {/* Left Column: Form Entry */}
               <div className="flex-1 flex flex-col">
@@ -3016,7 +3016,7 @@ const ExaminationsPage = () => {
                 </div>
 
                 <div className="p-6 space-y-4 overflow-y-auto max-h-[450px]">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
                         Exam Mode
@@ -3052,7 +3052,7 @@ const ExaminationsPage = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
                         Start (24h)
@@ -3099,7 +3099,7 @@ const ExaminationsPage = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
                         Target Room
@@ -3165,7 +3165,7 @@ const ExaminationsPage = () => {
                     <span className="text-[10px] uppercase font-black text-[#0077b6] tracking-wider block">
                       Marks Structure Splitting Config
                     </span>
-                    <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-center">
                       <div className="space-y-1">
                         <span className="text-[8px] uppercase font-bold text-gray-400">
                           Total
@@ -3311,7 +3311,7 @@ const ExaminationsPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white max-w-3xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30"
+              className="bg-white w-[95vw] md:w-[90vw] lg:max-w-3xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30"
             >
               <div className="p-6 bg-gradient-to-r from-[#03045e] to-[#023e8a] text-white flex justify-between items-center">
                 <div>
@@ -3379,7 +3379,7 @@ const ExaminationsPage = () => {
                           setOverrideStudentMarks(updated);
                         }}
                         placeholder="Remarks (e.g. Excellent progress)"
-                        className="flex-1 p-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-[#03045e] outline-none"
+                        className="overflow-y-auto flex-1 p-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-[#03045e] outline-none"
                       />
                     </div>
                   </div>
@@ -3413,7 +3413,7 @@ const ExaminationsPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30 flex flex-col"
+              className="bg-white w-[95vw] md:w-[90vw] lg:max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30 flex flex-col"
             >
               <div className="p-6 bg-[#03045e] text-white flex justify-between items-center border-b border-white/10">
                 <div>
@@ -3449,7 +3449,7 @@ const ExaminationsPage = () => {
                   </div>
 
                   {/* Student Specs */}
-                  <div className="grid grid-cols-2 gap-4 text-xs font-bold font-sans">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold font-sans">
                     <div className="space-y-1">
                       <p className="text-gray-400 font-medium">Student Name:</p>
                       <p className="text-sm font-black text-[#03045e]">
@@ -3483,7 +3483,8 @@ const ExaminationsPage = () => {
                   </div>
 
                   {/* Grades board */}
-                  <table className="w-full border-collapse text-left text-xs font-sans">
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full min-w-[800px] border-collapse text-left text-xs font-sans">
                     <thead>
                       <tr className="bg-gray-50 text-[10px] uppercase font-black tracking-wider text-gray-400 border-b border-gray-200">
                         <th className="p-3">Subject</th>
@@ -3515,6 +3516,7 @@ const ExaminationsPage = () => {
                       ))}
                     </tbody>
                   </table>
+                  </div>
 
                   {/* Summary calculations */}
                   <div className="pt-4 border-t border-dashed border-gray-200 flex justify-between items-center text-xs font-sans font-black">
@@ -3534,7 +3536,7 @@ const ExaminationsPage = () => {
                   </div>
 
                   {/* Signature Blocks */}
-                  <div className="pt-10 grid grid-cols-2 gap-8 text-center text-[10px] font-sans font-bold text-gray-400 uppercase tracking-widest">
+                  <div className="pt-10 grid grid-cols-1 sm:grid-cols-2 gap-8 text-center text-[10px] font-sans font-bold text-gray-400 uppercase tracking-widest">
                     <div className="border-t border-gray-200 pt-3">
                       CLASS TEACHER SIGNATURE
                     </div>
@@ -3573,7 +3575,7 @@ const ExaminationsPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30 flex flex-col max-h-[90vh]"
+              className="bg-white w-[95vw] md:w-[90vw] lg:max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-[#caf0f8]/30 flex flex-col max-h-[90vh]"
             >
               <div
                 className={`p-6 text-white flex justify-between items-center ${diagnostics.errors.length > 0 ? "bg-rose-600" : "bg-amber-500"}`}
@@ -3670,7 +3672,7 @@ const ExaminationsPage = () => {
                       <h3 className="text-sm font-black text-emerald-800 uppercase tracking-wider">
                         Datesheet Fully Compliant
                       </h3>
-                      <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
+                      <p className="text-xs text-gray-500 w-[95vw] md:w-[90vw] lg:max-w-md mx-auto leading-relaxed">
                         All classes are scheduled correctly with no duplicate
                         papers, room clashes, teacher overloads, or Sunday
                         collisions.

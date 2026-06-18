@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "../../context/LanguageContext";
 import { getSchoolCalendar } from "../../services/sharedService";
 import { useService } from "../../hooks/useService";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import HelperButton from "../../components/HelperButton";
 import HelperPopup from "../../components/HelperPopup";
 import MainCard from "../../components/MainCard";
@@ -57,6 +58,58 @@ const MONTHS = [
 ];
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
+
+
+function AgendaView({ events, hoveredEventId, onHover, onClickEvent }) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const nextWeek = new Date(now);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+
+  const sections = { Today: [], Tomorrow: [], 'This Week': [], Upcoming: [] };
+
+  (events || []).forEach(e => {
+    const d = new Date(e.date);
+    d.setHours(0,0,0,0);
+    if (d.getTime() === now.getTime()) sections.Today.push(e);
+    else if (d.getTime() === tomorrow.getTime()) sections.Tomorrow.push(e);
+    else if (d.getTime() > tomorrow.getTime() && d.getTime() <= nextWeek.getTime()) sections['This Week'].push(e);
+    else if (d.getTime() > nextWeek.getTime()) sections.Upcoming.push(e);
+  });
+
+  return (
+    <div className="flex flex-col gap-6 w-full">
+      {Object.entries(sections).map(([title, items]) => {
+        if (items.length === 0) return null;
+        return (
+          <div key={title} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <h3 className="text-sm font-black text-[#03045e] uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">
+              {title} <span className="text-gray-400 font-bold ml-2">({items.length})</span>
+            </h3>
+            <div className="flex flex-col gap-3">
+              {items.map((event, idx) => (
+                <EventRow
+                  key={event.id}
+                  event={event}
+                  index={idx}
+                  isHovered={hoveredEventId === event.id}
+                  onHover={onHover}
+                  onClick={() => {
+                    const parts = event.date.split(" ");
+                    onClickEvent(parseInt(parts[0]), parts[1], [event]);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 
 function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCurrent }) {
   const days = useMemo(() => getMonthData(year, monthIndex), [year, monthIndex]);
@@ -190,6 +243,7 @@ function EventRow({ event, index, isHovered, onHover, onClick }) {
 }
 
 function SchoolCalendarPage() {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const { t } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
@@ -368,9 +422,12 @@ function SchoolCalendarPage() {
 
           <div className="bg-white rounded-[2rem] p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-full relative overflow-hidden"
                style={{ borderTop: "6px solid #00b4d8" }}>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {calendarMonths.map((m, idx) => (
-                <MiniMonth 
+            {isMobile ? (
+              <AgendaView events={schoolCalendar.events} hoveredEventId={hoveredEventId} onHover={setHoveredEventId} onClickEvent={handleDateClick} />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-2">
+                {calendarMonths.map((m, idx) => (
+                  <MiniMonth 
                   key={idx}
                   year={m.year}
                   monthIndex={m.month}
@@ -381,6 +438,7 @@ function SchoolCalendarPage() {
                 />
               ))}
             </div>
+            )}
           </div>
         </div>
       </div>

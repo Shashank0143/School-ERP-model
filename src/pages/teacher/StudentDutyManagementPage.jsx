@@ -356,7 +356,7 @@ export default function StudentDutyManagementPage() {
       {activeTab === "my-requests" && (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <MainCard className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                 <ClipboardCheck size={24} />
@@ -427,7 +427,7 @@ export default function StudentDutyManagementPage() {
                       <tr key={req.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="p-4">
                           <p className="font-bold text-gray-800">{req.title}</p>
-                          <p className="text-xs text-gray-500 truncate max-w-[200px]" title={req.reason}>{req.reason}</p>
+                          <p className="text-xs text-gray-500 truncate w-full flex-1 min-w-0 md:max-w-[200px]" title={req.reason}>{req.reason}</p>
                         </td>
                         <td className="p-4 text-sm font-medium text-gray-600">{req.category}</td>
                         <td className="p-4">
@@ -503,7 +503,7 @@ export default function StudentDutyManagementPage() {
       {activeTab === "verification-board" && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <MainCard className="p-4 flex items-center gap-4 border-l-4 border-l-yellow-500">
               <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
                 <Clock size={24} />
@@ -535,7 +535,7 @@ export default function StudentDutyManagementPage() {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-4 items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Filter size={16} className="text-gray-400" />
               <span className="text-sm font-bold text-gray-600">Filters:</span>
             </div>
@@ -613,7 +613,7 @@ export default function StudentDutyManagementPage() {
               <p className="text-gray-500 text-sm">There are currently no active student duty requests requiring verification.</p>
             </MainCard>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredBoardRequests.map(req => (
                 <div key={req.id} className="bg-white border border-yellow-200 shadow-sm shadow-yellow-100 rounded-2xl overflow-hidden flex flex-col transition-all hover:shadow-md hover:border-yellow-300">
                   <div className="p-4 bg-yellow-50/50 border-b border-yellow-100 flex justify-between items-start">
@@ -630,7 +630,7 @@ export default function StudentDutyManagementPage() {
                   </div>
                   
                   <div className="p-4 flex-1 flex flex-col gap-3">
-                    <div className="flex items-center gap-4 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={14} className="text-gray-400" />
                         <span className="font-medium">{req.dutyDate}</span>
@@ -650,7 +650,7 @@ export default function StudentDutyManagementPage() {
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Students Assigned</p>
                       <ul className="space-y-1.5 max-h-32 overflow-y-auto pr-2">
                         {req.targetStudents?.map(s => (
-                          <li key={s.studentId} className="flex items-center gap-2 text-sm">
+                          <li key={s.studentId} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
                             <span className="font-medium text-gray-800">{s.studentName}</span>
                             <span className="text-gray-400 text-xs">({s.className})</span>
@@ -678,7 +678,7 @@ export default function StudentDutyManagementPage() {
       {/* Create / Edit Modal (Only for My Requests) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <MainCard className="w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+          <MainCard className="w-full w-[95vw] md:w-[90vw] lg:max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-3xl">
               <h2 className="text-xl font-bold text-[#03045e]">
                 {selectedRequest ? "Edit Duty Request" : "Create Duty Request"}
@@ -707,7 +707,7 @@ export default function StudentDutyManagementPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
                     <select
@@ -740,7 +740,7 @@ export default function StudentDutyManagementPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Start Time</label>
                     <input

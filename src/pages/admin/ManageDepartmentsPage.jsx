@@ -213,8 +213,8 @@ const ManageDepartmentsPage = () => {
         </div>
       </MainCard>
 
-      <MainCard className="border border-[#caf0f8]/60 overflow-hidden">
-        <table className="w-full">
+      <MainCard className="border border-[#caf0f8]/60 overflow-x-auto w-full">
+        <table className="w-full min-w-[800px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="text-left py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-wider">Department ID</th>
@@ -265,7 +265,7 @@ const ManageDepartmentsPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+            className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden"
           >
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
               <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2">

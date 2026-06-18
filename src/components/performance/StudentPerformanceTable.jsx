@@ -58,7 +58,7 @@ export default function StudentPerformanceTable({ studentsData, onSelectStudent 
             />
           </div>
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <div className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 px-3 py-1.5 rounded-xl border border-gray-100">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 px-3 py-1.5 rounded-xl border border-gray-100">
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>Filters</span>
             </div>
@@ -75,7 +75,7 @@ export default function StudentPerformanceTable({ studentsData, onSelectStudent 
             <select
               value={selectedStream}
               onChange={(e) => setSelectedStream(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 text-[#03045e] font-bold text-xs cursor-pointer focus:outline-none focus:border-indigo-100 max-w-[180px] truncate"
+              className="px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 text-[#03045e] font-bold text-xs cursor-pointer focus:outline-none focus:border-indigo-100 w-full flex-1 min-w-0 md:max-w-[180px] truncate"
             >
               <option value="ALL">All Streams</option>
               {streamOptions.map(s => <option key={s} value={s}>{s}</option>)}
@@ -97,7 +97,7 @@ export default function StudentPerformanceTable({ studentsData, onSelectStudent 
 
         {/* Alarm Toggle Checkboxes */}
         <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-gray-50">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          <label className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={showLowAttendance}
@@ -110,7 +110,7 @@ export default function StudentPerformanceTable({ studentsData, onSelectStudent 
             </span>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          <label className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={showOverdueOnly}

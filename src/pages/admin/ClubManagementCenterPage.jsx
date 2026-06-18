@@ -117,7 +117,7 @@ const ClubManagementCenterPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-gradient-to-br from-[#03045e] to-[#023e8a] p-5 rounded-2xl text-white shadow-lg">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <div className="p-3 bg-white/20 rounded-xl">
               <Building2 size={24} className="text-[#caf0f8]" />
             </div>
@@ -129,7 +129,7 @@ const ClubManagementCenterPage = () => {
         </div>
         
         <div className="bg-white border border-[#caf0f8] p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <div className="p-3 bg-[#e0fbfc] rounded-xl">
               <Activity size={24} className="text-[#0077b6]" />
             </div>
@@ -141,7 +141,7 @@ const ClubManagementCenterPage = () => {
         </div>
 
         <div className="bg-white border border-[#caf0f8] p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <div className="p-3 bg-[#e0fbfc] rounded-xl">
               <Users size={24} className="text-[#0077b6]" />
             </div>
@@ -360,7 +360,7 @@ const ClubManagementCenterPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="w-12 h-12 bg-[#caf0f8] rounded-xl flex items-center justify-center text-[#03045e]">
             <ShieldCheck size={28} />
           </div>
@@ -422,9 +422,9 @@ const ClubManagementCenterPage = () => {
         {activeTab === "proposals" && renderProposalsTab()}
         {activeTab === "participations" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
               <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-5 rounded-2xl text-white shadow-lg">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <div className="p-3 bg-white/20 rounded-xl">
                     <Award size={24} className="text-emerald-100" />
                   </div>
@@ -435,7 +435,7 @@ const ClubManagementCenterPage = () => {
                 </div>
               </div>
               <div className="bg-white border border-emerald-100 p-5 rounded-2xl shadow-sm">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl">
                     <Users size={24} className="text-emerald-600" />
                   </div>
@@ -448,7 +448,7 @@ const ClubManagementCenterPage = () => {
                 </div>
               </div>
               <div className="bg-white border border-emerald-100 p-5 rounded-2xl shadow-sm">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl">
                     <Activity size={24} className="text-emerald-600" />
                   </div>
@@ -533,7 +533,7 @@ const ClubManagementCenterPage = () => {
       {/* Create / Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
+          <div className="bg-white rounded-3xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden shadow-2xl">
             <div className="bg-[#03045e] p-6 text-white">
               <h3 className="text-xl font-black">{modalMode === "create" ? "Create New Club" : "Edit Club"}</h3>
               <p className="text-[#caf0f8] text-sm opacity-80 mt-1">
@@ -554,7 +554,7 @@ const ClubManagementCenterPage = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1.5">Category</label>
                   <select

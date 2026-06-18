@@ -129,7 +129,7 @@ const QuestionPapersPage = () => {
       />
 
       {/* Analytics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <MainCard className="p-5 border-l-4 border-l-[#03045e]">
           <div className="flex justify-between items-start">
             <div>

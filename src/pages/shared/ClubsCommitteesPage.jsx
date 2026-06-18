@@ -25,6 +25,7 @@ import MainCard from "../../components/MainCard";
 import HelperButton from "../../components/HelperButton";
 import HelperPopup from "../../components/HelperPopup";
 import ClubDetailPanel from "../../components/clubs/ClubDetailPanel";
+import ConfirmationModal from "../../shared/components/ConfirmationModal";
 
 const logoMap = {
   cpu: Cpu,
@@ -40,14 +41,9 @@ const NAVY = "#03045e";
 export default function ClubsCommitteesPage() {
   const { t } = useLanguage();
   const [showHelper, setShowHelper] = useState(false);
-  const [showAllActivities, setShowAllActivities] = useState(false);
   const [studentClubs, setStudentClubs] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [coordinators, setCoordinators] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
   const [myProposals, setMyProposals] = useState([]);
-  const [activityHistory, setActivityHistory] = useState([]);
-  const [feedAnnouncements, setFeedAnnouncements] = useState([]);
   const [activeTab, setActiveTab] = useState("memberships"); // "memberships", "discover", "requests", "feed", "proposals"
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(true);
@@ -57,6 +53,7 @@ export default function ClubsCommitteesPage() {
   const [proposalForm, setProposalForm] = useState({ clubName: "", category: "Academic", purpose: "" });
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [proposing, setProposing] = useState(false);
+  const [clubToLeave, setClubToLeave] = useState(null);
   
   const { activeStudentId } = useStudent();
   const studentId = activeStudentId || 'stud-001';
@@ -68,13 +65,8 @@ export default function ClubsCommitteesPage() {
       const clubs = await clubsService.getStudentClubs(studentId);
       setStudentClubs(clubs);
 
-      // 2. Aggregate recent events
-      let allEvents = [];
+      // 2. Aggregate recent events and counts
       for (const club of clubs) {
-        if (club.membershipStatus === 'Active') {
-          const evs = await clubsService.getClubEvents(club.id);
-          allEvents = [...allEvents, ...evs];
-        }
         // Calculate counts for badges
         const evs = await clubsService.getClubEvents(club.id);
         const updates = await clubsService.getClubAnnouncements(club.id);
@@ -85,48 +77,14 @@ export default function ClubsCommitteesPage() {
           clubObj.advisoriesCount = updates.length;
         }
       }
-      setActivities(allEvents);
 
       // 3. Get student's membership requests
       const requests = await clubsService.getStudentClubRequests(studentId);
       setMyRequests(requests);
 
-      // 4. Get Feed Announcements
-      const feed = await clubsService.getClubAnnouncementFeed(studentId);
-      setFeedAnnouncements(feed);
-
       // 5. Get Student Proposals
       const proposals = await clubsService.getStudentClubProposals(studentId);
       setMyProposals(proposals);
-
-      // 6. Get Activity History
-      const history = await clubsService.getStudentActivityHistory(studentId);
-      setActivityHistory(history);
-
-      // 7. Populate fallback faculty coordinators list for all clubs
-      const validClubsWithCoords = clubs.filter(
-        c => c.coordinator && 
-             !c.coordinator.toLowerCase().includes('faculty member') && 
-             !c.coordinator.toLowerCase().includes('faculty coordinator')
-      );
-      
-      const uniqueNames = new Set();
-      const resolvedCoordinators = [];
-      
-      validClubsWithCoords.forEach(c => {
-        if (!uniqueNames.has(c.coordinator)) {
-          uniqueNames.add(c.coordinator);
-          resolvedCoordinators.push({
-            id: `fac-${c.id}`,
-            name: c.coordinator,
-            department: c.category || 'Co-Curricular',
-            email: `${c.coordinator.toLowerCase().replace(/\s/g, '.').replace(/[^a-z.]/g, '')}@edudash.edu`,
-            timings: 'Mon, Wed: 3:30 PM - 5:00 PM'
-          });
-        }
-      });
-      
-      setCoordinators(resolvedCoordinators);
     } catch (err) {
       console.error("Failed to load student club dataset:", err);
     } finally {
@@ -176,6 +134,13 @@ export default function ClubsCommitteesPage() {
       await loadStudentData();
     } catch (err) {
       setErrorMsg(err.message || "Failed to leave club.");
+    }
+  };
+
+  const confirmLeaveClub = () => {
+    if (clubToLeave) {
+      handleLeaveClub(clubToLeave.id);
+      setClubToLeave(null);
     }
   };
 
@@ -238,7 +203,7 @@ export default function ClubsCommitteesPage() {
       )}
 
       <div className="grid grid-cols-12 gap-6 items-start">
-        <div className="col-span-12 lg:col-span-8 space-y-8">
+        <div className="col-span-12 space-y-8">
           {selectedClub ? (
             <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
               <ClubDetailPanel 
@@ -255,8 +220,6 @@ export default function ClubsCommitteesPage() {
                   { id: "memberships", label: "My Memberships" },
                   { id: "discover", label: "Discover Clubs" },
                   { id: "requests", label: "My Requests" },
-                  { id: "history", label: "Activity History" },
-                  { id: "feed", label: "Club Feed" },
                   { id: "proposals", label: "My Proposals" }
                 ].map((tab) => (
                   <button
@@ -291,7 +254,7 @@ export default function ClubsCommitteesPage() {
               </span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-4">
               {joinedClubs.length === 0 ? (
                 <div className="col-span-2 p-8 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 text-center font-bold text-xs text-gray-400 italic">
                   You are not enrolled in any clubs. Discover and join up to 2 clubs below!
@@ -305,24 +268,9 @@ export default function ClubsCommitteesPage() {
                         <div className="p-3 rounded-2xl bg-[#caf0f8]/30 text-[#0077b6] shadow-sm flex-shrink-0">
                           <Icon size={22} />
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setSelectedClub(club)}
-                            className="text-[9px] font-black px-2.5 py-1.5 rounded-lg bg-[#03045e] text-white uppercase tracking-wider hover:bg-[#0077b6] shadow-sm transition-colors"
-                          >
-                            View Details
-                          </button>
                           <span className="text-[9px] font-black px-2.5 py-1.5 rounded-lg bg-[#00b4d8]/10 text-[#00b4d8] uppercase tracking-wider hidden sm:inline-block">
                             {club.category}
                           </span>
-                          <button
-                            onClick={() => handleLeaveClub(club.id)}
-                            title="Leave Club"
-                            className="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                          >
-                            <MinusCircle size={16} />
-                          </button>
-                        </div>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -356,20 +304,38 @@ export default function ClubsCommitteesPage() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50 mt-auto">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-gray-400 uppercase">Coordinator</span>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            <span className="text-[10px] font-bold text-gray-700 truncate">{club.coordinator}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-50 mt-auto">
+                        <div className="flex items-center gap-8">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black text-gray-400 uppercase">Coordinator</span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                              <span className="text-[10px] font-bold text-gray-700 truncate">{club.coordinator}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black text-gray-400 uppercase">Joined Date</span>
+                            <div className="flex items-center gap-1.5">
+                              <Clock size={10} className="text-[#00b4d8]" />
+                              <span className="text-[10px] font-bold text-gray-700 truncate">
+                                {club.joinedAt ? new Date(club.joinedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '20 Jul 2024'}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-gray-400 uppercase">Joined Date</span>
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={10} className="text-[#00b4d8]" />
-                            <span className="text-[10px] font-bold text-gray-700 truncate">{club.joinedAt || '2024-07-20'}</span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedClub(club)}
+                            className="text-[10px] font-black px-4 py-2 rounded-xl bg-[#03045e] text-white uppercase tracking-wider hover:bg-[#0077b6] shadow-sm transition-colors"
+                          >
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => setClubToLeave(club)}
+                            className="text-[10px] font-black px-4 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wider hover:bg-rose-500 hover:text-white shadow-sm transition-colors"
+                          >
+                            Leave Club
+                          </button>
                         </div>
                       </div>
                     </MainCard>
@@ -386,12 +352,15 @@ export default function ClubsCommitteesPage() {
           <section className="pt-2">
             {/* Discover Clubs */}
             <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
-                  <ExternalLink size={16} />
-                </div>
-                {t("clubs.discover") || "Discover Clubs"}
-              </h2>
+              <div>
+                <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
+                    <ExternalLink size={16} />
+                  </div>
+                  {t("clubs.discover") || "Discover Clubs"}
+                </h2>
+                <p className="text-[10px] text-gray-500 font-bold mt-1 ml-9">Note: Students can maintain a maximum of 2 active club memberships.</p>
+              </div>
               <button
                 onClick={() => setIsProposeModalOpen(true)}
                 className="h-8 px-4 bg-[#00b4d8] text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-[#0096c7] transition-colors flex items-center gap-1.5 shadow-sm"
@@ -401,7 +370,7 @@ export default function ClubsCommitteesPage() {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3">
               {discoverClubs.length === 0 ? (
                 <div className="col-span-2 p-8 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 text-center font-bold text-xs text-gray-400 italic">
                   No other clubs available to join at this time.
@@ -418,7 +387,7 @@ export default function ClubsCommitteesPage() {
                         <div>
                           <h4 className="text-sm font-black text-[#03045e] group-hover:text-[#0077b6] transition-colors leading-tight mb-1">{club.name}</h4>
                           <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold text-gray-400">{30 + (club.id.charCodeAt(club.id.length - 1) % 15)} Members</span>
+                            <span className="text-[9px] font-bold text-gray-400">{club.membershipCount || 0} Members</span>
                             <div className="w-1 h-1 rounded-full bg-gray-200" />
                             <span className="text-[9px] font-bold text-[#00b4d8] uppercase tracking-tighter">{club.category}</span>
                           </div>
@@ -503,122 +472,7 @@ export default function ClubsCommitteesPage() {
                 </section>
               )}
 
-              {activeTab === "history" && (
-                <section>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <Award size={16} />
-                      </div>
-                      Activity History
-                    </h2>
-                  </div>
 
-                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                    {activityHistory.length === 0 ? (
-                      <div className="p-8 text-center text-xs font-bold text-gray-400 italic">
-                        No activity participation history found.
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {activityHistory.map(item => (
-                          <div key={item.participationId} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-black text-[#03045e]">{item.activityTitle}</span>
-                              <span className="text-[10px] font-bold text-gray-400">{item.clubName} • {item.participationDate}</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="flex flex-col text-right">
-                                <span className="text-[9px] font-bold text-gray-400 uppercase">Coordinator</span>
-                                <span className="text-[11px] font-black text-gray-700">{item.markedByTeacherName}</span>
-                              </div>
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                item.participationStatus === "Participated" 
-                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
-                                  : "bg-gray-100 text-gray-500 border border-gray-200"
-                              }`}>
-                                {item.participationStatus}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {activeTab === "feed" && (
-                <section>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
-                        <Megaphone size={16} />
-                      </div>
-                      Club Feed
-                    </h2>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {feedAnnouncements.length === 0 ? (
-                      <div className="p-8 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 text-center font-bold text-xs text-gray-400 italic">
-                        No announcements available.
-                      </div>
-                    ) : (
-                      feedAnnouncements.map((ann) => {
-                        const getCategoryColor = (cat) => {
-                          switch(cat) {
-                            case "Meeting": return "bg-blue-50 text-blue-600 border-blue-100";
-                            case "Competition": return "bg-purple-50 text-purple-600 border-purple-100";
-                            case "Practice Session": return "bg-orange-50 text-orange-600 border-orange-100";
-                            case "Achievement": return "bg-green-50 text-green-600 border-green-100";
-                            case "Registration": return "bg-cyan-50 text-cyan-600 border-cyan-100";
-                            case "Notice": return "bg-rose-50 text-rose-600 border-rose-100";
-                            case "Event Reminder": return "bg-indigo-50 text-indigo-600 border-indigo-100";
-                            default: return "bg-gray-50 text-gray-600 border-gray-100";
-                          }
-                        };
-                        return (
-                          <div key={ann.announcementId} className={`p-5 rounded-2xl border transition-colors relative ${ann.isPinned ? "bg-amber-50/30 border-amber-100" : "bg-white border-gray-100 hover:bg-gray-50/30"}`}>
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider border ${getCategoryColor(ann.category)}`}>
-                                  {ann.category}
-                                </span>
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider border border-gray-100 px-2 py-0.5 rounded bg-gray-50">
-                                  {ann.clubName}
-                                </span>
-                              </div>
-                              <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
-                                <Clock size={12} />
-                                {new Date(ann.createdAt).toLocaleDateString(undefined, {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
-                            <h5 className="font-black text-sm text-[#03045e] mb-2">{ann.title}</h5>
-                            <p className="text-xs text-gray-600 font-medium leading-relaxed whitespace-pre-wrap line-clamp-2">{ann.content}</p>
-                            <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-gray-400">
-                                Posted by: {ann.createdByTeacherName || "Coordinator"}
-                              </span>
-                              <button
-                                onClick={() => setSelectedAnnouncement(ann)}
-                                className="text-[10px] font-black text-[#00b4d8] hover:text-[#0077b6] flex items-center gap-1 uppercase tracking-wider transition-colors"
-                              >
-                                Read More <ChevronRight size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </section>
-              )}
             </>
           )}
         </div>
@@ -626,7 +480,7 @@ export default function ClubsCommitteesPage() {
       {/* Propose New Club Modal */}
       {isProposeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
+          <div className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden border border-gray-100">
             <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-[#00b4d8]" />
@@ -717,7 +571,7 @@ export default function ClubsCommitteesPage() {
       {/* Proposal Details Modal */}
       {selectedProposal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
+          <div className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden border border-gray-100">
             <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-[#00b4d8]" />
@@ -739,7 +593,7 @@ export default function ClubsCommitteesPage() {
                 <p className="text-sm font-bold text-[#03045e] mt-0.5">{selectedProposal.proposalId}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Club Name</span>
                   <p className="text-sm font-black text-[#03045e] mt-0.5">{selectedProposal.clubName}</p>
@@ -757,7 +611,7 @@ export default function ClubsCommitteesPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Submitted On</span>
                   <p className="text-xs font-bold text-gray-600 mt-0.5">
@@ -794,7 +648,7 @@ export default function ClubsCommitteesPage() {
       {/* Announcement Details Modal */}
       {selectedAnnouncement && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
             <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <Megaphone className="w-4 h-4 text-[#00b4d8]" />
@@ -844,92 +698,7 @@ export default function ClubsCommitteesPage() {
         </div>
       )}
 
-        {/* Sidebar Activities and Coordinators */}
-        <div className="col-span-12 lg:col-span-4 space-y-8">
-          <section>
-            <div className="flex items-center gap-2.5 mb-4 px-1">
-              <div className="w-7 h-7 rounded-lg bg-[#caf0f8] flex items-center justify-center text-[#0077b6]">
-                <Calendar size={16} />
-              </div>
-              <h2 className="text-lg font-black text-[#03045e]">
-                {t("clubs.activities") || "Upcoming Activities"}
-              </h2>
-            </div>
-            <MainCard borderColor="#0077b6" className="p-6">
-              {activities.length === 0 ? (
-                <div className="text-center py-6 text-xs font-bold text-gray-400 italic">
-                  No upcoming activities scheduled for your active memberships.
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {activities.slice(0, showAllActivities ? undefined : 3).map((act, idx) => (
-                    <div key={`${act.id}-${idx}`} className="relative pl-5 border-l-2 border-[#caf0f8] pb-1 last:pb-0">
-                      <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-[#00b4d8]" />
-                      <div className="mb-1.5 flex items-center justify-between">
-                        <span className="text-[10px] font-black text-[#00b4d8] uppercase tracking-[0.1em]">{act.date}</span>
-                        <span className="text-[8px] font-bold px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 border border-gray-100 uppercase">
-                          {act.type}
-                        </span>
-                      </div>
-                      <h4 className="text-sm font-black text-[#03045e] leading-snug mb-1">{act.title}</h4>
-                      <div className="text-[10px] font-bold text-gray-400 flex items-center gap-1.5">
-                        <Clock size={10} className="text-[#00b4d8] flex-shrink-0" />
-                        <span>{act.time}</span>
-                        <div className="w-1 h-1 rounded-full bg-gray-200" />
-                        <span>{act.venue}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {activities.length > 3 && (
-                <button 
-                  onClick={() => setShowAllActivities(!showAllActivities)}
-                  className="w-full mt-6 py-2.5 rounded-xl bg-gray-50 text-[10px] font-black text-[#0077b6] uppercase tracking-widest hover:bg-[#caf0f8] transition-colors border border-dashed border-[#00b4d8]/30"
-                >
-                  {showAllActivities ? "Show Less" : "View All Activities"}
-                </button>
-              )}
-            </MainCard>
-          </section>
 
-          {/* Coordinators */}
-          <section>
-            <div className="flex items-center gap-2 mb-3 px-2">
-              <Users size={16} className="text-[#00b4d8]" />
-              <h2 className="text-md font-black text-[#03045e]">{t("clubs.coordinators") || "Faculty Coordinators"}</h2>
-            </div>
-            <div className="space-y-3">
-              {coordinators.map((fac) => (
-                <div key={fac.id} className="bg-white border border-[#caf0f8] rounded-[1.25rem] p-3.5 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#03045e] flex items-center justify-center text-white font-black text-md shadow-md shadow-[#03045e]/20 flex-shrink-0">
-                      {fac.name.split(" ").pop()[0]}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-black text-[#03045e] leading-tight truncate">{fac.name}</h4>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter truncate mt-0.5">{fac.department}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 pt-2 border-t border-gray-50">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600">
-                      <div className="w-5 h-5 rounded-md bg-[#caf0f8]/30 flex items-center justify-center text-[#0077b6] flex-shrink-0">
-                        <Mail size={10} />
-                      </div>
-                      <span className="truncate">{fac.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600">
-                      <div className="w-5 h-5 rounded-md bg-[#caf0f8]/30 flex items-center justify-center text-[#0077b6] flex-shrink-0">
-                        <Clock size={10} />
-                      </div>
-                      <span className="truncate">{fac.timings}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
       </div>
 
       <HelperPopup
@@ -938,6 +707,17 @@ export default function ClubsCommitteesPage() {
         titleKey="clubs.title"
         contentEn="The Clubs & Committees section provides a central hub for all your extracurricular engagements."
         contentHi="क्लब और समितियाँ अनुभाग आपकी सभी पाठ्येतर व्यस्तताओं के लिए एक केंद्रीय केंद्र प्रदान करता है।"
+      />
+
+      <ConfirmationModal
+        isOpen={!!clubToLeave}
+        onCancel={() => setClubToLeave(null)}
+        onConfirm={confirmLeaveClub}
+        title="Leave Club"
+        message={clubToLeave ? `Are you sure you want to leave ${clubToLeave.name}? You will lose access to its activities and announcements.` : ''}
+        confirmText="Yes, Leave Club"
+        cancelText="Cancel"
+        type="danger"
       />
     </div>
   );

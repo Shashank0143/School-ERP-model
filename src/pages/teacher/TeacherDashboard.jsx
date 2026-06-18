@@ -1,3 +1,4 @@
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import TeacherIdentityCard from "../../components/teacher/TeacherIdentityCard";
 import MyClassPanel from "../../components/teacher/MyClassPanel";
@@ -31,6 +32,7 @@ const MemoizedQuickActionsPanel = React.memo(QuickActionsPanel);
  * Custom built for Class Teacher vs Subject Teacher workflows.
  */
 const TeacherDashboard = () => {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const { user } = useAuth();
   const teacherId = user?.linkedEntityId || "teach-001";
 

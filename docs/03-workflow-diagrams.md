@@ -283,6 +283,11 @@ flowchart LR
     F -->|Valid| G[Joined as Member / Leader]
     F -->|Invalid| H[Enrollment Limit Error]
     G -->|Accesses| I[Club Event Calendars & Scoped Announcements]
+    G -->|Leaves Club| J[Membership Revoked & Request History Updated]
+    Student -->|Proposes New Club| K[Club Creation Proposal]
+    K -->|Admin Reviews| L{Approval}
+    L -->|Approved| B
+    L -->|Rejected| M[Proposal Declined]
 ```
 
 
@@ -356,4 +361,21 @@ flowchart LR
     C -->|Or Cancels| K[Status: Cancelled]
     J --> B
     K --> B
+```
+
+# Attendance Governance & Communication Workflow
+
+```mermaid
+flowchart LR
+    A[Admin] -->|Monitors| B[Attendance Overview Dashboard]
+    B -->|Identifies At-Risk Students| C{Attendance Thresholds}
+    C -->|< 75%| D[Low Attendance Target]
+    C -->|< 50%| E[Critical Attendance Target]
+    C -->|< 30%| F[Severe Action Target]
+    C -->|> 95%| G[Appreciation Target]
+    
+    D & E & F & G -->|Selects Students| H[Redirect to Communication Center]
+    H -->|Pre-fills Data| I[Campaign Subject & Delivery Channel]
+    I -->|Auto-generates Body| J[Contextual Message Template based on Threshold]
+    J -->|Admin Reviews & Dispatches| K[Notification Sent via Email/SMS/App]
 ```

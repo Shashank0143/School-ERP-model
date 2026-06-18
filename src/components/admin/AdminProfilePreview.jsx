@@ -66,7 +66,7 @@ const AdminProfilePreview = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 350, damping: 30 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col border-l border-[#caf0f8]"
+            className="fixed right-0 top-0 h-full w-full w-[95vw] md:w-[90vw] lg:max-w-md bg-white shadow-2xl z-50 flex flex-col border-l border-[#caf0f8]"
             aria-label="Profile Detail Drawer"
           >
             {/* Drawer Header */}
@@ -128,7 +128,7 @@ const AdminProfilePreview = ({
                       isSeniorSecondary(data.classLevel) && data.stream;
 
                     return (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40">
                           <p className="text-[9px] text-gray-400 font-bold uppercase">
                             Class
@@ -184,7 +184,7 @@ const AdminProfilePreview = ({
                   })()}
 
                 {type === "teacher" && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40">
                       <p className="text-[9px] text-gray-400 font-bold uppercase">
                         Department
@@ -226,7 +226,7 @@ const AdminProfilePreview = ({
                     {data.student ? (
                       <>
                         {/* Student Academic Identity */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40">
                             <p className="text-[9px] text-gray-400 font-bold uppercase">
                               Class
@@ -283,7 +283,7 @@ const AdminProfilePreview = ({
                           <h4 className="text-xs font-black uppercase tracking-wider text-[#03045e]">
                             Parent / Guardian
                           </h4>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40">
                               <p className="text-[9px] text-gray-400 font-bold uppercase">
                                 Parent Name
@@ -355,7 +355,7 @@ const AdminProfilePreview = ({
                       </>
                     ) : (
                       /* Fallback for backward compatibility */
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40">
                           <p className="text-[9px] text-gray-400 font-bold uppercase">
                             Occupation
@@ -386,7 +386,7 @@ const AdminProfilePreview = ({
                 )}
 
                 {type === "admin" && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-[#caf0f8]/20 p-3 rounded-2xl border border-[#caf0f8]/40 col-span-2">
                       <p className="text-[9px] text-gray-400 font-bold uppercase">
                         Operational Role Accent

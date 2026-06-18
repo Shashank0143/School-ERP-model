@@ -152,7 +152,7 @@ export default function TransportPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
                   { label: "Vehicle No", value: summary?.vehicleNo },
                   { label: "Pass ID",    value: summary?.passId,    accent: true },
@@ -212,7 +212,7 @@ export default function TransportPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-wide text-gray-400 mb-0.5">Fuel Type</p>
                   <p className="text-xs font-bold" style={{ color: NAVY }}>{vehicle?.fuelType}</p>
@@ -463,7 +463,7 @@ export default function TransportPage() {
           onClick={() => setShowAlertsModal(false)}
         >
           <div 
-            className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[85vh] scale-100 transition-all duration-300"
+            className="w-full w-[95vw] md:w-[90vw] lg:max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[85vh] scale-100 transition-all duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 text-white flex items-center justify-between" style={{ backgroundColor: NAVY }}>

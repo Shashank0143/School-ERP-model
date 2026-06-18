@@ -12,7 +12,8 @@ import {
   Phone,
   Calendar,
   Building2,
-  Shield
+  Shield,
+  UserPlus
 } from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import MainCard from "../../components/MainCard";
@@ -193,7 +194,7 @@ const EmployeeDirectoryPage = () => {
   };
 
   const getRoleName = (roleId) => {
-    const r = ROLES_SEED.find(r => r.id === roleId);
+    const r = MOCK_ROLES.find(r => r.id === roleId);
     return r ? r.name : "Unassigned";
   };
 
@@ -223,7 +224,7 @@ const EmployeeDirectoryPage = () => {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4">
         <MainCard className="p-4 border border-[#caf0f8]/60">
           <div className="flex items-center justify-between">
             <div>
@@ -341,7 +342,7 @@ const EmployeeDirectoryPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
+            className="bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
           >
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-black text-[#03045e] flex items-center gap-2">
@@ -352,7 +353,7 @@ const EmployeeDirectoryPage = () => {
             
             <div className="p-6 overflow-y-auto">
               <form id="empForm" onSubmit={handleSave} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Employee Name *</label>
                     <input
@@ -428,7 +429,7 @@ const EmployeeDirectoryPage = () => {
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-[#03045e] outline-none focus:border-[#0077b6] cursor-pointer"
                     >
                       <option value="">-- Select --</option>
-                      {ROLES_SEED.map(r => (
+                      {MOCK_ROLES.map(r => (
                         <option key={r.id} value={r.id}>{r.name}</option>
                       ))}
                     </select>
@@ -458,7 +459,7 @@ const EmployeeDirectoryPage = () => {
                   
                   <div className="col-span-2 pt-2 border-t border-gray-100 mt-2">
                     <p className="text-xs font-black text-[#03045e] mb-3">System Access Configuration</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="flex items-center gap-2 cursor-pointer mt-2">
                           <input
@@ -515,7 +516,7 @@ const EmployeeDirectoryPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+            className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
           >
             <div className="p-6 text-center border-b border-gray-100 bg-gray-50 relative">
               <button onClick={() => setShowDetailsModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">

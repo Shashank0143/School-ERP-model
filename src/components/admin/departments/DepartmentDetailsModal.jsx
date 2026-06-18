@@ -64,7 +64,7 @@ const DepartmentDetailsModal = ({ isOpen, onClose, department }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="w-full w-[95vw] md:w-[90vw] lg:max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -93,7 +93,7 @@ const DepartmentDetailsModal = ({ isOpen, onClose, department }) => {
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Department Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-2xl bg-[#caf0f8]/20 border border-[#caf0f8]/40">
                     <div className="flex items-center gap-2 mb-2">
                       <User size={14} className="text-[#0077b6]" />

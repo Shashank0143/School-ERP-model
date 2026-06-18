@@ -70,7 +70,7 @@ function AssignmentsSummaryCard({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-rose-50 p-4 rounded-[1.5rem] border border-rose-100/50">
             <div className="flex items-center gap-2 mb-1">
               <AlertCircle size={14} className="text-rose-500" />

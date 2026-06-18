@@ -186,7 +186,7 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           { labelKey: "curriculum.code", value: data.code, icon: Hash, color: "#0077b6", bg: "#caf0f8" },
           { labelKey: "curriculum.class", value: data.classLevel, icon: GraduationCap, color: "#7c3aed", bg: "#ede9fe" },
@@ -257,8 +257,8 @@ export default function SubjectDetailPage({ subjectId, onBack }) {
           defaultOpen={true}
           onHelpClick={handleHelpClick}
         >
-          <div className="hidden md:block overflow-hidden rounded-xl border border-gray-200">
-            <table className="w-full text-left border-collapse">
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-200 w-full">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="py-3 px-4 font-bold text-gray-600 text-sm w-16 text-center">

@@ -63,7 +63,7 @@ function FeedbackModal({ faculty, onClose }) {
       />
 
       <motion.div
-        className="relative bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl z-10 overflow-hidden"
+        className="relative bg-white w-full sm:w-[95vw] md:w-[90vw] lg:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl z-10 overflow-hidden"
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}

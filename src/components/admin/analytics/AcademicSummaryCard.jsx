@@ -20,7 +20,7 @@ const AcademicSummaryCard = ({
     >
       <div className="space-y-4">
         {/* Metric circle benchmarks */}
-        <div className="grid grid-cols-3 gap-3 text-center border-b border-[#caf0f8]/30 pb-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 text-center border-b border-[#caf0f8]/30 pb-3.5">
           <div className="space-y-0.5">
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">
               Pass Rate

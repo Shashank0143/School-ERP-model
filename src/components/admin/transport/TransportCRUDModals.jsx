@@ -12,7 +12,7 @@ const ModalWrapper = ({ isOpen, onClose, title, children }) => {
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden"
+          className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-md flex flex-col overflow-hidden"
         >
           <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="text-xl font-black text-[#03045e] tracking-tight">{title}</h2>
@@ -113,7 +113,7 @@ export const RouteModal = ({ isOpen, onClose, onSave, drivers, vehicles }) => {
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} title="Add New Route">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Route Number</label>
             <input required type="text" value={formData.routeNo} onChange={e => setFormData({...formData, routeNo: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm text-[#03045e] font-bold outline-none focus:border-[#0077b6]" placeholder="e.g. RT-110" />
@@ -177,7 +177,7 @@ export const StopModal = ({ isOpen, onClose, onSave, routes }) => {
           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Stop Name</label>
           <input required type="text" value={formData.stopName} onChange={e => setFormData({...formData, stopName: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm text-[#03045e] font-bold outline-none focus:border-[#0077b6]" placeholder="e.g. Sector 62 Metro Gate" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Sequence #</label>
             <input required type="number" min="1" value={formData.sequence} onChange={e => setFormData({...formData, sequence: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm text-[#03045e] font-bold outline-none focus:border-[#0077b6]" />

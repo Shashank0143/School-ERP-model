@@ -257,7 +257,7 @@ export default function ModerationPanel({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-5 rounded-3xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+      <div className="bg-white p-5 rounded-3xl border border-gray-100 grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6 items-center">
         <div className="space-y-2">
           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
             Select Paper for Moderation

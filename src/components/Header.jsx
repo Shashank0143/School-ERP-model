@@ -168,8 +168,8 @@ const Header = React.memo(function Header({ student, notifications = [], current
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="flex items-center justify-between px-4 md:px-6 lg:px-8 h-16">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm w-full">
+      <div className="flex items-center justify-between px-3 md:px-6 lg:px-8 h-16 max-w-full">
         {/* Left: mobile hamburger + logo */}
         <div className="flex items-center gap-3">
           <button
@@ -191,7 +191,7 @@ const Header = React.memo(function Header({ student, notifications = [], current
                 aria-hidden="true"
               />
             </div>
-            <span className="font-black text-base" style={{ color: "#03045e" }}>
+            <span className="font-black text-base hidden sm:block" style={{ color: "#03045e" }}>
               EduDash
             </span>
           </div>
@@ -238,7 +238,7 @@ const Header = React.memo(function Header({ student, notifications = [], current
                 resetDemoData();
               }
             }}
-            className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-colors text-xs font-black shadow-sm"
+            className="hidden md:flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-colors text-xs font-black shadow-sm"
             style={{
               backgroundColor: "#caf0f8",
               borderColor: "#00b4d8",
@@ -303,7 +303,7 @@ const Header = React.memo(function Header({ student, notifications = [], current
               </div>
               <ChevronDown 
                 size={16} 
-                className={`ml-2 text-[#03045e] transition-transform duration-200 ${showProfile ? "rotate-180" : ""}`} 
+                className={`ml-1 sm:ml-2 text-[#03045e] transition-transform duration-200 hidden sm:block ${showProfile ? "rotate-180" : ""}`} 
               />
             </motion.div>
             

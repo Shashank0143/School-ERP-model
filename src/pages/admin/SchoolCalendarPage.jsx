@@ -396,7 +396,7 @@ function AdminSchoolCalendarPage() {
 
           <div className="bg-white rounded-[2rem] p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-full relative overflow-hidden"
                style={{ borderTop: "6px solid #00b4d8" }}>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-2">
               {calendarMonths.map((m, idx) => (
                 <MiniMonth 
                   key={idx}

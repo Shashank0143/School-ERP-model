@@ -39,7 +39,7 @@ export default function HomeroomPanel({ responsibilities }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-center">
         {/* Attendance Circle Dial / Stat */}
         <div className="flex items-center gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50">
           <div className="relative w-16 h-16 flex-shrink-0 flex items-center justify-center">

@@ -79,7 +79,7 @@ export default function StudentDetailPanel({ studentId, teacherId, teacherName, 
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 250 }}
-        className="relative w-full max-w-3xl bg-gray-50 h-full shadow-2xl flex flex-col z-10"
+        className="relative w-full w-[95vw] md:w-[90vw] lg:max-w-3xl bg-gray-50 h-full shadow-2xl flex flex-col z-10"
       >
         {loading ? (
           <div className="flex-1 flex flex-col justify-center items-center">
@@ -192,7 +192,7 @@ export default function StudentDetailPanel({ studentId, teacherId, teacherName, 
                     </div>
 
                     {/* Key Metrics Quick View */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                       <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm text-center">
                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Attendance</div>
                         <div className={`text-xl font-black ${
@@ -228,7 +228,7 @@ export default function StudentDetailPanel({ studentId, teacherId, teacherName, 
                   >
                     <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
                       <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest border-b pb-2">Roster Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 bg-gray-50/50 rounded-2xl border text-center">
                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Attended Days</span>
                           <span className="text-2xl font-black text-emerald-600 mt-1 block">{details.attendance.attended}</span>
@@ -437,7 +437,7 @@ export default function StudentDetailPanel({ studentId, teacherId, teacherName, 
                           {remarkError}
                         </div>
                       )}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Remark Type</label>
                           <select

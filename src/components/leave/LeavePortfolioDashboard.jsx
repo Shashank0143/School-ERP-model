@@ -116,7 +116,7 @@ const LeavePortfolioDashboard = ({ userId, userType, gender, refreshTrigger = 0 
       </div>
 
       {/* Portfolio Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {balances.map(b => {
           const status = getStatusIndicator(Number(b.remaining), Number(b.allocated));
           const isExpanded = expandedCardId === b.balanceId;
@@ -141,7 +141,7 @@ const LeavePortfolioDashboard = ({ userId, userType, gender, refreshTrigger = 0 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-4 text-center">
                   <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Allocated</p>
                     <p className="text-lg font-black text-[#03045e] leading-none mt-1">{b.allocated}</p>

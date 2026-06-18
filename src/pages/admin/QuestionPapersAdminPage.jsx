@@ -120,7 +120,7 @@ const QuestionPapersAdminPage = () => {
       />
 
       {/* Analytics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <MainCard className="p-5 border-l-4 border-l-[#03045e]">
           <div className="flex justify-between items-start">
             <div>
@@ -161,7 +161,7 @@ const QuestionPapersAdminPage = () => {
 
       {/* Controls Row */}
       <div className="p-4 md:p-5 flex flex-col md:flex-row gap-4 items-center justify-between border border-gray-150 shadow-sm rounded-3xl bg-white">
-        <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200/60 rounded-xl px-3.5 py-2.5 flex-1 max-w-md focus-within:bg-white focus-within:ring-2 focus-within:ring-[#03045e]/10 transition-all">
+        <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200/60 rounded-xl px-3.5 py-2.5 flex-1 w-[95vw] md:w-[90vw] lg:max-w-md focus-within:bg-white focus-within:ring-2 focus-within:ring-[#03045e]/10 transition-all">
           <Search size={15} className="text-gray-400" />
           <input 
             type="text" 
@@ -274,7 +274,7 @@ const QuestionPapersAdminPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+              className="relative w-full w-[95vw] md:w-[90vw] lg:max-w-3xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
@@ -299,7 +299,7 @@ const QuestionPapersAdminPage = () => {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 
                 {/* Meta details */}
-                <div className="grid grid-cols-3 gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Exam Type</p>
                     <p className="text-sm font-black text-[#03045e]">{viewPaper.examType}</p>

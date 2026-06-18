@@ -75,7 +75,7 @@ const PieChartImpl = ({ data, height }) => {
 
   return (
     <div style={{ height }} className="flex flex-col items-center gap-3">
-      <svg viewBox="0 0 100 100" className="flex-1 w-full max-w-[200px]">
+      <svg viewBox="0 0 100 100" className="flex-1 w-full w-full flex-1 min-w-0 md:max-w-[200px]">
         {segments.map((seg, i) => (
           <path
             key={i}

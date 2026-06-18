@@ -124,7 +124,7 @@ const QuestionPaperForm = ({ isOpen, onClose, paperToEdit, onSaved, teacherProfi
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        className="relative w-full w-[95vw] md:w-[90vw] lg:max-w-4xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
@@ -148,7 +148,7 @@ const QuestionPaperForm = ({ isOpen, onClose, paperToEdit, onSaved, teacherProfi
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           
           {/* Section 1: Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2 md:col-span-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Question Paper Title *</label>
               <input

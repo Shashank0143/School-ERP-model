@@ -43,7 +43,7 @@ export default function MarksEntryConsole({
     setLocalMarks(initialMarks);
     setError("");
     setSuccess("");
-  }, [paper, examCycle, classStudents]);
+  }, [paper, examCycle, students]);
 
   if (!paper) {
     return (
@@ -148,7 +148,7 @@ export default function MarksEntryConsole({
       const actionLabel = submitStatus === "evaluated" ? "submitted" : "saved as draft";
       timeline.unshift({
         timestamp: new Date().toISOString(),
-        message: `${paperSubject?.name || "Subject"} for Class ${paperClass?.displayName || "Class"} evaluation ${actionLabel} by Teacher`,
+        message: `${paperSubject?.name || "Subject"} for ${paperClass?.displayName || "Class"} evaluation ${actionLabel} by Teacher`,
         type: submitStatus === "evaluated" ? "success" : "info",
       });
       localStorage.setItem(`exam_op_state_${examCycle.id}_evaluation_timeline`, JSON.stringify(timeline));
@@ -172,7 +172,7 @@ export default function MarksEntryConsole({
             Subject Teacher Workspace
           </span>
           <h4 className="text-sm font-black text-[#03045e] mt-0.5">
-            {paperSubject?.name} (Class {paperClass?.displayName})
+            {paperSubject?.name} ({paperClass?.displayName})
           </h4>
           <div className="flex gap-4 text-[10px] text-gray-500 font-bold uppercase mt-1">
             <span>Max Theory: {paper.theoryMarks || 40}</span>

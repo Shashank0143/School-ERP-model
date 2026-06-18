@@ -55,7 +55,7 @@ const WorkloadAnalyticsPage = () => {
       />
 
       {/* Roster Strengths stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <OperationsStatCard
           title="Average Faculty Workload"
           value="18.2 Hours/Wk"
@@ -88,7 +88,7 @@ const WorkloadAnalyticsPage = () => {
       />
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTeachers.map((teacher) => (
           <WorkloadCard
             key={teacher.id}

@@ -156,8 +156,8 @@ const AttendanceLockPanel = ({
             )}
 
             {/* Students Table */}
-            <div className="overflow-y-auto max-h-[380px] pr-1">
-              <table className="w-full text-left text-xs font-bold text-gray-700">
+            <div className="overflow-x-auto overflow-y-auto max-h-[380px] w-full pr-1">
+              <table className="w-full min-w-[800px] text-left text-xs font-bold text-gray-700">
                 <thead>
                   <tr className="border-b border-gray-100 text-[9px] uppercase font-black text-gray-400 tracking-wider">
                     <th className="pb-3 w-32">Admission No</th>

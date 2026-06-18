@@ -318,7 +318,7 @@ const ProfileSettingsPage = () => {
           <ProfileSection icon={User} title="Personal Information">
             <MainCard borderColor="#00b4d8" className="p-6 md:p-8">
               {!isEditing ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
+                <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
                   <InfoField label="Primary Mobile Phone" value={profileData.phoneNumber} icon={Smartphone} />
                   <InfoField label="School Email Address" value={profileData.email} icon={Mail} />
                   <InfoField label="Emergency Contact Person / No." value={profileData.emergencyContact} icon={Phone} />
@@ -327,7 +327,7 @@ const ProfileSettingsPage = () => {
                   <InfoField label="Gender" value={profileData.gender} icon={User} />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6 text-xs font-bold text-[#03045e]">
+                <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 text-xs font-bold text-[#03045e]">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Mobile Phone</label>
                     <input 
@@ -405,7 +405,7 @@ const ProfileSettingsPage = () => {
             <MainCard borderColor="#00b4d8" className="p-6 md:p-8">
               {!isEditing ? (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
                     <InfoField label="Highest Qualification" value={profileData.qualification} icon={GraduationCap} />
                     <InfoField label="Teaching Experience" value={profileData.experience} icon={Briefcase} />
                     <InfoField label="Subject Specialization" value={profileData.subjectSpecialization} icon={Sparkles} fullWidth />
@@ -421,7 +421,7 @@ const ProfileSettingsPage = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6 text-xs font-bold text-[#03045e]">
+                <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 text-xs font-bold text-[#03045e]">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Highest Qualification Details</label>
                     <input 
@@ -565,7 +565,7 @@ const ProfileSettingsPage = () => {
           {/* 2. Institutional Overview (Workload Stats - Styled exactly like Student Medical Card) */}
           <ProfileSection icon={Briefcase} title="Workload Registry">
             <MainCard borderColor="#00b4d8" className="p-5">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center font-black text-lg">
                     {profileData.assignedSubjects?.length || 0}

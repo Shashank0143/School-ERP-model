@@ -238,7 +238,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
               title="Personal Information" 
             >
               <MainCard borderColor="#00b4d8" className="p-6 md:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
+                <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
                   <InfoField label="Admission No." value={data.personal.admissionNumber} />
                   <InfoField label="Roll Number" value={data.personal.rollNumber} />
                   <InfoField label="Date of Birth" value={data.personal.dateOfBirth} />
@@ -258,7 +258,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
               title="Academic Information" 
             >
               <MainCard borderColor="#00b4d8" className="p-6 md:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6 mb-8">
                   <InfoField label="Current Class" value={data.academic.class} />
                   <InfoField label="Section" value={data.academic.section} />
                   <InfoField label="Stream" value={data.academic.stream} />
@@ -286,7 +286,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
             >
               <MainCard borderColor="#00b4d8" className="p-6 md:p-8">
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-6">
                     {/* Father Details */}
                     <div className="bg-gray-50/50 rounded-[1.5rem] p-5 border border-gray-100">
                       <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -294,7 +294,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
                       </h3>
                       <div className="space-y-4">
                         <InfoField label="Name" value={data.family?.father?.name || "N/A"} density="compact" />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <InfoField label="Phone" value={data.family?.father?.phoneNumber || "N/A"} icon={Smartphone} density="compact" />
                           <InfoField label="Occupation" value={data.family?.father?.occupation || "N/A"} density="compact" />
                         </div>
@@ -308,7 +308,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
                       </h3>
                       <div className="space-y-4">
                         <InfoField label="Name" value={data.family?.mother?.name || "N/A"} density="compact" />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <InfoField label="Phone" value={data.family?.mother?.phoneNumber || "N/A"} icon={Smartphone} density="compact" />
                           <InfoField label="Occupation" value={data.family?.mother?.occupation || "N/A"} density="compact" />
                         </div>
@@ -321,7 +321,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
                     <h3 className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-6 flex items-center gap-2">
                       <ShieldCheck size={14} /> Emergency Guardian
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
                       <InfoField label="Guardian Name" value={data.family?.guardian?.name || "N/A"} />
                       <InfoField label="Relation" value={data.family?.guardian?.relation || "N/A"} />
                       <InfoField label="Contact" value={data.family?.guardian?.phoneNumber || "N/A"} icon={Phone} />
@@ -342,7 +342,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
                     No activity participation history found.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 gap-4">
                     {data.activityParticipations?.map(p => (
                       <div key={p.participationId} className="p-4 rounded-2xl border border-gray-100 hover:border-[#00b4d8] hover:bg-[#caf0f8]/20 transition-all flex flex-col justify-between group">
                         <div className="flex justify-between items-start mb-2">
@@ -414,7 +414,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
               title="Medical Registry" 
             >
               <MainCard borderColor="#00b4d8" className="p-5">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-6 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 mb-6">
                   <div className="flex items-center gap-3">
                      <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center font-black text-lg">
                         {data.medical?.bloodGroup || "N/A"}

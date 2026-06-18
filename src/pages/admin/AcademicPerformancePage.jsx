@@ -31,6 +31,7 @@ import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import OperationsStatCard from "../../components/admin/operations/OperationsStatCard";
 import AdminSectionCard from "../../components/admin/AdminSectionCard";
 import { getDataProvider } from "../../data";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 
 // ─── Grade Configuration ───────────────────────────────────────────────────
 const GRADE_SCALE = [
@@ -77,7 +78,7 @@ const StudentPerformanceRow = ({ student, onViewProfile, onPrintReport }) => {
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <h4 className="text-sm font-black text-[#03045e]">
               {student.name}
             </h4>
@@ -104,7 +105,7 @@ const StudentPerformanceRow = ({ student, onViewProfile, onPrintReport }) => {
           <p className="text-[10px] font-bold text-slate-400 mt-0.5">
             Class {student.className}
             {hasSubjects
-              ? ` · ${student.subjects.length} Subjects`
+              ? ` · ${student.subjects.length} Assessment Records`
               : " · No Results Recorded"}
           </p>
         </div>
@@ -125,7 +126,7 @@ const StudentPerformanceRow = ({ student, onViewProfile, onPrintReport }) => {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -151,49 +152,76 @@ const StudentPerformanceRow = ({ student, onViewProfile, onPrintReport }) => {
 
       {/* Expanded Subject Details */}
       {expanded && (
-        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {student.subjects?.map((sub, index) => {
-              const subGrade = getGradeFromMarks(
-                sub.marksObtained,
-                sub.maxMarks,
-              );
-              const percent = (
-                (sub.marksObtained / sub.maxMarks) *
-                100
-              ).toFixed(0);
-              return (
-                <div
-                  key={`${sub.subjectId}-${index}`}
-                  className="bg-white border border-slate-200 rounded-xl p-3"
-                >
-                  <p className="text-[9px] font-black text-slate-400 uppercase">
-                    {sub.subjectName}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span
-                      className="text-lg font-black"
-                      style={{ color: subGrade.color }}
-                    >
-                      {subGrade.grade}
-                    </span>
-                    <span className="text-xs font-bold text-slate-600">
-                      {sub.marksObtained}/{sub.maxMarks}
-                    </span>
+        <div className="border-t border-slate-100 px-4 py-4 bg-slate-50/50 space-y-6">
+          {Object.entries(
+            student.subjects?.reduce((acc, sub) => {
+              const exam = sub.examName || "Term Exam";
+              if (!acc[exam]) acc[exam] = [];
+              acc[exam].push(sub);
+              return acc;
+            }, {}) || {}
+          ).map(([examName, subjects]) => {
+            const totalMarks = subjects.reduce((sum, s) => sum + (s.marksObtained || 0), 0);
+            const maxMarks = subjects.reduce((sum, s) => sum + (s.maxMarks || 100), 0);
+            const percentage = maxMarks > 0 ? Math.round((totalMarks / maxMarks) * 100) : 0;
+            
+            return (
+              <div key={examName} className="border border-[#caf0f8] rounded-3xl overflow-hidden bg-white shadow-sm mt-4">
+                {/* Report Card Header */}
+                <div className="bg-[#caf0f8]/30 px-6 py-4 border-b border-[#caf0f8] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-sm font-black text-[#03045e] uppercase tracking-wider">{examName}</h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Published Result</p>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${percent}%`,
-                        backgroundColor: subGrade.color,
-                      }}
-                    />
+                  <div className="flex gap-4">
+                    <div className="text-center bg-white px-4 py-2 rounded-xl shadow-sm border border-[#caf0f8]/50">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">Total Marks</p>
+                      <p className="text-lg font-black text-[#0077b6]">{totalMarks} / {maxMarks}</p>
+                    </div>
+                    <div className="text-center bg-white px-4 py-2 rounded-xl shadow-sm border border-[#caf0f8]/50">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">Percentage</p>
+                      <p className="text-lg font-black text-[#0077b6]">{percentage}%</p>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                
+                {/* Report Card Body */}
+                <div className="p-0 overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                        <th className="py-3 px-6">Subject</th>
+                        <th className="py-3 px-6">Max Marks</th>
+                        <th className="py-3 px-6">Marks Obtained</th>
+                        <th className="py-3 px-6 text-center">Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-xs font-bold text-gray-700">
+                      {subjects.map((sub, idx) => {
+                        const subGrade = sub.grade && sub.grade !== "-" ? sub.grade : getGradeFromMarks(sub.marksObtained, sub.maxMarks).grade;
+                        return (
+                          <tr key={idx} className="border-b border-gray-50 hover:bg-[#caf0f8]/5 transition-colors">
+                            <td className="py-3 px-6 text-[#03045e]">{sub.subjectName}</td>
+                            <td className="py-3 px-6 text-gray-400">{sub.maxMarks}</td>
+                            <td className="py-3 px-6">{sub.marksObtained}</td>
+                            <td className="py-3 px-6 text-center">
+                              <span className={`px-2 py-1 rounded-md ${
+                                subGrade?.startsWith('A') ? 'bg-emerald-50 text-emerald-700' :
+                                subGrade?.startsWith('B') ? 'bg-blue-50 text-blue-700' :
+                                'bg-orange-50 text-orange-700'
+                              }`}>
+                                {subGrade}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -202,6 +230,7 @@ const StudentPerformanceRow = ({ student, onViewProfile, onPrintReport }) => {
 
 // ─── Main Academic Performance Page ────────────────────────────────────────
 const AcademicPerformancePage = () => {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [activeTab, setActiveTab] = useState("overview");
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -251,10 +280,21 @@ const AcademicPerformancePage = () => {
       const studentResults = results.filter((r) => r.studentId === student.id);
 
       const subjectsData = studentResults.map((res) => {
-        const sub = subjects.find((s) => s.id === res.subjectId);
+        const rExamId = res.examId || res.examSessionId;
+        const sub = subjects.find((s) => s.id === res.subjectId || s.subjectId === res.subjectId);
+        const exam = exams.find((e) => e.id === rExamId || e.examId === rExamId || (e.examId && e.examId.startsWith(rExamId)));
+        
+        let fallbackName = "Unknown Exam";
+        if (rExamId === "exam-ut1") fallbackName = "Unit Test 1";
+        else if (rExamId === "exam-ut2") fallbackName = "Unit Test 2";
+        else if (rExamId === "exam-term1") fallbackName = "Term 1 Examination";
+        else if (rExamId === "exam-halfyearly-2025") fallbackName = "Half-Yearly Examination";
+        
         return {
           subjectId: res.subjectId,
-          subjectName: sub?.name || "Unknown",
+          subjectName: sub?.name || sub?.subjectName || res.subjectName || "Unknown",
+          examId: rExamId,
+          examName: res.examName || exam?.name || exam?.examName || (rExamId ? fallbackName : "Term Exam"),
           marksObtained: res.marksObtained || 0,
           maxMarks: res.maxMarks || 100,
           grade: res.grade || "-",
@@ -280,7 +320,7 @@ const AcademicPerformancePage = () => {
         totalMax,
       };
     });
-  }, [students, classes, subjects, results]);
+  }, [students, classes, subjects, results, exams]);
 
   // Get unique class levels and sections
   const classLevels = useMemo(() => {
@@ -402,7 +442,7 @@ const AcademicPerformancePage = () => {
       />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <OperationsStatCard
           title="Total Students"
           value={stats.totalStudents.toString()}
@@ -443,7 +483,7 @@ const AcademicPerformancePage = () => {
       </div>
 
       {/* Main Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b-2 border-slate-100">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b-2 border-slate-100">
         {[
           { id: "overview", label: "Student Overview", icon: Users },
           { id: "analytics", label: "Performance Analytics", icon: BarChart3 },
@@ -469,7 +509,7 @@ const AcademicPerformancePage = () => {
         <div className="space-y-6">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3 bg-slate-50 p-4 rounded-2xl">
-            <div className="relative flex-1 min-w-[200px]">
+            <div className="relative flex-1 w-full flex-1 min-w-0 md:min-w-[200px]">
               <Search
                 size={14}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -564,11 +604,11 @@ const AcademicPerformancePage = () => {
       {activeTab === "analytics" && (
         <div className="space-y-6">
           {/* Grade Distribution */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-2 gap-6">
             <AdminSectionCard title="Grade Distribution">
               <div className="space-y-3">
                 {stats.gradeDistribution?.map((grade) => (
-                  <div key={grade.grade} className="flex items-center gap-3">
+                  <div key={grade.grade} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <span
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black"
                       style={{
@@ -634,7 +674,7 @@ const AcademicPerformancePage = () => {
                           ) / classStudents.length
                         : 0;
                     return (
-                      <div key={cls.id} className="flex items-center gap-3">
+                      <div key={cls.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                         <span className="w-16 text-xs font-black text-slate-600">
                           {cls.name}
                         </span>
@@ -661,7 +701,7 @@ const AcademicPerformancePage = () => {
       {activeTab === "reports" && (
         <div className="space-y-6">
           <AdminSectionCard title="Report Cards & Academic Reports">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {[
                 {
                   title: "Individual Report Card",

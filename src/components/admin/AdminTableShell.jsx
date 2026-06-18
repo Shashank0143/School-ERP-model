@@ -13,7 +13,7 @@ const AdminTableShell = ({
   isEmpty = false, 
   emptyTitle = "No records found",
   emptyDescription = "There are no entries currently matching this directory filter.",
-  minWidth = "700px" 
+  minWidth = "800px" 
 }) => {
   return (
     <div className="overflow-x-auto w-full">

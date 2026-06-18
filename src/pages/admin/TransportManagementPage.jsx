@@ -115,7 +115,7 @@ const TransportManagementPage = () => {
         description="Monitor school bus route fleets, verify driver credentials, track occupancy, manage route stops, and allocate students."
         breadcrumbs={["Admin Portal", "Operations", "Transport"]}
         actionButton={
-          <button onClick={toggleDirections} className="flex items-center gap-2 bg-[#03045e] hover:bg-[#0077b6] text-white px-5 py-2.5 rounded-2xl shadow-sm text-xs font-black transition-colors">
+          <button onClick={toggleDirections} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#03045e] hover:bg-[#0077b6] text-white px-5 py-2.5 rounded-2xl shadow-sm text-xs font-black transition-colors">
             <ToggleLeft size={16} />
             SWITCH TO {directionFilter === "PICKUP_ROUTE" ? "DROP ROUTE" : "PICKUP ROUTE"}
           </button>
@@ -123,7 +123,7 @@ const TransportManagementPage = () => {
       />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <OperationsStatCard title="Active Bus Fleet" value={routes.length.toString()} description="CNG & Green-Electric Vehicles" icon={Truck} />
         <OperationsStatCard title="Total Bus Commuters" value={`${totalOccupancy} Students`} description="Calculated from allocations" icon={Users} color="#0096c7" bg="#ade8f4" />
         <OperationsStatCard title="Route Stops Mapped" value={stops.filter(s => !s.isSchool).length.toString()} description="Across all active routes" icon={MapPin} color="#03045e" bg="#e0f2fe" />
@@ -132,7 +132,7 @@ const TransportManagementPage = () => {
       {/* Push-able Alerts Panel */}
       <div className="p-5 bg-white rounded-3xl border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-xs font-black uppercase text-amber-600">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs font-black uppercase text-amber-600">
             <AlertTriangle size={16} className="text-amber-500" />
             Active Transport Alerts
             <span className="ml-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black border border-amber-100">
@@ -197,12 +197,12 @@ const TransportManagementPage = () => {
       {activeTab === "routes" && (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => setRouteModalOpen(true)} className="flex items-center gap-2 bg-white border border-[#caf0f8] hover:border-[#00b4d8] text-[#03045e] px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Route</button>
-            <button onClick={() => setVehicleModalOpen(true)} className="flex items-center gap-2 bg-white border border-[#caf0f8] hover:border-[#00b4d8] text-[#03045e] px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Vehicle</button>
-            <button onClick={() => setDriverModalOpen(true)} className="flex items-center gap-2 bg-white border border-[#caf0f8] hover:border-[#00b4d8] text-[#03045e] px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Driver</button>
+            <button onClick={() => setRouteModalOpen(true)} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-[#caf0f8] hover:border-[#00b4d8] text-[#03045e] px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Route</button>
+            <button onClick={() => setVehicleModalOpen(true)} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-[#caf0f8] hover:border-[#00b4d8] text-[#03045e] px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Vehicle</button>
+            <button onClick={() => setDriverModalOpen(true)} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-[#caf0f8] hover:border-[#00b4d8] text-[#03045e] px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Driver</button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredRoutes.map((route) => (
               <RouteOverviewCard key={route.id} route={route} onViewDetails={(r) => setSelectedRoute(r)} />
             ))}
@@ -249,7 +249,7 @@ const TransportManagementPage = () => {
       {activeTab === "stops" && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => setStopModalOpen(true)} className="flex items-center gap-2 bg-[#03045e] hover:bg-[#0077b6] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Stop</button>
+            <button onClick={() => setStopModalOpen(true)} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#03045e] hover:bg-[#0077b6] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Add Stop</button>
             <select value={stopRouteFilter} onChange={e => setStopRouteFilter(e.target.value)} className="border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] bg-white outline-none cursor-pointer">
               <option value="">All Routes</option>
               {routes.map(r => <option key={r.id} value={r.id}>{r.routeNo} — {r.zone}</option>)}
@@ -289,7 +289,7 @@ const TransportManagementPage = () => {
       {activeTab === "allocation" && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => setAllocModalOpen(true)} className="flex items-center gap-2 bg-[#03045e] hover:bg-[#0077b6] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Allocate Student</button>
+            <button onClick={() => setAllocModalOpen(true)} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#03045e] hover:bg-[#0077b6] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors"><Plus size={14} /> Allocate Student</button>
             <select value={allocRouteFilter} onChange={e => setAllocRouteFilter(e.target.value)} className="border border-[#caf0f8] hover:border-[#00b4d8] px-4 py-2.5 rounded-2xl text-xs font-bold text-[#03045e] bg-white outline-none cursor-pointer">
               <option value="">All Routes</option>
               {routes.map(r => <option key={r.id} value={r.id}>{r.routeNo} — {r.zone}</option>)}
@@ -361,7 +361,7 @@ const PushAlertModal = ({ isOpen, onClose, onSave, routes }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
+        className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-white">
@@ -394,7 +394,7 @@ const PushAlertModal = ({ isOpen, onClose, onSave, routes }) => {
           </div>
 
           {/* Type + Severity row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Alert Type</label>
               <select

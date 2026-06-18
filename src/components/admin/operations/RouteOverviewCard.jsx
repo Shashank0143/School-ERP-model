@@ -68,7 +68,7 @@ const RouteOverviewCard = ({
             className="border-t border-gray-100 bg-gray-50"
           >
             <div className="p-5 space-y-3">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <span className="block text-[9px] font-black text-gray-400 uppercase mb-1">Vehicle Details</span>
                   <div className="text-xs font-bold text-[#03045e]">{route.vehicleNo}</div>

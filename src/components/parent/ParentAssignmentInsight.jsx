@@ -16,7 +16,7 @@ const ParentAssignmentInsight = ({ timeline, onNavigate }) => {
       <div className="flex flex-col lg:flex-row gap-8 items-center relative z-10">
         <div className="flex flex-wrap items-center gap-8 flex-1">
           {/* Metric 1: Assignments */}
-          <div className="flex items-center gap-4 min-w-[160px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full flex-1 min-w-0 md:min-w-[160px]">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
               <ClipboardList size={24} />
             </div>
@@ -27,7 +27,7 @@ const ParentAssignmentInsight = ({ timeline, onNavigate }) => {
           </div>
 
           {/* Metric 2: Status */}
-          <div className="flex items-center gap-4 min-w-[160px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full flex-1 min-w-0 md:min-w-[160px]">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${overdueCount > 0 ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}>
               {overdueCount > 0 ? <AlertCircle size={24} /> : <CheckCircle2 size={24} />}
             </div>
@@ -40,7 +40,7 @@ const ParentAssignmentInsight = ({ timeline, onNavigate }) => {
           </div>
 
           {/* Metric 3: Completion Insight (Simulated) */}
-          <div className="hidden xl:flex items-center gap-4 min-w-[160px]">
+          <div className="hidden xl:flex items-center gap-4 w-full flex-1 min-w-0 md:min-w-[160px]">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-sm">
               <Activity size={24} />
             </div>

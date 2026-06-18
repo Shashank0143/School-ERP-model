@@ -80,7 +80,7 @@ export default function UpdateFeed({ updates, onDeleteUpdate }) {
           <p className="text-gray-400 font-bold">No active updates match your search criteria.</p>
         </div>
       ) : (
-        <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-6" layout>
+        <motion.div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6" layout>
           <AnimatePresence mode="popLayout">
             {filteredUpdates.map(upd => (
               <UpdateCard

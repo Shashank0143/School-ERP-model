@@ -25,7 +25,7 @@ const WorkloadCard = ({
         </h3>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 my-4 border-y border-[#caf0f8]/30 py-3 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 my-4 border-y border-[#caf0f8]/30 py-3 text-center">
         <div className="space-y-0.5">
           <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-center gap-0.5">
             <Briefcase size={8} /> Classes

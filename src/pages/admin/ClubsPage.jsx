@@ -551,7 +551,7 @@ const ClubsPage = () => {
       {/* Review Proposal Modal */}
       {reviewProposalOpen && selectedProposal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
+          <div className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden border border-gray-100">
             <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-[#00b4d8]" />
@@ -568,7 +568,7 @@ const ClubsPage = () => {
             </div>
             
             <div className="p-6">
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Proposed By</span>
                   <p className="text-sm font-black text-[#03045e] mt-0.5">{selectedProposal.proposedByStudentName}</p>
@@ -581,7 +581,7 @@ const ClubsPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Club Name</span>
                   <p className="text-sm font-black text-[#03045e] mt-0.5">{selectedProposal.clubName}</p>

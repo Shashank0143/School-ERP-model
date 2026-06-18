@@ -15,7 +15,7 @@ const RoleSelector = ({ selectedRole, onSelectRole }) => {
       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
         Select Institutional Role
       </label>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-1.5 bg-gray-50 rounded-2xl border border-gray-150 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-4 gap-2.5 p-1.5 bg-gray-50 rounded-2xl border border-gray-150 relative">
         {roles.map((r) => {
           const isActive = selectedRole === r.id;
           const Icon = r.icon;

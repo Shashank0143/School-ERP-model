@@ -10,7 +10,8 @@ import {
   CheckCircle2, 
   AlertCircle, 
   ChevronRight, 
-  Upload, 
+  Upload,
+  Download, 
   FileCheck,
   Timer,
   Link as LinkIcon,
@@ -109,26 +110,25 @@ const AssignmentCard = ({ assignment, onStatusUpdate }) => {
                   <span className="text-[10px] font-black uppercase tracking-widest">{assignment.dueDate}</span>
                 </div>
                 {assignment.attachment && (
-                  typeof assignment.attachment === "string" ? (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-150 rounded-xl w-full max-w-[200px] sm:max-w-[250px]">
+                    <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                      <FileText size={12} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black text-[#03045e] truncate block w-full">
+                        {typeof assignment.attachment === "string" ? "Resource Link" : assignment.attachment.fileName}
+                      </p>
+                    </div>
                     <a 
-                      href={assignment.attachment}
+                      href={typeof assignment.attachment === "string" ? assignment.attachment : assignment.attachment.data}
+                      download={typeof assignment.attachment === "string" ? undefined : assignment.attachment.fileName}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1.5 text-blue-500 hover:text-blue-700 transition-colors"
+                      className="w-6 h-6 rounded-md bg-white border border-gray-200 flex items-center justify-center text-[#03045e] hover:bg-[#03045e] hover:text-white transition-colors shrink-0"
                     >
-                      <FileText size={14} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Attachment</span>
+                      <Download size={10} />
                     </a>
-                  ) : (
-                    <a 
-                      href={assignment.attachment.data}
-                      download={assignment.attachment.fileName}
-                      className="flex items-center gap-1.5 text-blue-500 hover:text-blue-700 transition-colors"
-                    >
-                      <FileText size={14} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Download {assignment.attachment.fileName}</span>
-                    </a>
-                  )
+                  </div>
                 )}
               </div>
               
@@ -176,7 +176,7 @@ const AssignmentCard = ({ assignment, onStatusUpdate }) => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] p-8 w-full max-w-lg shadow-2xl relative overflow-hidden"
+              className="bg-white rounded-[2.5rem] p-8 w-full w-[95vw] md:w-[90vw] lg:max-w-lg shadow-2xl relative overflow-hidden"
             >
               {/* Modal Background Pattern */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[5rem] -mr-8 -mt-8 pointer-events-none" />

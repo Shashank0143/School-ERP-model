@@ -16,7 +16,7 @@ export default function DutyDetailsModal({ request, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-      <MainCard className="w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+      <MainCard className="w-full w-[95vw] md:w-[90vw] lg:max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-3xl">
           <h2 className="text-xl font-bold text-[#03045e]">Duty Request Details</h2>
           <button
@@ -41,7 +41,7 @@ export default function DutyDetailsModal({ request, onClose }) {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase">Date</p>
               <p className="font-medium text-gray-800 flex items-center gap-1 mt-1">
@@ -69,8 +69,8 @@ export default function DutyDetailsModal({ request, onClose }) {
           </div>
 
           <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3">Assigned Students ({request.targetStudents?.length || 0})</h4>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <table className="w-full text-left text-sm">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto w-full">
+            <table className="w-full text-left text-sm w-full md:min-w-[500px]">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   <th className="p-3 font-bold text-gray-600">Student Name</th>

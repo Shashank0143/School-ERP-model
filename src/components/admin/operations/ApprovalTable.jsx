@@ -125,7 +125,7 @@ const ApprovalTable = ({
                             transition={{ duration: 0.2 }}
                             className="bg-gray-50/50 overflow-hidden"
                           >
-                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-[#0077b6] ml-2 my-2 bg-white rounded-r-xl shadow-sm">
+                            <div className="p-4 grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-4 border-l-4 border-[#0077b6] ml-2 my-2 bg-white rounded-r-xl shadow-sm">
                               <div>
                                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Leave Information</h4>
                                 <p className="text-xs font-bold text-[#03045e] mb-1">Type: <span className="text-gray-600">{req.type}</span></p>

@@ -85,7 +85,7 @@ export default function ResultAnalyticsPreview({ examCycle, papers, students, su
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4.5 rounded-2xl border border-gray-100 space-y-1.5 shadow-sm">
           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">
             Class Pass Rate
@@ -129,7 +129,7 @@ export default function ResultAnalyticsPreview({ examCycle, papers, students, su
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
         {/* Subject wise average */}
         <div className="space-y-3">
           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">

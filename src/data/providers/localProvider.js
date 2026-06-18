@@ -1131,14 +1131,43 @@ const localProvider = {
     setItem(STORAGE_KEYS.CLUBS, clubs);
     return clubs[idx];
   },
+  _initializeClubEnrollments: async () => {
+    let enrollments = getItem(STORAGE_KEYS.CLUB_ENROLLMENTS) || [];
+    await localProvider._initializeClubMembershipRequests();
+    const requests = getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS) || [];
+    let updated = false;
+    requests.forEach(req => {
+      if (req.status === "Approved") {
+        const exists = enrollments.some(e => e.studentId === req.studentId && e.clubId === req.clubId);
+        if (!exists) {
+          enrollments.push({
+            id: `enroll-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            studentId: req.studentId,
+            clubId: req.clubId,
+            role: "Member",
+            joinedDate: req.decisionDate || req.requestDate || new Date().toISOString().split("T")[0],
+            status: "Active"
+          });
+          updated = true;
+        }
+      }
+    });
+    if (updated || enrollments.length === 0) {
+      setItem(STORAGE_KEYS.CLUB_ENROLLMENTS, enrollments);
+    }
+  },
+
   getClubEnrollments: async () => {
+    await localProvider._initializeClubEnrollments();
     return getItem(STORAGE_KEYS.CLUB_ENROLLMENTS) || [];
   },
   getClubEnrollmentsByStudent: async (studentId) => {
+    await localProvider._initializeClubEnrollments();
     const enrollments = getItem(STORAGE_KEYS.CLUB_ENROLLMENTS) || [];
     return enrollments.filter((ce) => ce.studentId === studentId);
   },
   getClubEnrollmentsByClub: async (clubId) => {
+    await localProvider._initializeClubEnrollments();
     const enrollments = getItem(STORAGE_KEYS.CLUB_ENROLLMENTS) || [];
     return enrollments.filter((ce) => ce.clubId === clubId);
   },
@@ -1163,6 +1192,19 @@ const localProvider = {
     if (idx === -1) return false;
     enrollments.splice(idx, 1);
     setItem(STORAGE_KEYS.CLUB_ENROLLMENTS, enrollments);
+    
+    const requests = getItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS) || [];
+    let updatedRequests = false;
+    requests.forEach(req => {
+      if (req.studentId === studentId && req.clubId === clubId && req.status === "Approved") {
+        req.status = "Left";
+        updatedRequests = true;
+      }
+    });
+    if (updatedRequests) {
+      setItem(STORAGE_KEYS.CLUB_MEMBERSHIP_REQUESTS, requests);
+    }
+    
     return true;
   },
   getClubActivities: async () => {
@@ -2555,6 +2597,18 @@ const localProvider = {
     list[index] = { ...list[index], ...updates };
     setItem(STORAGE_KEYS.CLUB_ACTIVITY_PARTICIPATIONS, list);
     return list[index];
+  },
+
+  // === INSTITUTION SETTINGS ===
+  getInstitutionSettings: async () => {
+    return getItem(STORAGE_KEYS.INSTITUTION_SETTINGS) || {};
+  },
+
+  updateInstitutionSettings: async (updates) => {
+    const current = getItem(STORAGE_KEYS.INSTITUTION_SETTINGS) || {};
+    const updated = { ...current, ...updates };
+    setItem(STORAGE_KEYS.INSTITUTION_SETTINGS, updated);
+    return updated;
   },
 
 };

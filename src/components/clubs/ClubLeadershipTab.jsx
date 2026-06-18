@@ -89,7 +89,7 @@ export default function ClubLeadershipTab({ clubId, teacherId, members, onRolesU
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4">
         {roles.map((roleName) => {
           const occupants = leadershipPositions[roleName] || [];
           const isCore = roleName === "Core Member";
@@ -130,7 +130,7 @@ export default function ClubLeadershipTab({ clubId, teacherId, members, onRolesU
       {/* Assign Role Modal */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden">
+          <div className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <h3 className="text-sm font-black text-[#03045e]">Assign Leadership Role</h3>
               <button onClick={() => setIsAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600">

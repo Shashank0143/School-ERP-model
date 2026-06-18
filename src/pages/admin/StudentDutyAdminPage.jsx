@@ -116,7 +116,7 @@ export default function StudentDutyAdminPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
           <MainCard className="p-4 flex flex-col justify-center items-center text-center">
             <ClipboardList size={24} className="text-blue-500 mb-2" />
             <p className="text-xs text-gray-500 font-bold uppercase">Total</p>
@@ -152,7 +152,7 @@ export default function StudentDutyAdminPage() {
 
       {/* Filters Section */}
       <MainCard className="p-4">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-6 gap-3">
           <div>
             <label className="block text-xs font-bold text-gray-500 mb-1">Category</label>
             <select

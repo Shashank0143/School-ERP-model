@@ -176,7 +176,7 @@ function FeeStructure({ structure }) {
 function FeeBill({ bills }) {
   const { t, lang } = useLanguage();
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-4">
       {(bills || []).map(bill => {
         const isPaid = bill.status === "Paid";
         const style = STATUS_STYLE[bill.status] || STATUS_STYLE.Pending;
@@ -283,7 +283,7 @@ function ITCertificate({ cert }) {
           <p className="text-sm font-semibold text-gray-500 mt-1">{t("feeDetails.itCertificate.desc")}</p>
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4 mb-8 text-left">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4 mb-8 text-left">
           <div>
             <p className="text-xs font-black text-gray-400 mb-1 uppercase tracking-tighter">{t("feeDetails.itCertificate.studentName")}</p>
             <p className="font-bold text-[#03045e]">{cert.studentName}</p>
@@ -391,7 +391,7 @@ export default function FeeDetailsPage() {
 
       <div className="bg-white rounded-2xl shadow-sm p-5 mb-6 border border-gray-100" style={{ outline: "1px solid #caf0f8" }}>
         {/* Metric Row with thin responsive separators */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center divide-y md:divide-y-0 md:divide-x divide-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-center divide-y md:divide-y-0 md:divide-x divide-gray-100">
           
           {/* Metric 1: Total Planned Billing */}
           <div className="flex items-center gap-4 pb-4 md:pb-0">

@@ -60,7 +60,7 @@ export default function ClubAnnouncementsTab({ announcements = [], onPostAnnounc
 
       {/* Post a New Announcement Form (Only visible to coordinators) */}
       {!isReadOnly && onPostAnnouncement && (
-        <form onSubmit={handlePostSubmit} className="space-y-3 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+        <form onSubmit={handlePostSubmit} className="space-y-3 p-5 md:p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
           <div className="flex items-center gap-1.5 mb-1">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
             <span className="text-[10px] font-black text-[#03045e] uppercase tracking-wider">Post Announcement</span>
@@ -72,7 +72,7 @@ export default function ClubAnnouncementsTab({ announcements = [], onPostAnnounc
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3">
             <input
               type="text"
               required
@@ -137,7 +137,7 @@ export default function ClubAnnouncementsTab({ announcements = [], onPostAnnounc
           </div>
         ) : (
           announcements.map((ann) => (
-            <div key={ann.announcementId} className={`p-4 rounded-xl border transition-colors relative ${ann.isPinned ? "bg-amber-50/30 border-amber-100" : "bg-white border-gray-100 hover:bg-gray-50/30"}`}>
+            <div key={ann.announcementId} className={`p-5 md:p-6 rounded-xl border transition-colors relative ${ann.isPinned ? "bg-amber-50/30 border-amber-100" : "bg-white border-gray-100 hover:bg-gray-50/30"}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider border ${getCategoryColor(ann.category)}`}>

@@ -103,12 +103,20 @@ export const getStudentClubs = async (studentId) => {
 
   // 3. Get all clubs
   const allClubs = await provider.getClubs();
+  
+  let allEnrollments = [];
+  if (provider.getClubEnrollments) {
+    allEnrollments = await provider.getClubEnrollments();
+  }
 
   const mappedClubs = allClubs.map((c) => {
     const enrollment = enrolledClubMap.get(c.id);
     const leadership = leadershipMap.get(c.id);
+    const members = allEnrollments.filter(e => e.clubId === c.id && e.status === "Active");
+    
     return {
       ...c,
+      membershipCount: members.length,
       isMember: !!enrollment,
       role: leadership ? leadership.role : (enrollment ? enrollment.role || "Member" : null),
       joinedAt: enrollment ? enrollment.joinedDate : null,

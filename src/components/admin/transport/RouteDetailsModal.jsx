@@ -35,7 +35,7 @@ const RouteDetailsModal = ({ isOpen, onClose, route }) => {
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
+          className="bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white shrink-0">
@@ -61,7 +61,7 @@ const RouteDetailsModal = ({ isOpen, onClose, route }) => {
           <div className="p-6 overflow-y-auto flex-1 bg-gray-50/30">
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1 mb-2">
                   <Users size={12} className="text-[#0077b6]" /> Occupancy
@@ -93,7 +93,7 @@ const RouteDetailsModal = ({ isOpen, onClose, route }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
               {/* Left Column */}
               <div className="space-y-4">

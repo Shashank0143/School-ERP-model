@@ -216,7 +216,7 @@ const LeaveApprovalsPage = () => {
       )}
 
       {/* Roster Strengths stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <OperationsStatCard
           title="Pending Leave Reviews"
           value={leaves.filter((l) => (l.status || "Pending").toUpperCase() === "PENDING").length.toString()}
@@ -339,7 +339,7 @@ const LeaveApprovalsPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+              className="relative w-full w-[95vw] md:w-[90vw] lg:max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-rose-50 to-white">
                 <h3 className="text-lg font-black text-rose-600 flex items-center gap-2">

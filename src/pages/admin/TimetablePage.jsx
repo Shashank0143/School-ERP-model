@@ -169,7 +169,7 @@ function EditSlotModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+        className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden"
       >
         {/* Header */}
         <div className="bg-[#03045e] px-6 py-5 flex items-start justify-between">
@@ -923,7 +923,7 @@ const TimetablePage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-8 max-w-md shadow-2xl"
+              className="bg-white rounded-3xl p-8 w-[95vw] md:w-[90vw] lg:max-w-md shadow-2xl"
             >
               <h3 className="text-lg font-black text-[#03045e] mb-3">
                 Reset Timetable
@@ -972,7 +972,7 @@ const TimetablePage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl"
+              className="bg-white rounded-3xl p-6 w-[95vw] md:w-[90vw] lg:max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
                 <div className="flex items-center gap-3">

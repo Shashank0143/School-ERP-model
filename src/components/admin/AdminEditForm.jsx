@@ -77,7 +77,7 @@ const AdminEditForm = ({
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: "spring", stiffness: 350, damping: 30 }}
               onSubmit={handleFormSubmit}
-              className="bg-white rounded-3xl shadow-2xl border border-[#caf0f8] w-full max-w-2xl flex flex-col pointer-events-auto overflow-hidden max-h-[90vh]"
+              className="bg-white rounded-3xl shadow-2xl border border-[#caf0f8] w-full w-[95vw] md:w-[90vw] lg:max-w-2xl flex flex-col pointer-events-auto overflow-hidden max-h-[90vh]"
             >
               {/* Modal Header */}
               <div className="p-5 border-b border-[#caf0f8] flex items-center justify-between bg-gray-50/50">

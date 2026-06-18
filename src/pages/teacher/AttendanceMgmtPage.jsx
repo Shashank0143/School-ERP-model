@@ -377,7 +377,7 @@ const AttendanceMgmtPage = () => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-3xl p-8 max-w-md shadow-2xl"
+                className="bg-white rounded-3xl p-8 w-[95vw] md:w-[90vw] lg:max-w-md shadow-2xl"
               >
                 <h3 className="text-lg font-black text-[#03045e] mb-3">
                   Unmarked Students

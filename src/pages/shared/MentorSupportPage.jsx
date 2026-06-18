@@ -82,7 +82,7 @@ function MentorCard({ mentor }) {
 function CategoryGrid({ onSelect }) {
   const { lang } = useLanguage();
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 gap-3">
       {SUPPORT_CATEGORIES.map((cat, i) => {
         const Icon = ICON_MAP[cat.icon] || MessageCircle;
         const title = lang === "hi" ? cat.titleHi : cat.titleEn;
@@ -205,7 +205,7 @@ function RequestForm({ prefillCategory, onSessionCreated }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4">
         {/* Topic Selection */}
         <div className="flex flex-col gap-1.5">
           {label("Choose Session Topic")}

@@ -57,7 +57,7 @@ export default function MyClassPanel({ classInfo }) {
       </div>
 
       {/* Roster & Operations Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
         
         {/* Attendance Widget */}
         <div className="flex items-center gap-4 bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
@@ -162,7 +162,7 @@ export default function MyClassPanel({ classInfo }) {
           <BellRing className="w-4 h-4 text-blue-600" />
           <h4 className="text-xs font-black text-[#03045e] uppercase tracking-wide">Upcoming Class Events</h4>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 gap-3">
           {classEvents.map((evt, idx) => (
             <div key={idx} className="bg-white border border-slate-100 p-3 rounded-xl flex items-start gap-2.5 hover:shadow-xs transition-shadow">
               <div className="w-1.5 h-10 rounded-full bg-blue-500 flex-shrink-0" />

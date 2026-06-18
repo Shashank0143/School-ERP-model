@@ -323,7 +323,7 @@ const StudentChecklistRow = ({
       {/* Expanded Checklist */}
       {expanded && (
         <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {student.checklist.map((doc) => (
               <div
                 key={doc.id}
@@ -483,7 +483,7 @@ const TeacherChecklistRow = ({
       {/* Expanded Checklist */}
       {expanded && (
         <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {teacher.checklist.map((doc) => (
               <div
                 key={doc.id}
@@ -642,7 +642,7 @@ const MissingDocsReport = ({ checklist, onClose, entityType = "students" }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-3xl w-full w-[95vw] md:w-[90vw] lg:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
             <h3 className="text-lg font-black text-[#03045e]">
@@ -685,8 +685,8 @@ const MissingDocsReport = ({ checklist, onClose, entityType = "students" }) => {
                     </span>
                     <span className="text-slate-400">({items.length})</span>
                   </h4>
-                  <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
-                    <table className="w-full text-xs">
+                  <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-x-auto w-full">
+                    <table className="w-full text-xs min-w-[800px]">
                       <thead className="bg-slate-100/50">
                         <tr>
                           <th className="text-left px-4 py-2 font-black text-slate-500">
@@ -762,7 +762,7 @@ const DocumentViewerModal = ({ doc, onVerify, onReject, onClose }) => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
@@ -776,7 +776,7 @@ const DocumentViewerModal = ({ doc, onVerify, onReject, onClose }) => {
         
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50 flex flex-col items-center justify-center">
             {/* Dummy Document Placeholder */}
-            <div className="w-full max-w-md aspect-[1/1.4] bg-white border-2 border-slate-200 border-dashed rounded-xl flex flex-col items-center justify-center text-slate-400 shadow-sm">
+            <div className="w-full w-[95vw] md:w-[90vw] lg:max-w-md aspect-[1/1.4] bg-white border-2 border-slate-200 border-dashed rounded-xl flex flex-col items-center justify-center text-slate-400 shadow-sm">
                 <FileText size={64} className="text-slate-300 mb-4" />
                 <p className="text-sm font-black text-slate-500">Document Preview</p>
                 <p className="text-[10px] font-bold text-slate-400 mt-1">{doc.fileSize || "1.2 MB"} • PDF Document</p>
@@ -1068,7 +1068,7 @@ const DocumentsPage = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <OperationsStatCard
           title="Document Completion"
           value={`${stats.completionRate}%`}
@@ -1320,7 +1320,7 @@ const DocumentsPage = () => {
         </div>
       ) : activeView === "bytype" ? (
         <AdminSectionCard>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {(entityType === "students"
               ? STUDENT_DOCUMENT_TYPES
               : TEACHER_DOCUMENT_TYPES

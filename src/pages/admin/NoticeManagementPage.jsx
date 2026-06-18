@@ -367,8 +367,8 @@ const NoticeManagementPage = () => {
       </div>
 
       {/* Notices Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-lg shadow overflow-x-auto w-full">
+        <table className="w-full min-w-[800px]">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left">

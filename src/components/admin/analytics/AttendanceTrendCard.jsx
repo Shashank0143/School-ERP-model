@@ -22,7 +22,7 @@ const AttendanceTrendCard = ({
       <div className="space-y-4">
         <TrendChart points={points} labels={labels} />
 
-        <div className="grid grid-cols-2 gap-4 border-t border-[#caf0f8]/30 pt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[#caf0f8]/30 pt-3">
           <div className="p-3 bg-gray-50 rounded-2xl">
             <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
               AVERAGE COMPLIANCE RATE

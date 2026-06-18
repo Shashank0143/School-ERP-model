@@ -157,7 +157,7 @@ const AssignmentForm = ({ isOpen, onClose, teacherProfile, assignmentToEdit, onA
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl relative overflow-hidden my-8"
+          className="bg-white rounded-[2.5rem] w-full w-[95vw] md:w-[90vw] lg:max-w-2xl shadow-2xl relative overflow-hidden my-8"
         >
           {/* Header Panel */}
           <div className="p-6 bg-gradient-to-r from-[#03045e] to-[#0077b6] text-white flex justify-between items-start">
@@ -183,7 +183,7 @@ const AssignmentForm = ({ isOpen, onClose, teacherProfile, assignmentToEdit, onA
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
               {/* Assignment Title */}
               <div className="md:col-span-2 space-y-2">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assignment Title</span>

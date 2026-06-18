@@ -362,7 +362,7 @@ const StudentsPage = () => {
           description="Manage institutional student records, admission statuses, and parent mappings."
           breadcrumbs={["Admin Portal", "User Management", "Students"]}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
@@ -397,7 +397,7 @@ const StudentsPage = () => {
       />
 
       {/* Stats Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <AdminStatCard
           title="Active Admissions"
           value={analytics.total.toString()}

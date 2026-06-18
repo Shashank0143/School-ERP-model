@@ -434,7 +434,7 @@ const NoticesPage = () => {
           description="Manage institutional communication and broadcast notices"
           breadcrumbs={["Admin", "Notices"]}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
@@ -465,7 +465,7 @@ const NoticesPage = () => {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <AdminStatCard
           title="Published"
           value={analytics.published.toString()}
@@ -670,7 +670,7 @@ const NoticesPage = () => {
             <tbody className="divide-y divide-[#caf0f8]/30">
               {filteredNotices.map((notice, index) => (
                 <motion.tr
-                  key={notice.id}
+                  key={notice.id || notice.noticeId || index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}

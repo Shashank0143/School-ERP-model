@@ -212,7 +212,7 @@ const LeaveApprovalPage = () => {
       </AnimatePresence>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-5 gap-4">
         <OperationsStatCard
           title="Total"
           value={leaves.length.toString()}
@@ -400,7 +400,7 @@ const LeaveApprovalPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+              className="relative w-full w-[95vw] md:w-[90vw] lg:max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
                 <h3 className="text-lg font-black text-[#03045e] flex items-center gap-2">
@@ -431,7 +431,7 @@ const LeaveApprovalPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
                   <div>
                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Leave Type</span>
                     <p className="text-xs font-bold text-[#03045e] mt-1">{viewLeave.leaveType}</p>

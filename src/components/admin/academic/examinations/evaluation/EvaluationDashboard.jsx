@@ -33,6 +33,8 @@ export default function EvaluationDashboard({
   const sessionPapers = papers.filter((p) => p.examSessionId === examCycle?.id);
 
   const [selectedPaperForEntry, setSelectedPaperForEntry] = useState(null);
+  const [overviewClassFilter, setOverviewClassFilter] = useState("");
+  const [entryClassFilter, setEntryClassFilter] = useState("");
 
   const fetchProgress = async () => {
     if (!examCycle) return;
@@ -62,7 +64,7 @@ export default function EvaluationDashboard({
   return (
     <div className="space-y-6">
       {/* Overview stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
         <AdminStatCard
           title="Grading Progress"
           value={`${progressStats.completionPercentage}%`}
@@ -121,17 +123,31 @@ export default function EvaluationDashboard({
         {activeSubTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
-              <div>
-                <h4 className="text-xs font-black text-[#03045e] uppercase tracking-wider">
-                  Grading Completion Map
-                </h4>
-                <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">
-                  Select a paper to record or review marks directly
-                </p>
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div>
+                  <h4 className="text-xs font-black text-[#03045e] uppercase tracking-wider">
+                    Grading Completion Map
+                  </h4>
+                  <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">
+                    Select a paper to record or review marks directly
+                  </p>
+                </div>
+                <select
+                  value={overviewClassFilter}
+                  onChange={(e) => setOverviewClassFilter(e.target.value)}
+                  className="p-2 rounded-xl border border-gray-150 bg-gray-50 text-xs font-bold outline-none cursor-pointer min-w-[200px]"
+                >
+                  <option value="">All Classes</option>
+                  {classes.filter(c => sessionPapers.some(p => p.classId === c.id)).map(c => (
+                    <option key={c.id} value={c.id}>{c.displayName || c.name || c.id}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {sessionPapers.map((p) => {
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4">
+                {sessionPapers
+                  .filter(p => !overviewClassFilter || p.classId === overviewClassFilter)
+                  .map((p) => {
                   const cls = classes.find((c) => c.id === p.classId);
                   const sub = subjects.find((s) => s.id === p.subjectId);
 
@@ -145,6 +161,7 @@ export default function EvaluationDashboard({
                     <div
                       key={p.id}
                       onClick={() => {
+                        setEntryClassFilter(p.classId);
                         setSelectedPaperForEntry(p);
                         setActiveSubTab("entry");
                       }}
@@ -171,7 +188,7 @@ export default function EvaluationDashboard({
                           {sub?.name || p.subjectId}
                         </h5>
                         <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">
-                          Class: {cls?.displayName || p.classId}
+                          {cls?.displayName || p.classId}
                         </p>
                       </div>
 
@@ -196,7 +213,7 @@ export default function EvaluationDashboard({
         {/* VIEW 2: MARKS ENTRY CONSOLE */}
         {activeSubTab === "entry" && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-4 border-b border-gray-50">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-gray-50">
               <div>
                 <h4 className="text-xs font-black text-[#03045e] uppercase tracking-wider">
                   Academic Scores Entry
@@ -206,25 +223,43 @@ export default function EvaluationDashboard({
                 </p>
               </div>
 
-              <select
-                value={selectedPaperForEntry?.id || ""}
-                onChange={(e) => {
-                  const paperObj = sessionPapers.find((p) => p.id === e.target.value);
-                  setSelectedPaperForEntry(paperObj || null);
-                }}
-                className="p-2 rounded-xl border border-gray-150 bg-gray-50 text-xs font-bold outline-none cursor-pointer"
-              >
-                <option value="">Select paper slot</option>
-                {sessionPapers.map((p) => {
-                  const cls = classes.find((c) => c.id === p.classId);
-                  const sub = subjects.find((s) => s.id === p.subjectId);
-                  return (
-                    <option key={p.id} value={p.id}>
-                      {sub?.name || p.subjectId} ({cls?.displayName || p.classId})
-                    </option>
-                  );
-                })}
-              </select>
+              <div className="flex items-center gap-3">
+                <select
+                  value={entryClassFilter}
+                  onChange={(e) => {
+                    setEntryClassFilter(e.target.value);
+                    setSelectedPaperForEntry(null);
+                  }}
+                  className="p-2 rounded-xl border border-gray-150 bg-gray-50 text-xs font-bold outline-none cursor-pointer min-w-[150px]"
+                >
+                  <option value="">Select Class</option>
+                  {classes.filter(c => sessionPapers.some(p => p.classId === c.id)).map(c => (
+                    <option key={c.id} value={c.id}>{c.displayName || c.name || c.id}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedPaperForEntry?.id || ""}
+                  onChange={(e) => {
+                    const paperObj = sessionPapers.find((p) => p.id === e.target.value);
+                    setSelectedPaperForEntry(paperObj || null);
+                  }}
+                  disabled={!entryClassFilter}
+                  className="p-2 rounded-xl border border-gray-150 bg-gray-50 text-xs font-bold outline-none cursor-pointer disabled:opacity-50 min-w-[180px]"
+                >
+                  <option value="">Select paper slot</option>
+                  {sessionPapers
+                    .filter(p => p.classId === entryClassFilter)
+                    .map((p) => {
+                      const sub = subjects.find((s) => s.id === p.subjectId);
+                      return (
+                        <option key={p.id} value={p.id}>
+                          {sub?.name || p.subjectId}
+                        </option>
+                      );
+                    })}
+                </select>
+              </div>
             </div>
 
             <MarksEntryConsole

@@ -51,7 +51,7 @@ export default function QuickActionsPanel() {
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-5 gap-4">
         {actions.map((act, idx) => {
           const Icon = act.icon;
           return (

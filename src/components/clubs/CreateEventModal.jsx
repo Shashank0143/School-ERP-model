@@ -39,7 +39,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div className="fixed inset-0 bg-[#03045e]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
         <div className="p-5 bg-gradient-to-r from-[#03045e] to-[#0077b6] text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
@@ -83,7 +83,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[9px] font-black text-gray-400 uppercase">Date *</label>
               <input

@@ -67,7 +67,7 @@ const drawerVariants = {
 };
 
 // ── Single nav item ───────────────────────────────────────────────────────────
-const NavItem = React.memo(function NavItem({ item, onClick, isCollapsed }) {
+const NavItem = React.memo(function NavItem({ item, onClick, isCollapsed, isMobileDrawer }) {
   const { t } = useLanguage();
   const IconComponent = iconMap[item.icon] || LayoutDashboard;
   const [showTooltip, setShowTooltip] = useState(false);
@@ -79,11 +79,16 @@ const NavItem = React.memo(function NavItem({ item, onClick, isCollapsed }) {
         whileTap={{ scale: 0.96 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         onClick={() => onClick && onClick(item)}
-        onMouseEnter={() => isCollapsed && setShowTooltip(true)}
+        onMouseEnter={() => (isCollapsed || (!isMobileDrawer && window.innerWidth >= 768 && window.innerWidth < 1024)) && setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         className={`
           w-full flex items-center rounded-xl text-left transition-colors duration-200 font-medium text-sm
-          ${isCollapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3"}
+          ${isMobileDrawer 
+             ? "gap-3 px-4 py-3" 
+             : isCollapsed 
+                ? "justify-center px-0 py-3" 
+                : "justify-center lg:justify-start px-0 lg:px-4 py-3 lg:gap-3"
+          }
           ${
             item.active
               ? "bg-[#caf0f8] text-[#03045e] font-bold border-l-4 border-[#03045e]"
@@ -97,33 +102,28 @@ const NavItem = React.memo(function NavItem({ item, onClick, isCollapsed }) {
           className={item.active ? "text-[#03045e]" : "text-white/60"}
           aria-hidden="true"
         />
-        {/* Label — hidden when collapsed */}
-        <AnimatePresence initial={false}>
-          {!isCollapsed && (
-            <motion.span
-              key="label"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="truncate overflow-hidden whitespace-nowrap"
-            >
-              {item.label}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {/* Label — hidden when collapsed or on tablet */}
+        {isMobileDrawer ? (
+          <span className="truncate overflow-hidden whitespace-nowrap">
+            {item.label}
+          </span>
+        ) : (
+          <span className={`truncate overflow-hidden whitespace-nowrap ${isCollapsed ? "hidden" : "hidden lg:block"}`}>
+            {item.label}
+          </span>
+        )}
       </motion.button>
 
-      {/* Tooltip — only in collapsed mode */}
+      {/* Tooltip — only in collapsed mode or tablet */}
       <AnimatePresence>
-        {isCollapsed && showTooltip && (
+        {(isCollapsed || (!isMobileDrawer && showTooltip)) && showTooltip && (
           <motion.div
             key="tooltip"
             initial={{ opacity: 0, x: -4 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 pointer-events-none"
+            className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 pointer-events-none hidden md:block"
           >
             <div
               className="px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shadow-lg"
@@ -148,6 +148,7 @@ const SidebarContent = React.memo(function SidebarContent({
   onNavClick,
   isCollapsed,
   onToggleCollapse,
+  isMobileDrawer = false,
 }) {
   const { t } = useLanguage();
   return (
@@ -155,7 +156,11 @@ const SidebarContent = React.memo(function SidebarContent({
       {/* Logo + collapse toggle */}
       <div
         className={`flex items-center border-b border-white/10 ${
-          isCollapsed ? "justify-center px-2 py-5" : "gap-3 px-5 py-6"
+          isMobileDrawer 
+             ? "gap-3 px-5 py-6" 
+             : isCollapsed 
+                ? "justify-center px-2 py-5" 
+                : "justify-center lg:justify-start px-2 lg:px-5 py-5 lg:py-6 lg:gap-3"
         }`}
       >
         {/* Icon always visible */}
@@ -167,26 +172,26 @@ const SidebarContent = React.memo(function SidebarContent({
           />
         </div>
 
-        {/* Text — hidden when collapsed */}
-        <AnimatePresence initial={false}>
-          {!isCollapsed && (
-            <motion.div
-              key="logo-text"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="overflow-hidden"
-            >
-              <h1 className="text-xl font-black text-white leading-tight whitespace-nowrap">
-                EduDash
-              </h1>
-              <p className="text-xs text-white/50 font-medium whitespace-nowrap">
-                {t("school.portal")}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Text — hidden when collapsed or on tablet */}
+        {isMobileDrawer ? (
+          <div className="overflow-hidden">
+            <h1 className="text-xl font-black text-white leading-tight whitespace-nowrap">
+              EduDash
+            </h1>
+            <p className="text-xs text-white/50 font-medium whitespace-nowrap">
+              {t("school.portal")}
+            </p>
+          </div>
+        ) : (
+          <div className={`overflow-hidden ${isCollapsed ? "hidden" : "hidden lg:block"}`}>
+            <h1 className="text-xl font-black text-white leading-tight whitespace-nowrap">
+              EduDash
+            </h1>
+            <p className="text-xs text-white/50 font-medium whitespace-nowrap">
+              {t("school.portal")}
+            </p>
+          </div>
+        )}
 
         {/* Collapse toggle — desktop only */}
         {onToggleCollapse && (
@@ -194,7 +199,7 @@ const SidebarContent = React.memo(function SidebarContent({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={onToggleCollapse}
-            className={`flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors ${
+            className={`flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 items-center justify-center text-white/70 hover:text-white transition-colors hidden lg:flex ${
               isCollapsed ? "mt-0" : "ml-auto"
             }`}
             aria-label={isCollapsed ? t("sidebar.expand") : t("sidebar.collapse")}
@@ -210,7 +215,7 @@ const SidebarContent = React.memo(function SidebarContent({
 
       {/* Nav items */}
       <nav
-        className={`sidebar-nav flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 ${isCollapsed ? "px-2" : "px-3"}`}
+        className={`sidebar-nav flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 ${isMobileDrawer ? "px-3" : isCollapsed ? "px-2" : "px-2 lg:px-3"}`}
         aria-label={t("common.mainNav") || "Main navigation"}
       >
         {navItems.map((item) => (
@@ -219,6 +224,7 @@ const SidebarContent = React.memo(function SidebarContent({
             item={item}
             onClick={onNavClick}
             isCollapsed={isCollapsed}
+            isMobileDrawer={isMobileDrawer}
           />
         ))}
       </nav>
@@ -257,10 +263,8 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
   return (
     <>
       {/* ── Desktop sidebar ── */}
-      <motion.aside
-        animate={{ width: isCollapsed ? 64 : 240 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="hidden md:flex flex-col flex-shrink-0 fixed left-0 top-0 h-full z-30 shadow-xl overflow-hidden"
+      <aside
+        className={`hidden md:flex flex-col flex-shrink-0 fixed left-0 top-0 h-full z-30 shadow-xl overflow-hidden transition-[width] duration-300 w-16 ${isCollapsed ? "lg:w-16" : "lg:w-60"}`}
         style={{ backgroundColor: "#03045e" }}
         aria-label={t("common.sidebarNav") || "Sidebar navigation"}
       >
@@ -269,8 +273,9 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
           onNavClick={handleNavClick}
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
+          isMobileDrawer={false}
         />
-      </motion.aside>
+      </aside>
 
       {/* ── Mobile hamburger (shown by Header on mobile, but keep as fallback) ── */}
       <button
@@ -320,6 +325,7 @@ function Sidebar({ navItems = [], student, openRef, onNavClick, onCollapse }) {
               onNavClick={handleNavClick}
               isCollapsed={false}
               onToggleCollapse={null}
+              isMobileDrawer={true}
             />
           </motion.div>
         )}

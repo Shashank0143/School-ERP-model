@@ -121,7 +121,7 @@ export default function MentorSupportPage() {
 
       {loading && studentsData.length === 0 ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             <div className="h-28 bg-gray-100/50 rounded-[2rem] animate-pulse" />
             <div className="h-28 bg-gray-100/50 rounded-[2rem] animate-pulse" />
             <div className="h-28 bg-gray-100/50 rounded-[2rem] animate-pulse" />
@@ -185,7 +185,7 @@ export default function MentorSupportPage() {
                     </div>
 
                     {/* Operational performance warning cards */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                         <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Attendance</span>
                         <span className={`text-xs font-black ${

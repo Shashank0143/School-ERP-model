@@ -166,7 +166,7 @@ const AchievementsPage = () => {
       )}
 
       {/* Roster Strengths stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <OperationsStatCard
           title="Total Medals Awarded"
           value={achievements.length.toString()}
@@ -231,7 +231,7 @@ const AchievementsPage = () => {
           No honors posted matching active filter criteria
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAchievements.map((ach) => (
             <AchievementCard
               key={ach.id}

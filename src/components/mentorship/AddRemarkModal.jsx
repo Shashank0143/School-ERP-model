@@ -71,7 +71,7 @@ export default function AddRemarkModal({ isOpen, onClose, student, teacherId, on
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-xl bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full w-[95vw] md:w-[90vw] lg:max-w-xl bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header bar */}
         <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
@@ -98,7 +98,7 @@ export default function AddRemarkModal({ isOpen, onClose, student, teacherId, on
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4">
             {/* Category selection */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</label>

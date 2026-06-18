@@ -290,7 +290,7 @@ function FeeStructureTab({ feeStructures, onSave }) {
                       </div>
 
                       {/* Fee heads grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                         {fs.feeHeads.map((head) => {
                           const val = isEditing
                             ? (editValues[head.id] ?? String(head.annualAmount))
@@ -735,7 +735,7 @@ const FeeManagementPage = () => {
           description="Manage fee structure, generate demand, track collections, and issue receipts."
           breadcrumbs={["Admin Portal", "Finance", "Fee Management"]}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
           <LoadingSkeleton variant="stat-card" />
@@ -797,7 +797,7 @@ const FeeManagementPage = () => {
       {activeTab === "dashboard" && (
         <>
           {/* Collection Dashboard Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-white border-2 border-slate-100 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-2">
                 <Users size={16} className="text-[#0077b6]" />
@@ -1110,7 +1110,7 @@ const FeeManagementPage = () => {
               <FileText size={14} /> Generate Demand
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[10px] font-black text-slate-500 uppercase mb-2">
                 Select Month
@@ -1164,7 +1164,7 @@ const FeeManagementPage = () => {
               Fee Reports
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {[
               {
                 title: "Collection Report",

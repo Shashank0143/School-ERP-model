@@ -1,3 +1,4 @@
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +43,7 @@ const containerVariants = {
 };
 
 const AdminDashboard = () => {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const navigate = useNavigate();
 
   const [studentCount, setStudentCount] = useState(0);
@@ -217,9 +219,9 @@ const AdminDashboard = () => {
       </div>
 
       {/* Grid Layout: Visual charts & analytics cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={isMobile ? "flex flex-col gap-6" : "grid grid-cols-1 lg:grid-cols-3 gap-6"} style={isMobile ? { display: "flex", flexDirection: "column" } : {}}>
         {/* Attendance Spark Chart Card */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2" style={{ order: isMobile ? 3 : 1 }}>
           <AttendanceTrendCard
             points={[88, 92, 90, 94, 95, 93, 94]}
             labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
@@ -228,13 +230,13 @@ const AdminDashboard = () => {
         </div>
 
         {/* Academic averages card */}
-        <AcademicSummaryCard
+        <div style={{ order: isMobile ? 2 : 2 }}><AcademicSummaryCard
           title="Academic Performance Status"
           passRate="98%"
           examCount={3}
           toppersCount={demoClassScores.length}
           classScores={demoClassScores}
-        />
+        /></div>
       </div>
 
       {/* Main Workspace Split Section */}

@@ -136,7 +136,7 @@ const LeavePortfolioPage = () => {
     return (
       <div className="space-y-6 pb-12 animate-pulse">
         <div className="h-20 bg-gray-100 rounded-3xl" />
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1,2,3].map(i => <div key={i} className="h-32 bg-gray-100 rounded-3xl" />)}
         </div>
         <div className="h-[400px] bg-gray-100 rounded-3xl" />
@@ -183,7 +183,7 @@ const LeavePortfolioPage = () => {
 
       <MainCard className="overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
@@ -208,7 +208,7 @@ const LeavePortfolioPage = () => {
           
           <button
             onClick={() => handleOpenForm()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#0077b6] text-white rounded-xl text-sm font-bold hover:bg-[#03045e] transition-colors shadow-lg shadow-[#0077b6]/20"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-6 py-2.5 bg-[#0077b6] text-white rounded-xl text-sm font-bold hover:bg-[#03045e] transition-colors shadow-lg shadow-[#0077b6]/20"
           >
             <Plus size={18} />
             Create Leave Type
@@ -236,7 +236,7 @@ const LeavePortfolioPage = () => {
                 >
                   <td className="py-4 px-6">
                     <p className="text-sm font-black text-[#03045e]">{p.leaveTypeName}</p>
-                    <p className="text-xs text-gray-500 font-medium truncate max-w-[200px]">{p.description}</p>
+                    <p className="text-xs text-gray-500 font-medium truncate w-full flex-1 min-w-0 md:max-w-[200px]">{p.description}</p>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex gap-1 flex-wrap">
@@ -318,7 +318,7 @@ const LeavePortfolioPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h2 className="text-xl font-black text-[#03045e]">
@@ -356,7 +356,7 @@ const LeavePortfolioPage = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Default Allocation (Days) *</label>
                       <input
@@ -384,7 +384,7 @@ const LeavePortfolioPage = () => {
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Applicable To *</label>
                     <div className="flex flex-wrap gap-3">
                       {LEAVE_APPLICABLE_TYPES.map(type => (
-                        <label key={type} className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                        <label key={type} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
                           <input 
                             type="checkbox" 
                             checked={formData.applicableTo.includes(type)}
@@ -398,7 +398,7 @@ const LeavePortfolioPage = () => {
                   </div>
                   
                   {!editingPortfolio && (
-                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 rounded-xl border border-gray-100 mt-4">
+                    <label className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 cursor-pointer p-4 bg-gray-50 rounded-xl border border-gray-100 mt-4">
                       <input 
                         type="checkbox" 
                         checked={formData.isActive}
@@ -443,7 +443,7 @@ const LeavePortfolioPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+              className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden flex flex-col"
             >
               <div className="p-6 border-b border-gray-100 relative bg-gradient-to-br from-blue-50 to-white">
                 <button 
@@ -456,7 +456,7 @@ const LeavePortfolioPage = () => {
                   <Library size={28} />
                 </div>
                 <h2 className="text-2xl font-black text-[#03045e] mb-1">{activePortfolio.leaveTypeName}</h2>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <span className="text-xs font-mono text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100">{activePortfolio.leaveTypeId}</span>
                   {activePortfolio.isSystemDefined && (
                     <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded">System Data</span>
@@ -472,7 +472,7 @@ const LeavePortfolioPage = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Clock size={12}/> Default Allocation</p>
                     <p className="text-xl font-black text-[#03045e]">{activePortfolio.defaultAllocation} <span className="text-sm text-gray-500 font-bold">Days</span></p>
@@ -496,7 +496,7 @@ const LeavePortfolioPage = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
+                <div className="pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Created Date</p>
                     <p className="text-xs font-bold text-gray-600">{formatDate(activePortfolio.createdAt)}</p>

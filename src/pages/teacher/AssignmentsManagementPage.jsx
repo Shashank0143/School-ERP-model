@@ -25,6 +25,8 @@ import {
   Trash2, 
   CheckCircle,
   FileCheck,
+  FileText,
+  Download,
   AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -373,34 +375,36 @@ const AssignmentsManagementPage = () => {
                     </span>
                   </div>
                   {selectedAssignment.attachment && (
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-black text-gray-400 uppercase tracking-widest text-[9px]">Attachment</span>
-                      {typeof selectedAssignment.attachment === "string" ? (
-                        <a 
-                          href={selectedAssignment.attachment} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="text-blue-500 font-black hover:underline inline-flex items-center gap-1"
-                        >
-                          Material URL
-                          <ChevronRight size={12} />
-                        </a>
-                      ) : (
-                        <a 
-                          href={selectedAssignment.attachment.data} 
-                          download={selectedAssignment.attachment.fileName}
-                          className="text-blue-500 font-black hover:underline inline-flex items-center gap-1"
-                        >
-                          {selectedAssignment.attachment.fileName}
-                          <ChevronRight size={12} />
-                        </a>
-                      )}
+                    <div className="pt-2">
+                      <span className="font-black text-gray-400 uppercase tracking-widest text-[9px] mb-2 block">Attachment</span>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-150 rounded-xl w-full">
+                         <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                           <FileText size={16} />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className="text-xs font-black text-[#03045e] truncate block w-full">
+                             {typeof selectedAssignment.attachment === "string" ? "Material Link" : selectedAssignment.attachment.fileName}
+                           </p>
+                           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                             {typeof selectedAssignment.attachment === "string" ? "External Resource" : "Uploaded File"}
+                           </p>
+                         </div>
+                         <a 
+                           href={typeof selectedAssignment.attachment === "string" ? selectedAssignment.attachment : selectedAssignment.attachment.data} 
+                           download={typeof selectedAssignment.attachment === "string" ? undefined : selectedAssignment.attachment.fileName}
+                           target="_blank"
+                           rel="noreferrer"
+                           className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-[#03045e] hover:bg-[#03045e] hover:text-white transition-colors shrink-0"
+                         >
+                           <Download size={14} />
+                         </a>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Edit / Delete Buttons */}
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-gray-100">
                   <button
                     onClick={() => {
                       setAssignmentToEdit(selectedAssignment);

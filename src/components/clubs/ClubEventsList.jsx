@@ -58,7 +58,7 @@ export default function ClubEventsList({ events = [], onOpenScheduleModal, onOpe
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-50/50 mt-2 text-[10px] font-bold text-gray-500">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 pt-2 border-t border-gray-50/50 mt-2 text-[10px] font-bold text-gray-500">
                 <div className="flex items-center gap-1 truncate">
                   <Calendar size={12} className="text-gray-400" />
                   <span className="truncate">{evt.date}</span>

@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Mail, MessageSquare, Radio, Bell, Users, Search, Plus, Eye,
@@ -158,16 +159,20 @@ const Toast = ({ message, onClose }) => (
 // ─── Main Page Component ──────────────────────────────────────────────────────
 
 const CommunicationCenterPage = () => {
+  const location = useLocation();
+
   // Composer state
   const [activeChannel, setActiveChannel]             = useState("email");
-  const [audienceObj, setAudienceObj]                 = useState({
-    groups: [], classes: [], sections: [], streams: [], teacherTypes: [], subjects: [], studentIds: [], employeeIds: []
-  });
-  const [subject, setSubject]                         = useState("");
-  const [messageBody, setMessageBody]                 = useState("");
-  const [priority, setPriority]                       = useState("normal");
+  const [audienceObj, setAudienceObj]                 = useState(
+    location.state?.audienceObj || {
+      groups: [], classes: [], sections: [], streams: [], teacherTypes: [], subjects: [], studentIds: [], employeeIds: []
+    }
+  );
+  const [subject, setSubject]                         = useState(location.state?.campaignConfig?.subject || "");
+  const [messageBody, setMessageBody]                 = useState(location.state?.campaignConfig?.messageBody || "");
+  const [priority, setPriority]                       = useState(location.state?.campaignConfig?.priority || "normal");
   const [sendTiming, setSendTiming]                   = useState("now");
-  const [deliveryChannels, setDeliveryChannels]       = useState(["email"]);
+  const [deliveryChannels, setDeliveryChannels]       = useState(location.state?.campaignConfig?.deliveryChannels || ["email"]);
 
   // History state
   const [campaigns, setCampaigns]   = useState(MOCK_CAMPAIGNS);
@@ -341,7 +346,7 @@ const CommunicationCenterPage = () => {
 
           {/* ══ COMPOSER ══════════════════════════════════════════════════ */}
           {activeSection === "composer" && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-[95vw] md:w-[90vw] lg:max-w-5xl mx-auto space-y-6">
 
               {/* Audience groups */}
               <MainCard className="p-5 border border-[#caf0f8]/60">
@@ -368,7 +373,7 @@ const CommunicationCenterPage = () => {
                 {/* Priority */}
                 <MainCard className="p-5 border border-[#caf0f8]/60">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Priority Level</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {PRIORITIES.map(({ value, label, cls }) => (
                       <button
                         key={value}
@@ -387,7 +392,7 @@ const CommunicationCenterPage = () => {
                 {/* Delivery channels */}
                 <MainCard className="p-5 border border-[#caf0f8]/60">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Delivery Channels</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[
                       { id: "portal",   label: "Portal Notification", icon: Bell         },
                       { id: "email",    label: "Email",               icon: Mail         },
@@ -692,7 +697,7 @@ const CommunicationCenterPage = () => {
               initial={{ opacity: 0, scale: 0.94, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8"
+              className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-[95vw] md:w-[90vw] lg:max-w-lg w-full p-8"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>

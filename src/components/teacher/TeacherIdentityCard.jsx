@@ -65,7 +65,7 @@ export default function TeacherIdentityCard({ identity }) {
         </div>
 
         {/* Right: Quick metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 bg-slate-900/50 p-4 rounded-2xl border border-indigo-500/10 backdrop-blur-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 bg-slate-900/50 p-4 rounded-2xl border border-indigo-500/10 backdrop-blur-sm">
           
           {isClassTeacher ? (
             <>

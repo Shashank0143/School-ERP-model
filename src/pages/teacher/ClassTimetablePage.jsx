@@ -146,7 +146,7 @@ const ClassTimetablePage = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100/50 text-[10px] font-bold text-gray-400">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-3 border-t border-gray-100/50 text-[10px] font-bold text-gray-400">
                       <div className="flex items-center gap-1.5 truncate">
                         <Clock size={12} className="text-blue-400" />
                         <span className="truncate">{item.time}</span>

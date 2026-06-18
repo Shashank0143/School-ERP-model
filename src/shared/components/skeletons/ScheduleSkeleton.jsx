@@ -11,7 +11,7 @@ const ScheduleSkeleton = () => {
         </div>
         <div className="h-8 w-24 bg-gray-200 rounded-xl" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex gap-4 p-4 border border-gray-50 rounded-2xl bg-gray-50/50">
             <div className="w-12 h-12 bg-gray-200 rounded-xl" />

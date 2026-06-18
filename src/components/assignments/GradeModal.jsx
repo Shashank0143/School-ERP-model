@@ -61,7 +61,7 @@ const GradeModal = ({ isOpen, onClose, submission, totalMarks, assignmentId, onG
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl relative overflow-hidden"
+          className="bg-white rounded-[2.5rem] w-full w-[95vw] md:w-[90vw] lg:max-w-xl shadow-2xl relative overflow-hidden"
         >
           {/* Header Panel */}
           <div className="p-6 bg-gradient-to-r from-[#03045e] to-[#0077b6] text-white flex justify-between items-start">

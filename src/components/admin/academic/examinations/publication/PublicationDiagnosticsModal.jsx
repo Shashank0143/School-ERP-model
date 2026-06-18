@@ -14,7 +14,7 @@ export default function PublicationDiagnosticsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4">
-      <div className="w-full max-w-2xl bg-white rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative animate-scale-in">
+      <div className="w-full w-[95vw] md:w-[90vw] lg:max-w-2xl bg-white rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative animate-scale-in">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-xl text-gray-400 hover:bg-slate-50 transition-colors"

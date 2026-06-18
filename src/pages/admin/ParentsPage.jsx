@@ -201,7 +201,7 @@ const ParentsPage = () => {
         description="Monitor parental linkages, verify emergency contact information, and audit multi-child configurations."
         breadcrumbs={["Admin Portal", "User Management", "Parents"]}
         actionButton={
-          <button className="flex items-center gap-2 bg-[#0077b6] hover:bg-[#0096c7] text-white px-5 py-2.5 rounded-2xl shadow-sm text-xs font-black transition-colors">
+          <button className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#0077b6] hover:bg-[#0096c7] text-white px-5 py-2.5 rounded-2xl shadow-sm text-xs font-black transition-colors">
             <UserPlus size={16} />
             <span>MAP NEW PARENT</span>
           </button>
@@ -209,7 +209,7 @@ const ParentsPage = () => {
       />
 
       {/* Stats Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <AdminStatCard
           title="Enrolled Students"
           value={students.length.toString()}
@@ -251,7 +251,7 @@ const ParentsPage = () => {
           onSearchChange={setSearchTerm}
           placeholder="Search by Adm No., student name, parent, contact..."
           additionalControls={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {/* Grade Filter */}
               <select
                 value={selectedGrade}

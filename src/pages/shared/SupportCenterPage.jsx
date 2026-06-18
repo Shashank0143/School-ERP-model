@@ -199,7 +199,7 @@ export default function SupportCenterPage() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 bg-[#0077b6] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#0077b6] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20"
         >
           <Plus size={18} />
           Create Request
@@ -207,7 +207,7 @@ export default function SupportCenterPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
         <MainCard className="p-5 border-l-4 border-[#03045e]">
           <div className="flex justify-between items-start">
             <div>
@@ -261,7 +261,7 @@ export default function SupportCenterPage() {
       <MainCard className="overflow-hidden flex flex-col min-h-[500px]">
         {/* Filters */}
         <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="flex items-center gap-2 text-[#03045e] font-bold text-sm w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-[#03045e] font-bold text-sm w-full md:w-auto">
             <Filter size={18} />
             <span>Filters:</span>
           </div>
@@ -309,59 +309,61 @@ export default function SupportCenterPage() {
               <p className="text-sm">Try adjusting your filters or create a new request.</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/80 border-b border-gray-100">
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Request ID</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-bold font-mono text-gray-500">{req.id}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-[#03045e]">{req.category}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-bold text-gray-900 max-w-[250px] truncate">{req.title}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border ${getPriorityColor(req.priority)}`}>
-                        {req.priority}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-600">
-                        {new Date(req.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(req.status)}`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setViewRequest(req)}
-                        className="w-8 h-8 rounded-lg bg-blue-50 text-[#0077b6] flex items-center justify-center ml-auto hover:bg-[#0077b6] hover:text-white transition-colors"
-                      >
-                        <Eye size={16} />
-                      </motion.button>
-                    </td>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[800px] text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/80 border-b border-gray-100">
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Request ID</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Priority</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredRequests.map((req) => (
+                    <tr key={req.id} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-bold font-mono text-gray-500">{req.id}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-[#03045e]">{req.category}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-gray-900 w-full flex-1 min-w-0 md:max-w-[250px] truncate">{req.title}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border ${getPriorityColor(req.priority)}`}>
+                          {req.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-600">
+                          {new Date(req.createdAt).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(req.status)}`}>
+                          {req.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setViewRequest(req)}
+                          className="w-8 h-8 rounded-lg bg-blue-50 text-[#0077b6] flex items-center justify-center ml-auto hover:bg-[#0077b6] hover:text-white transition-colors"
+                        >
+                          <Eye size={16} />
+                        </motion.button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </MainCard>
@@ -381,7 +383,7 @@ export default function SupportCenterPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden"
+              className="relative bg-white w-full w-[95vw] md:w-[90vw] lg:max-w-xl rounded-3xl shadow-2xl overflow-hidden"
             >
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                 <h3 className="text-lg font-black text-[#03045e] flex items-center gap-2">
@@ -397,7 +399,7 @@ export default function SupportCenterPage() {
               </div>
 
               <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Category <span className="text-rose-500">*</span></label>
                     <select
@@ -438,7 +440,7 @@ export default function SupportCenterPage() {
                     <h4 className="text-xs font-black text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
                       <AlertCircle size={14} /> Complaint Details
                     </h4>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-rose-600">Complaint Against Type</label>
                         <select
@@ -477,7 +479,7 @@ export default function SupportCenterPage() {
                 </div>
 
                 {(formData.category === "Complaint" || formData.category === "Feedback") && (
-                  <label className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                  <label className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.anonymous}
@@ -529,10 +531,10 @@ export default function SupportCenterPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden"
+              className="relative bg-white w-full w-[95vw] md:w-[90vw] lg:max-w-2xl rounded-3xl shadow-2xl overflow-hidden"
             >
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
                     <LifeBuoy size={20} />
                   </div>
@@ -574,7 +576,7 @@ export default function SupportCenterPage() {
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
                       <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Requester</p>
                       {viewRequest.anonymous && (viewRequest.category === "Complaint" || viewRequest.category === "Feedback") ? (

@@ -239,7 +239,7 @@ function OverrideFormModal({ override, classes, teachers, onClose, onSave }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="bg-[#03045e] px-6 py-5 flex items-start justify-between flex-shrink-0">
@@ -325,7 +325,7 @@ function OverrideFormModal({ override, classes, teachers, onClose, onSave }) {
                   ? "Select Grades"
                   : "Select Classes"}
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-[#caf0f8] rounded-2xl bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-[#caf0f8] rounded-2xl bg-gray-50">
                 {(formData.targetScope === "grade"
                   ? [...new Set(classes.map((c) => c.level || c.grade))]
                   : classes
@@ -361,7 +361,7 @@ function OverrideFormModal({ override, classes, teachers, onClose, onSave }) {
           )}
 
           {/* Date Range */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5">
                 Start Date

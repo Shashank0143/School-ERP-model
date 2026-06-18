@@ -153,6 +153,7 @@ const ClassesPage = () => {
         allAttendance,
         allExams,
         allResults,
+        allTimetables,
       ] = await Promise.all([
         provider.getClasses(),
         provider.getTeachers(),
@@ -962,7 +963,7 @@ const ClassesPage = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-md mx-4 overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#caf0f8]/60">

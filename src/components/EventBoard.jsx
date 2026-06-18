@@ -228,7 +228,7 @@ function EventBoard({ happenings = [], upcoming = [], index = 0 }) {
                 </p>
               ) : (
                 <div
-                  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 sm:grid-cols-2 gap-4"
                   aria-label="Event list"
                 >
                   {activeData.map((event, i) => (

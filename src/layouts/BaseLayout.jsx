@@ -87,10 +87,8 @@ const BaseLayout = React.memo(({ children, navItems = [], activePage, setActiveP
         onCollapse={setSidebarCollapsed}
       />
 
-      <motion.div
-        animate={{ marginLeft: window.innerWidth < 768 ? 0 : (sidebarCollapsed ? 64 : 240) }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex-1 flex flex-col min-w-0"
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ml-0 md:ml-16 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-60"}`}
       >
         <Header
           student={user}
@@ -100,10 +98,10 @@ const BaseLayout = React.memo(({ children, navItems = [], activePage, setActiveP
           onNavigatePage={handleHeaderNavigate}
         />
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-4 md:py-6 lg:py-8 w-full max-w-full">
           {children || <Outlet />}
         </main>
-      </motion.div>
+      </div>
 
       {/* Premium Profile Switching Overlay Loader */}
       <AnimatePresence>

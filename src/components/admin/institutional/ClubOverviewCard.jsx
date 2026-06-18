@@ -25,7 +25,7 @@ const ClubOverviewCard = ({
 
       <div>
         <h4 className="text-xs font-black text-[#03045e] uppercase tracking-wider">Activity Club</h4>
-        <h3 className="text-sm font-black text-gray-800 tracking-tight mt-1 truncate max-w-[150px]">
+        <h3 className="text-sm font-black text-gray-800 tracking-tight mt-1 truncate w-full flex-1 min-w-0 md:max-w-[150px]">
           {name}
         </h3>
         

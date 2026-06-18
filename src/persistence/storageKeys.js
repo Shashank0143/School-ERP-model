@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   AUTH_USERS: "erp_authUsers",
   EMPLOYEES: "erp_employees",
   APPROVAL_SETTINGS: "erp_approvalSettings",
+  INSTITUTION_SETTINGS: "erp_institutionSettings",
   CLASSES: "erp_classes",
   SUBJECTS: "erp_subjects",
   STREAMS: "erp_streams",

@@ -277,7 +277,7 @@ const MarksExamsPage = () => {
 
       {/* Filters */}
       <MainCard className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Class Selector */}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">

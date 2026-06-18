@@ -19,7 +19,7 @@ const AcademicTable = ({
       {isEmpty || items.length === 0 ? (
         <AdminEmptyState title={emptyTitle} description={emptyDescription} />
       ) : (
-        <table className="w-full text-left border-collapse min-w-[700px]">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-[#caf0f8] text-[10px] uppercase font-black tracking-wider text-gray-400">
               {headers.map((h, idx) => (

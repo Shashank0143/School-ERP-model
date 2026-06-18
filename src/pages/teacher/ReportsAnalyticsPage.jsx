@@ -217,7 +217,7 @@ const ReportsAnalyticsPage = () => {
           className="space-y-8"
         >
           {/* ── KPI Cards Row ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {kpiCards.map((card, idx) => {
               const Icon = card.icon;
               return (
@@ -252,7 +252,7 @@ const ReportsAnalyticsPage = () => {
           </div>
 
           {/* ── Detailed Breakdowns ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
 
             {/* Assignments Breakdown */}
             <MainCard className="p-6 space-y-4">

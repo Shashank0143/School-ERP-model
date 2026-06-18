@@ -253,7 +253,7 @@ const OngoingOperationsDashboard = ({
       {/* Top Operations Quick Metrics & Timeline Bar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Quick Info Grid */}
-        <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-6">
           <MainCard className="p-4 flex flex-col justify-between border-l-4 border-rose-500">
             <div className="space-y-0.5">
               <span className="text-[9px] uppercase font-bold text-gray-400">Total Infractions</span>

@@ -157,7 +157,7 @@ export default function SupportManagementPage() {
           </p>
         </div>
         {handler && (
-          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#03045e] font-bold">
               {handler.name.charAt(0)}
             </div>
@@ -173,7 +173,7 @@ export default function SupportManagementPage() {
       {/* Insights Section */}
       <div className="space-y-4">
         {/* Row 1: Workflow Status */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <MainCard className="p-4 border-l-4 border-[#03045e]">
             <div className="flex justify-between items-center">
               <div>
@@ -236,7 +236,7 @@ export default function SupportManagementPage() {
         </div>
 
         {/* Row 2: Categories */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <MainCard className="p-4 border border-gray-100 bg-gray-50/50">
             <div className="flex justify-between items-center">
               <div>
@@ -283,7 +283,7 @@ export default function SupportManagementPage() {
       <MainCard className="overflow-hidden flex flex-col min-h-[500px]">
         {/* Filters */}
         <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col lg:flex-row gap-4 justify-between items-center">
-          <div className="flex items-center gap-2 text-[#03045e] font-bold text-sm w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-[#03045e] font-bold text-sm w-full lg:w-auto">
             <Filter size={18} />
             <span>Filters:</span>
           </div>
@@ -340,68 +340,70 @@ export default function SupportManagementPage() {
               <p className="text-sm">Try adjusting your filters.</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/80 border-b border-gray-100">
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Request ID</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Requester</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-bold font-mono text-gray-500">{req.id}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900">{formatRequesterDisplay(req)}</span>
-                        {formatRequesterDisplay(req) !== "Anonymous Submission" && (
-                          <span className="text-[10px] font-bold text-gray-500 uppercase mt-0.5">{req.requesterType}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-[#03045e]">{req.category}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-bold text-gray-900 max-w-[200px] truncate">{req.title}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border ${getPriorityColor(req.priority)}`}>
-                        {req.priority}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusColor(req.status)}`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-600">
-                        {new Date(req.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setViewRequest(req)}
-                        className="w-8 h-8 rounded-lg bg-blue-50 text-[#0077b6] flex items-center justify-center ml-auto hover:bg-[#0077b6] hover:text-white transition-colors"
-                      >
-                        <Eye size={16} />
-                      </motion.button>
-                    </td>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[800px] text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/80 border-b border-gray-100">
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Request ID</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Requester</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Priority</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredRequests.map((req) => (
+                    <tr key={req.id} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-bold font-mono text-gray-500">{req.id}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-900">{formatRequesterDisplay(req)}</span>
+                          {formatRequesterDisplay(req) !== "Anonymous Submission" && (
+                            <span className="text-[10px] font-bold text-gray-500 uppercase mt-0.5">{req.requesterType}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-[#03045e]">{req.category}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-gray-900 w-full flex-1 min-w-0 md:max-w-[200px] truncate">{req.title}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border ${getPriorityColor(req.priority)}`}>
+                          {req.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusColor(req.status)}`}>
+                          {req.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-600">
+                          {new Date(req.createdAt).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setViewRequest(req)}
+                          className="w-8 h-8 rounded-lg bg-blue-50 text-[#0077b6] flex items-center justify-center ml-auto hover:bg-[#0077b6] hover:text-white transition-colors"
+                        >
+                          <Eye size={16} />
+                        </motion.button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </MainCard>
@@ -421,10 +423,10 @@ export default function SupportManagementPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="relative bg-white w-full w-[95vw] md:w-[90vw] lg:max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
                     <LifeBuoy size={20} />
                   </div>
@@ -433,7 +435,7 @@ export default function SupportManagementPage() {
                     <p className="text-xs font-mono text-gray-500">{viewRequest.id}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   {/* Status Dropdown */}
                   <select
                     value={viewRequest.status}
@@ -459,7 +461,7 @@ export default function SupportManagementPage() {
                 <div className="md:col-span-2 space-y-6">
                   {/* Request Header */}
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-2">
                       <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border ${getPriorityColor(viewRequest.priority)}`}>
                         {viewRequest.priority} Priority
                       </span>
@@ -479,11 +481,11 @@ export default function SupportManagementPage() {
                   {/* Complaint Specific Info */}
                   {viewRequest.category === "Complaint" && viewRequest.complaintAgainstType && (
                     <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-2">
                         <AlertCircle size={16} className="text-rose-500" />
                         <h5 className="text-xs font-black text-rose-700 uppercase tracking-wider">Complaint Information</h5>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 mt-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                         <div>
                           <p className="text-[10px] font-bold text-rose-400 uppercase">Against Type</p>
                           <p className="font-bold text-rose-900">{viewRequest.complaintAgainstType}</p>
@@ -538,7 +540,7 @@ export default function SupportManagementPage() {
                   <div className="p-5 rounded-2xl bg-[#caf0f8]/30 border border-[#90e0ef]/30">
                     <p className="text-[10px] font-black text-[#0077b6] uppercase tracking-wider mb-3">Requester Profile</p>
                     {formatRequesterDisplay(viewRequest) === "Anonymous Submission" ? (
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
                           <Eye size={20} className="opacity-50" />
                         </div>
@@ -548,7 +550,7 @@ export default function SupportManagementPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-[#0077b6] text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/20">
                           {viewRequest.requesterName?.charAt(0) || "?"}
                         </div>

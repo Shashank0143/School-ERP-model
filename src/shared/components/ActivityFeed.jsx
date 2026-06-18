@@ -8,7 +8,7 @@ const ActivityFeed = ({ activities = [], maxItems = 10, className = "" }) => {
         <h3 className="text-sm font-black text-[#03045e] uppercase tracking-wider mb-4">
           Recent Activity
         </h3>
-        <p className="text-xs text-gray-500 font-semibold text-center py-6">
+        <p className="text-[11px] sm:text-xs text-gray-500 font-semibold text-center py-6">
           No recent activity
         </p>
       </div>
@@ -61,16 +61,16 @@ const ActivityFeed = ({ activities = [], maxItems = 10, className = "" }) => {
           return (
             <div
               key={index}
-              className="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0"
+              className="flex items-start gap-4 sm:p-5 pb-3 border-b border-slate-100 last:border-0 last:pb-0"
             >
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#caf0f8] flex items-center justify-center">
                 <Icon size={14} className="text-[#0077b6]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-700 font-semibold leading-tight">
+                <p className="text-[11px] sm:text-xs text-gray-700 font-semibold leading-tight">
                   {activity.description}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-3 mt-1">
                   <Clock size={10} className="text-gray-400" />
                   <span className="text-[10px] text-gray-400 font-medium">
                     {formatTime(activity.timestamp)}

@@ -26,7 +26,7 @@ const ConfirmationModal = ({
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+            className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl w-full w-[95vw] md:w-[90vw] lg:max-w-md overflow-hidden"
           >
             {/* Header */}
             <div className="bg-[#03045e] px-6 py-5 flex items-start justify-between">
@@ -36,12 +36,6 @@ const ConfirmationModal = ({
                 </div>
                 <h3 className="text-base font-black text-white">{title}</h3>
               </div>
-              <button
-                onClick={onCancel}
-                className="p-2 rounded-xl hover:bg-white/10 text-white/70 hover:text-white transition-colors"
-              >
-                <X size={18} />
-              </button>
             </div>
 
             {/* Body */}

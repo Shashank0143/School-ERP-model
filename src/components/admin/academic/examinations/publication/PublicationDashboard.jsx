@@ -139,7 +139,7 @@ export default function PublicationDashboard({
 
       <div className="bg-white p-6 rounded-3xl border border-[#caf0f8]/50 shadow-sm animate-fade-in">
         {activeSubTab === "overview" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <div>
                 <h4 className="text-xs font-black text-[#03045e] uppercase tracking-wider">
@@ -150,7 +150,7 @@ export default function PublicationDashboard({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl border border-gray-100 space-y-1.5 shadow-sm bg-slate-50/20">
                   <strong className="text-[10px] font-black text-[#03045e] uppercase tracking-wider block">
                     Diagnostic Errors

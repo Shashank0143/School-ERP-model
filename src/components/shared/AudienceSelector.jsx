@@ -345,7 +345,7 @@ const AudienceSelector = ({ value, onChange }) => {
 
           {/* DIRECT TARGETING */}
           {activeTab === "direct" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
               <SearchSelect 
                 label="Target Students"
                 placeholder="Search name or adm no..."

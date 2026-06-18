@@ -142,7 +142,7 @@ export default function ActivityParticipantsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
         
         {/* Header */}
         <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
@@ -256,7 +256,7 @@ export default function ActivityParticipantsModal({
                     No participants marked yet.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 gap-2">
                     {alreadyMarkedList.map(p => (
                       <div key={p.participationId} className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-100 bg-emerald-50/30 group">
                         <div>

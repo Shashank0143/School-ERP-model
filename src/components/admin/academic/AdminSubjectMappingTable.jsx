@@ -485,7 +485,7 @@ const AdminSubjectMappingTable = ({ selectedClass, subjects, teachers, refreshDa
       {/* Modals from AcademicStructurePage */}
       {changeTeacherModalOpen && selectedAssignment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-md mx-4 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#caf0f8]/60">
               <div>
                 <h3 className="text-sm font-black text-[#03045e]">Change Subject Teacher</h3>
@@ -544,7 +544,7 @@ const AdminSubjectMappingTable = ({ selectedClass, subjects, teachers, refreshDa
 
       {addSubjectModalOpen && selectedClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-md mx-4 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#caf0f8]/60">
               <div>
                 <h3 className="text-sm font-black text-[#03045e]">Add Subject</h3>
@@ -613,7 +613,7 @@ const AdminSubjectMappingTable = ({ selectedClass, subjects, teachers, refreshDa
 
       {deleteConfirmOpen && assignmentToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
             <div className="px-6 py-4 border-b border-[#caf0f8]/60"><h3 className="text-sm font-black text-rose-600">Remove Subject?</h3></div>
             <div className="px-6 py-4">
               <p className="text-xs text-gray-600 mb-2">Are you sure you want to remove <span className="font-bold text-[#03045e]">{assignmentToDelete.subjectName}</span> taught by <span className="font-bold text-[#03045e]">{assignmentToDelete.teacherName}</span>?</p>
