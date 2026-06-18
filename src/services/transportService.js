@@ -130,23 +130,24 @@ export const getTransportSummary = async (studentId) => {
   if (!assignment) return null;
 
   const route = await provider.getTransportRouteById(
-    assignment.assignedRouteId,
+    assignment.assignedRouteId || assignment.routeId,
   );
   const vehicle = await provider.getTransportVehicleById(
-    assignment.assignedVehicleId,
+    assignment.assignedVehicleId || assignment.vehicleId,
   );
 
   const activeDirection = route?.activeDirection || "PICKUP_ROUTE";
-  const pickupStopObj = (route?.stops || []).find(
+  const stopsList = route ? await provider.getTransportStopsByRoute(route.id) : [];
+  
+  const pickupStopObj = stopsList.find(
     (st) => st.stopId === assignment.pickupStopId,
   );
-  const dropStopObj = (route?.stops || []).find(
+  const dropStopObj = stopsList.find(
     (st) => st.stopId === assignment.dropStopId,
   );
 
   // Derive nextStop based on activeDirection
   let nextStop = "Main Gate";
-  const stopsList = route?.stops || [];
   if (activeDirection === "DROP_ROUTE") {
     // School is the origin; nextStop is the first student drop stop
     const dropStopsOnly = stopsList.filter((st) => !st.isSchool).reverse();
@@ -217,7 +218,7 @@ export const getRouteTimeline = async (studentIdOrRouteId, studentId = null) => 
   
   const assignment = await provider.getTransportAssignmentByStudent(targetStudentId);
   if (assignment) {
-    route = await provider.getTransportRouteById(assignment.assignedRouteId);
+    route = await provider.getTransportRouteById(assignment.assignedRouteId || assignment.routeId);
   } else {
     route = await provider.getTransportRouteById(studentIdOrRouteId);
   }
@@ -225,7 +226,7 @@ export const getRouteTimeline = async (studentIdOrRouteId, studentId = null) => 
   if (!route) return [];
 
   const activeDirection = route?.activeDirection || "PICKUP_ROUTE";
-  const stops = route?.stops || [];
+  const stops = await provider.getTransportStopsByRoute(route.id);
   let timeline = [];
 
   if (activeDirection === "DROP_ROUTE") {
