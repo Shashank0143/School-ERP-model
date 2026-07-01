@@ -30,6 +30,8 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useStudent } from "../../context/StudentContext";
 import { useAuth } from "../../context/AuthContext";
 import ChildScopeSwitcher from "../../components/parent/ChildScopeSwitcher";
+import { IDCard } from "../../components/common/id-card";
+import IDCardPreviewModal from "../../components/common/id-card/IDCardPreviewModal";
 
 // ── Reusable UI Components ──────────────────────────────────────────────────
 
@@ -97,6 +99,25 @@ const StudentProfilePage = ({ onNavigatePage }) => {
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [showHelper, setShowHelper] = useState(false);
+  const [idCardModalOpen, setIdCardModalOpen] = useState(false);
+
+  const idCardData = React.useMemo(() => {
+    if (!data) return {};
+    return {
+      name: data.personal?.fullName,
+      photo: data.personal?.avatarUrl || data.personal?.photo || null,
+      id: data.personal?.admissionNumber || data.personal?.studentId,
+      class: data.academic?.class,
+      section: data.academic?.section,
+      role: "Student",
+      bloodGroup: data.health?.bloodGroup || data.personal?.bloodGroup,
+      address: data.contact?.address?.permanent || data.personal?.address,
+      emergencyContact: data.contact?.emergency?.phone || data.family?.father?.phoneNumber,
+      parentName: data.family?.father?.name !== "N/A" ? data.family?.father?.name : data.family?.mother?.name,
+      status: data.personal?.status || "Active",
+      schoolName: "EduDash Academy"
+    };
+  }, [data]);
 
   React.useEffect(() => {
     const fetchProfile = async () => {
@@ -210,9 +231,12 @@ const StudentProfilePage = ({ onNavigatePage }) => {
 
             {/* Right Side: Quick Actions */}
             <div className="flex items-center gap-3 w-full md:w-auto">
-               <button className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-[#03045e] text-white hover:bg-[#0077b6] transition-all shadow-lg shadow-[#03045e]/20 group">
-                  <Download size={18} />
-                  <span className="text-[11px] font-black uppercase tracking-widest">ID Card</span>
+               <button 
+                  onClick={() => setIdCardModalOpen(true)}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-[#03045e] text-white hover:bg-[#0077b6] transition-all shadow-lg shadow-[#03045e]/20 group"
+               >
+                  <Contact size={18} />
+                  <span className="text-[11px] font-black uppercase tracking-widest">View ID Card</span>
                </button>
                <button className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-white border border-gray-100 text-[#03045e] hover:border-[#00b4d8] hover:text-[#00b4d8] transition-all shadow-sm group">
                   <Edit3 size={18} />
@@ -476,6 +500,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
               </MainCard>
             </ProfileSection>
 
+
           </div>
         </div>
       </motion.div>
@@ -487,6 +512,14 @@ const StudentProfilePage = ({ onNavigatePage }) => {
         contentEn="The Student Profile section contains all official student information including personal details, academic history, family information, and medical registry."
         contentHi="छात्र प्रोफाइल अनुभाग में व्यक्तिगत विवरण, शैक्षणिक इतिहास, पारिवारिक जानकारी और चिकित्सा रजिस्ट्री सहित सभी आधिकारिक छात्र जानकारी शामिल है।"
       />
+
+      {/* ID Card Modal */}
+      <IDCardPreviewModal 
+        isOpen={idCardModalOpen} 
+        onClose={() => setIdCardModalOpen(false)}
+      >
+        <IDCard variant="student" data={idCardData} />
+      </IDCardPreviewModal>
     </>
   );
 };

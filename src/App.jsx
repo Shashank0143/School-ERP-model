@@ -31,6 +31,8 @@ import ChildScopeSwitcher from "./components/parent/ChildScopeSwitcher";
 import ErrorBoundary from "./components/ErrorBoundary";
 import MainCard from "./components/MainCard";
 import { Users, ShieldCheck } from "lucide-react";
+import "./modules/academic/index.js";
+
 // Lazy Loaded Pages
 const CoursesPage = lazy(() => import("./pages/shared/CoursesPage"));
 const FacultyPage = lazy(() => import("./pages/shared/FacultyPage"));
@@ -111,7 +113,6 @@ const NoticesPage = lazy(() => import("./pages/admin/NoticesPage"));
 const AdminAnnouncementsPage = lazy(
   () => import("./pages/admin/AnnouncementsPage"),
 );
-const AdminClubsPage = lazy(() => import("./pages/admin/ClubsPage"));
 const AdminClubManagementPage = lazy(() => import("./pages/admin/ClubManagementCenterPage"));
 const AdminCommitteesPage = lazy(() => import("./pages/admin/CommitteesPage"));
 const AdminAchievementsPage = lazy(
@@ -130,6 +131,7 @@ const InstitutionalPlanningPage = lazy(
   () => import("./pages/admin/InstitutionalPlanningPage"),
 );
 const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
+const StaffWorkspaceLayout = lazy(() => import("./layouts/StaffWorkspaceLayout"));
 const SupportManagementPage = lazy(() => import("./pages/admin/SupportManagementPage"));
 const ManageDepartmentsPage = lazy(
   () => import("./pages/admin/ManageDepartmentsPage"),
@@ -959,6 +961,7 @@ function AppContent() {
         />
         <Route path="parents" element={<AdminRouteGuard requiredModule="admin_parents"><LazyRoute Component={ParentsPage} /></AdminRouteGuard>} />
         <Route path="employees" element={<AdminRouteGuard requiredModule="admin_employees"><LazyRoute Component={EmployeeDirectoryPage} /></AdminRouteGuard>} />
+        <Route path="staff/:id/*" element={<AdminRouteGuard requiredModule="admin_employees"><LazyRoute Component={StaffWorkspaceLayout} /></AdminRouteGuard>} />
         <Route path="employee-leaves" element={<AdminRouteGuard requiredModule="admin_employee_leaves"><LazyRoute Component={EmployeeLeavePage} /></AdminRouteGuard>} />
         <Route path="classes" element={<AdminRouteGuard requiredModule="admin_classes"><LazyRoute Component={ClassesPage} /></AdminRouteGuard>} />
         <Route
@@ -1006,12 +1009,8 @@ function AppContent() {
           element={<AdminRouteGuard requiredModule="student_duty"><LazyRoute Component={StudentDutyAdminPage} /></AdminRouteGuard>}
         />
         <Route
-          path="clubs"
-          element={<AdminRouteGuard requiredModule="admin_clubs"><LazyRoute Component={AdminClubsPage} /></AdminRouteGuard>}
-        />
-        <Route
           path="club-management"
-          element={<AdminRouteGuard requiredModule="admin_club_management"><LazyRoute Component={AdminClubManagementPage} /></AdminRouteGuard>}
+          element={<AdminRouteGuard requiredModule="admin_clubs"><LazyRoute Component={AdminClubManagementPage} /></AdminRouteGuard>}
         />
         <Route
           path="committees"

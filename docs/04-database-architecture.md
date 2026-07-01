@@ -237,6 +237,11 @@ While the current PostgreSQL setup is perfectly adequate for standard school ope
     *   **Permissions** are granular strings (`"students:create"`, `"attendance:view:own_class"`, `"fees:manage"`).
 *   **Resolution**: Upon login, the API calculates the user's flat array of permissions and embeds it into the JWT payload. The API middleware then simply checks these strings before fulfilling requests, requiring no database hit per API call.
 
+### 21. Identity Card Module (No Persistence)
+*   **Design**: ID Cards are generated dynamically on the client side.
+*   **Database Impact**: ZERO. There are no database entities, tables, or storage associated with ID cards.
+*   **Mechanism**: The ID Card component simply maps existing fields from `core.profiles`, `academic.students`, and `core.employees` into a printable format on demand.
+
 ---
 
 > [!TIP]

@@ -22,10 +22,13 @@ import {
   ClipboardList,
   AlertCircle,
   X,
-  MessageSquare
+  MessageSquare,
+  Printer
 } from "lucide-react";
 import MainCard from "../../components/MainCard";
 import TeacherModuleHeader from "../../components/teacher/TeacherModuleHeader";
+import { IDCard } from "../../components/common/id-card";
+import IDCardPreviewModal from "../../components/common/id-card/IDCardPreviewModal";
 import { useAuth } from "../../context/AuthContext";
 import { getTeacherProfile, updateTeacherProfile } from "../../services/teacherService";
 import { useLanguage } from "../../context/LanguageContext";
@@ -119,9 +122,25 @@ const ProfileSettingsPage = () => {
     subjectSpecialization: ""
   });
 
+  const idCardData = React.useMemo(() => {
+    if (!profileData) return {};
+    return {
+      name: profileData.name,
+      id: profileData.employeeId,
+      designation: profileData.designation,
+      department: profileData.department,
+      role: "Teacher",
+      status: "Active",
+      phone: profileData.phoneNumber,
+      email: profileData.email,
+      schoolName: "EduDash Academy"
+    };
+  }, [profileData]);
+
   // Notifications & Errors
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const [errorMsg, setErrorMsg] = useState("");
+  const [idCardModalOpen, setIdCardModalOpen] = useState(false);
 
   // Load Data Relationally
   const loadProfile = async () => {
@@ -270,13 +289,22 @@ const ProfileSettingsPage = () => {
           {/* Right Side: Quick Actions */}
           <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
             {!isEditing ? (
-              <button 
-                onClick={() => setIsEditing(true)}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-[#03045e] text-white hover:bg-[#0077b6] transition-all shadow-lg shadow-[#03045e]/20 group"
-              >
-                <Edit3 size={18} />
-                <span className="text-[11px] font-black uppercase tracking-widest">{t("profile.updateData", { fallback: "Update Data" })}</span>
-              </button>
+              <>
+                <button 
+                  onClick={() => setIdCardModalOpen(true)}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-[#03045e] text-white hover:bg-[#0077b6] transition-all shadow-lg shadow-[#03045e]/20 group"
+                >
+                  <Contact size={18} />
+                  <span className="text-[11px] font-black uppercase tracking-widest">View ID Card</span>
+                </button>
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-white border border-gray-100 text-[#03045e] hover:border-[#00b4d8] hover:text-[#00b4d8] transition-all shadow-sm group"
+                >
+                  <Edit3 size={18} />
+                  <span className="text-[11px] font-black uppercase tracking-widest">{t("profile.updateData", { fallback: "Update Data" })}</span>
+                </button>
+              </>
             ) : (
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <button 
@@ -593,6 +621,14 @@ const ProfileSettingsPage = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* ID Card Modal */}
+      <IDCardPreviewModal 
+        isOpen={idCardModalOpen} 
+        onClose={() => setIdCardModalOpen(false)}
+      >
+        <IDCard variant="staff" data={idCardData} />
+      </IDCardPreviewModal>
     </div>
   );
 };

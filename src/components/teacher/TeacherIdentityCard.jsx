@@ -1,7 +1,9 @@
-import React from "react";
-import { UserCheck, Users, Calendar, BookOpen, Layers, CheckCircle2, Clock, Landmark } from "lucide-react";
+import React, { useState } from "react";
+import { UserCheck, Users, Calendar, BookOpen, Layers, CheckCircle2, Clock, Landmark, Contact } from "lucide-react";
 import MainCard from "../MainCard";
 import { useLanguage } from "../../context/LanguageContext";
+import { IDCard } from "../common/id-card";
+import IDCardPreviewModal from "../common/id-card/IDCardPreviewModal";
 
 export default function TeacherIdentityCard({ identity }) {
   const { t } = useLanguage();
@@ -21,6 +23,20 @@ export default function TeacherIdentityCard({ identity }) {
     classesAssigned = [],
     lecturesTodayCount
   } = identity;
+
+  const [idCardModalOpen, setIdCardModalOpen] = useState(false);
+
+  const idCardData = React.useMemo(() => {
+    return {
+      name: name,
+      id: identity.id,
+      designation: designation,
+      department: department,
+      role: "Teacher",
+      status: "Active",
+      schoolName: "EduDash Academy"
+    };
+  }, [name, identity.id, designation, department]);
 
   return (
     <MainCard className="p-6 border border-indigo-100 bg-gradient-to-br from-indigo-900 via-slate-950 to-indigo-950 text-white relative overflow-hidden">
@@ -47,6 +63,13 @@ export default function TeacherIdentityCard({ identity }) {
               }`}>
                 {isClassTeacher ? t("teacherDashboard.classTeacher", { fallback: "Class Teacher" }) : t("teacherDashboard.subjectTeacher", { fallback: "Subject Teacher" })}
               </span>
+              <button 
+                onClick={() => setIdCardModalOpen(true)}
+                className="ml-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/40 hover:text-white transition-colors border border-indigo-500/30"
+              >
+                <Contact size={12} />
+                <span className="text-[10px] font-black uppercase tracking-widest">ID Card</span>
+              </button>
             </div>
             <p className="text-xs text-indigo-300 font-bold mt-0.5">{designation} • <span className="text-indigo-200">{department}</span></p>
             
@@ -130,6 +153,14 @@ export default function TeacherIdentityCard({ identity }) {
         </div>
 
       </div>
+
+      {/* ID Card Modal */}
+      <IDCardPreviewModal 
+        isOpen={idCardModalOpen} 
+        onClose={() => setIdCardModalOpen(false)}
+      >
+        <IDCard variant="staff" data={idCardData} />
+      </IDCardPreviewModal>
     </MainCard>
   );
-}
+};

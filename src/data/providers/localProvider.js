@@ -1558,7 +1558,7 @@ const localProvider = {
       departments = [
         { departmentId: "dept-academics", departmentName: "Academic Affairs", departmentHead: "EMP-002", memberIds: [], status: "active", requiredStaff: 12, ownedModules: ["admin_students", "admin_calendar"] },
         { departmentId: "dept-examination", departmentName: "Examination & Evaluation", departmentHead: "EMP-003", memberIds: [], status: "active", requiredStaff: 4, ownedModules: ["admin_question_papers"] },
-        { departmentId: "dept-student-affairs", departmentName: "Student Affairs", departmentHead: null, memberIds: [], status: "active", requiredStaff: 3, ownedModules: ["admin_club_management", "admin_achievements", "student_duty", "admin_attendance"] },
+        { departmentId: "dept-student-affairs", departmentName: "Student Affairs", departmentHead: null, memberIds: [], status: "active", requiredStaff: 3, ownedModules: ["admin_clubs", "admin_achievements", "student_duty", "admin_attendance"] },
         { departmentId: "dept-administration", departmentName: "Administration", departmentHead: "EMP-010", memberIds: [], status: "active", requiredStaff: 8, ownedModules: ["admin_leave_management", "admin_support_management", "admin_documents", "admin_notices"] },
         { departmentId: "dept-finance", departmentName: "Finance & Accounts", departmentHead: "EMP-001", memberIds: [], status: "active", requiredStaff: 5, ownedModules: ["admin_fees"] },
         { departmentId: "dept-transport", departmentName: "Transport Services", departmentHead: "EMP-004", memberIds: [], status: "active", requiredStaff: 15, ownedModules: ["admin_transport"] },

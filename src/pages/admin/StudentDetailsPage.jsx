@@ -20,6 +20,8 @@ import AdminSectionCard from "../../components/admin/AdminSectionCard";
 import AdminEditForm from "../../components/admin/AdminEditForm";
 import ToastNotification from "../../shared/components/ToastNotification";
 import LoadingSkeleton from "../../shared/components/LoadingSkeleton";
+import { IDCard } from "../../components/common/id-card";
+import IDCardPreviewModal from "../../components/common/id-card/IDCardPreviewModal";
 
 // Services
 import { getStudentProfile, updateStudentProfile, getDocuments } from "../../services/studentService";
@@ -40,6 +42,7 @@ const StudentDetailsPage = () => {
 
   
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [idCardModalOpen, setIdCardModalOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   useEffect(() => {
@@ -152,6 +155,21 @@ const StudentDetailsPage = () => {
     motherPhone: profile.family?.mother?.phoneNumber,
   };
 
+  const idCardData = profile ? {
+    name: profile.personal?.fullName,
+    photo: profile.personal?.photo || null,
+    id: profile.personal?.admissionNumber || profile.personal?.studentId,
+    class: profile.academic?.class,
+    section: profile.academic?.section,
+    role: "Student",
+    bloodGroup: profile.personal?.bloodGroup,
+    address: profile.personal?.address || profile.contact?.address?.permanent || profile.contact?.address?.current,
+    emergencyContact: profile.family?.father?.phoneNumber || profile.family?.mother?.phoneNumber,
+    parentName: profile.family?.father?.name !== "N/A" ? profile.family?.father?.name : profile.family?.mother?.name,
+    status: profile.status || "Active",
+    schoolName: "EduDash Academy"
+  } : {};
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -182,6 +200,13 @@ const StudentDetailsPage = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setIdCardModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#03045e] hover:bg-[#020344] text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+          >
+            <User size={14} />
+            View ID Card
+          </button>
           <button 
             onClick={() => setEditModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-[#caf0f8]/50 hover:bg-[#caf0f8] text-[#0077b6] rounded-xl text-xs font-bold transition-colors"
@@ -476,17 +501,27 @@ const StudentDetailsPage = () => {
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         title="Edit Student Details"
-        data={flatProfile}
         fields={studentFields}
+        data={flatProfile}
         onSubmit={handleUpdateProfile}
       />
 
-      <ToastNotification
-        show={toast.show}
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ ...toast, show: false })}
-      />
+      {/* ID Card Modal */}
+      <IDCardPreviewModal 
+        isOpen={idCardModalOpen} 
+        onClose={() => setIdCardModalOpen(false)}
+      >
+        <IDCard variant="student" data={idCardData} />
+      </IDCardPreviewModal>
+
+      {toast.show && (
+        <ToastNotification
+          show={toast.show}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </motion.div>
   );
 };

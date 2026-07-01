@@ -379,3 +379,16 @@ flowchart LR
     I -->|Auto-generates Body| J[Contextual Message Template based on Threshold]
     J -->|Admin Reviews & Dispatches| K[Notification Sent via Email/SMS/App]
 ```
+
+# Identity Card Workflow
+
+```mermaid
+flowchart LR
+    A[Student] -->|Opens Portal| B[Student360]
+    B -->|Clicks View ID Card| C[Preview Modal]
+    C -->|Browser Print| D[Print / Save as PDF]
+
+    E[Admin / Teacher / HR] -->|Opens Portal| F[Staff360 / Profile]
+    F -->|Clicks View ID Card| G[Preview Modal]
+    G -->|Browser Print| H[Print / Save as PDF]
+```

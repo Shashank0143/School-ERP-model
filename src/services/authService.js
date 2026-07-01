@@ -125,6 +125,8 @@ export const getDemoAccounts = async () => {
   const studentsList = await provider.getStudents();
   const teachersList = await provider.getTeachers();
   const parentsList = await provider.getParents();
+  const employeesList = await provider.getEmployees();
+  const departmentsList = await provider.getDepartments();
 
   // Group by role
   const demoAccounts = {
@@ -135,6 +137,8 @@ export const getDemoAccounts = async () => {
   };
 
   users.forEach((user) => {
+    if (user.status === "INACTIVE" || user.active === false) return;
+
     let displayName = user.username;
     let description = "";
     const extraMeta = {};
@@ -196,8 +200,16 @@ export const getDemoAccounts = async () => {
         }
       }
     } else if (user.role === ROLES.ADMIN) {
-      displayName = "Admin User";
-      description = "System Administrator";
+      const employee = employeesList.find((e) => e.employeeId === user.employeeId || e.id === user.employeeId);
+      if (employee) {
+        displayName = employee.employeeName || employee.name || user.username;
+        const dept = departmentsList.find((d) => d.departmentId === employee.departmentId);
+        const deptName = dept ? dept.departmentName : employee.departmentId;
+        description = `${employee.designation || 'System Administrator'} · ${deptName || 'System'}`;
+      } else {
+        displayName = "Admin User";
+        description = "System Administrator";
+      }
     }
 
     if (demoAccounts[user.role]) {

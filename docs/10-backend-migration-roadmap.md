@@ -28,3 +28,10 @@ The migration strategy is explicitly designed to be painless. Backend developers
 - **Contexts**: Global state managers remain exactly as they are.
 - **Pages**: Routing and page-level container logic stays identical.
 - **Schemas**: The expected JSON shapes of data flowing into the components must remain identical to the mock database schemas defined in `02-technical-reference.md`.
+
+## Future Module Considerations
+- **Identity Card (Future)**: The current module is 100% client-side and presentation-only. Future backend integration could include:
+  - Server-side generation and template management.
+  - Integration with QR Code / RFID generation APIs.
+  - Digital verification endpoints.
+  *(These are strictly PLANNED/FUTURE scope and not currently implemented).*

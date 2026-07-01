@@ -63,3 +63,10 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 📬 Leaves (✔ Complete)
 ├── 🎧 Support Center (✔ Complete)
 └── 🛡️ Duty Records (✔ Complete)
+
+## Shared UI Modules
+├── 🪪 Identity Card (✔ Complete)
+    - Purpose: Unified presentation component for Student/Staff ID rendering and printing.
+    - Entry points: Profile settings, Student360, Staff360, Admin Profile.
+    - Dependencies: Student Profile, Staff Profile, Shared IDCard Component, Browser Print API.
+    - Future Scope: Digital verification, Server-side template generation, QR/RFID integration.

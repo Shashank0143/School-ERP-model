@@ -74,3 +74,26 @@ Always use the utilities provided by `classIdentity.js`:
 
 Any code violating these guidelines will be rejected in code review.
 All legacy data MUST be migrated to the canonical numeric formats. No Roman numerals should ever be saved to the database.
+
+---
+
+## ID CARD IDENTITY STANDARDS
+
+The Identity Card Module (`src/components/common/id-card/`) establishes a unified format for all institutional identities. 
+
+### Student ID Card
+*   **Variant identifier**: `variant="student"`
+*   **Required Fields**: Name, Student ID (Admission No), Class, Section, DOB, Blood Group, Father's Name, Mother's Name, Primary Contact, Address, Validity Year.
+*   **Optional Fields**: House/Group, Bus Route.
+*   **Display Rules**: The class display name must ALWAYS use Roman numerals generated via `formatClassName(level, section)`.
+
+### Unified Employee Card (Staff/Teacher/Admin)
+*   **Variant identifier**: `variant="staff"`
+*   **Required Fields**: Name, Employee ID, Designation, Department, Role, DOB, Blood Group, Primary Contact, Address, Validity Year.
+*   **Optional Fields**: Specialization/Subject.
+*   **Display Rules**: Unifies all non-student roles (Teacher, Admin, HR, Operations) into a single standard layout.
+
+### Shared Identity Conventions
+*   **Avatar**: Initials generation (first letters of first and last name) with deterministic background color based on ID string.
+*   **Institution Header**: Always displays canonical school logo, name, affiliation, and core contact details.
+*   **Backend Contract**: ID Cards do not hit APIs. Data must be fully normalized by the parent Profile component before being passed to the `IDCard` component prop `data`.

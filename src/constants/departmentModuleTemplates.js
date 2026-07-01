@@ -26,7 +26,7 @@ export const DEPARTMENT_MODULE_TEMPLATES = {
     "admin_fees"
   ],
   "dept-student-affairs": [
-    "admin_club_management",
+    "admin_clubs",
     "admin_achievements",
     "student_duty",
     "admin_attendance"

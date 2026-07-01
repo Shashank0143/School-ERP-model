@@ -37,6 +37,7 @@ const SystemAdministrationPage = () => {
   // Modal State
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [tempPermissions, setTempPermissions] = useState([]);
+  const [tempIsSuperAdmin, setTempIsSuperAdmin] = useState(false);
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
 
   const [showProvisionModal, setShowProvisionModal] = useState(false);
@@ -118,10 +119,10 @@ const SystemAdministrationPage = () => {
 
   const handleToggleLoginStatus = async (emp, authUser) => {
     if (!authUser) return;
-    const newStatus = authUser.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    if (window.confirm(`Are you sure you want to ${newStatus === 'INACTIVE' ? 'disable' : 'enable'} login for ${emp.employeeName}?`)) {
+    const isEnabling = authUser.status === "INACTIVE";
+    if (window.confirm(`Are you sure you want to ${isEnabling ? 'enable' : 'disable'} login for ${emp.employeeName}?`)) {
       try {
-        await authUserService.updateAdminUser(authUser.id, { status: newStatus });
+        await employeeService.togglePortalAccess(emp.employeeId, isEnabling);
         await loadData();
       } catch (err) {
         console.error("Failed to toggle status", err);
@@ -157,11 +158,13 @@ const SystemAdministrationPage = () => {
     setSelectedAdmin(emp);
     const authUser = authUsers[emp.employeeId];
     setTempPermissions(authUser?.manualOverrides || []);
+    setTempIsSuperAdmin(authUser?.isSuperAdmin || false);
   };
 
   const closePermissionModal = () => {
     setSelectedAdmin(null);
     setTempPermissions([]);
+    setTempIsSuperAdmin(false);
   };
 
   const handleToggleOverride = (moduleId) => {
@@ -198,6 +201,9 @@ const SystemAdministrationPage = () => {
     try {
       const authUser = authUsers[selectedAdmin.employeeId];
       if (authUser) {
+        if (authUser.isSuperAdmin !== tempIsSuperAdmin) {
+          await authUserService.updateSuperAdminStatus(authUser.id, tempIsSuperAdmin);
+        }
         await authUserService.updateManualOverrides(authUser.id, tempPermissions);
         // Re-fetch profile to keep UI in sync
         const newAuthUser = await authUserService.getAuthUserByEmployeeId(selectedAdmin.employeeId);
@@ -216,6 +222,7 @@ const SystemAdministrationPage = () => {
       closePermissionModal();
     } catch (error) {
       console.error("Failed to save permissions", error);
+      alert(error.message);
     } finally {
       setIsSavingPermissions(false);
     }
@@ -224,13 +231,13 @@ const SystemAdministrationPage = () => {
   const renderPermissionSummaryCard = () => {
     if (!selectedAdmin) return null;
     const authUser = authUsers[selectedAdmin.employeeId];
-    if (authUser?.isSuperAdmin) {
+    if (tempIsSuperAdmin) {
       return (
         <div className="bg-[#caf0f8]/20 border border-[#caf0f8] p-4 rounded-xl mb-6 flex items-center gap-3 shadow-sm">
           <ShieldCheck size={28} className="text-[#03045e]" />
           <div>
-            <p className="text-sm font-black text-[#03045e]">Full System Access</p>
-            <p className="text-[11px] text-gray-500 font-bold mt-0.5">This user is a Super Admin. They have implicit access to all modules and configurations.</p>
+            <p className="text-sm font-black text-[#03045e]">Full System Access Granted</p>
+            <p className="text-[11px] text-gray-500 font-bold mt-0.5">This user has implicit access to all modules and configurations. Granular permissions below are bypassed.</p>
           </div>
         </div>
       );
@@ -658,11 +665,34 @@ const SystemAdministrationPage = () => {
                   </div>
                 )}
 
+                {/* System Authority Section */}
+                <div className="bg-white border border-gray-200 p-4 rounded-xl mb-6 flex items-start justify-between gap-4 shadow-sm">
+                  <div>
+                    <h4 className="text-sm font-black text-[#03045e] flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-[#0077b6]"/>
+                      System Authority
+                    </h4>
+                    <p className="text-[11px] text-gray-500 mt-1 font-bold">
+                      Grants unrestricted, implicit access to all modules and configurations across the ERP.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={tempIsSuperAdmin}
+                      onChange={(e) => setTempIsSuperAdmin(e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#03045e]"></div>
+                    <span className="ml-3 text-[10px] font-black text-gray-600 uppercase tracking-wider">{tempIsSuperAdmin ? "Full System Access" : "Standard Access"}</span>
+                  </label>
+                </div>
+
                 {renderPermissionSummaryCard()}
 
                 <div className="space-y-6">
                   {Object.entries(moduleGroups).map(([section, modules]) => {
-                    const isSuper = authUsers[selectedAdmin.employeeId]?.isSuperAdmin;
+                    const isSuper = tempIsSuperAdmin;
                     const deptModules = authUsers[selectedAdmin.employeeId]?.departmentModules || [];
                     const moduleIds = modules.map(m => m.id);
                     
@@ -761,7 +791,7 @@ const SystemAdministrationPage = () => {
                 </button>
                 <button
                   onClick={handleSavePermissions}
-                  disabled={isSavingPermissions || authUsers[selectedAdmin.employeeId]?.isSuperAdmin}
+                  disabled={isSavingPermissions}
                   className="px-5 py-2.5 rounded-xl text-xs font-black bg-[#03045e] text-white hover:bg-[#020344] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md shadow-[#03045e]/20"
                 >
                   {isSavingPermissions ? "Saving..." : "Save Permissions"}

@@ -1037,3 +1037,7 @@ export const teacherScheduleService = {
   getTeacherSchedule,
   clearScheduleCache,
 };
+
+export const getTeacherProfileByEmployeeId = async (id) => ({ employeeId: id });
+export const createTeacherProfile = async (data) => data;
+

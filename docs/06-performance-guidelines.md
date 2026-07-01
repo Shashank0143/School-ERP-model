@@ -40,6 +40,11 @@ This document outlines the architectural rules and performance standards for the
 - **CSS Gradients**: Favor CSS gradients over background images for banners and UI accents.
 - **Modern Formats**: If images are required, use `.webp` and provide appropriate dimensions.
 
+## 7. Shared Component Rendering Strategy
+- **Data Reusability**: Shared components like the Identity Card must use existing fetched profile data (passed via props). Prevent duplicate API fetches or redundant state generation for presentation-only layers.
+- **Print Optimization**: Avoid heavy JS-based PDF generation libraries when possible. The Identity Card module utilizes native browser printing and `@media print` CSS injections to maintain a zero-dependency, ultra-fast render path for documents.
+- **Avoid Duplicate Rendering**: Shared UI modules (like `IDCard`) should be implemented once and consumed across different portals (Student360, Staff360) rather than duplicated.
+
 ---
 
 *By following these guidelines, EduDash will maintain its enterprise-grade responsiveness regardless of the number of features added.*

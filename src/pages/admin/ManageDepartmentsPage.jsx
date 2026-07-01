@@ -61,11 +61,11 @@ const ManageDepartmentsPage = () => {
   });
 
   const eligibleHeads = useMemo(() => {
-    return employees.filter(e => e.portalAccess && e.status === "active");
+    return employees.filter(e => e.status === "active");
   }, [employees]);
 
   const eligibleMembers = useMemo(() => {
-    return employees.filter(e => e.portalAccess);
+    return employees.filter(e => e.status === "active");
   }, [employees]);
 
   const [isLoading, setIsLoading] = useState(true);

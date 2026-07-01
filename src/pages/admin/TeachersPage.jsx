@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   UserPlus,
@@ -15,7 +16,6 @@ import AdminStatCard from "../../components/admin/AdminStatCard";
 import AdminFilterBar from "../../components/admin/AdminFilterBar";
 import AdminDataTable from "../../components/admin/AdminDataTable";
 import AdminSectionCard from "../../components/admin/AdminSectionCard";
-import AdminProfilePreview from "../../components/admin/AdminProfilePreview";
 import AdminEditForm from "../../components/admin/AdminEditForm";
 import ConfirmationModal from "../../shared/components/ConfirmationModal";
 import ToastNotification from "../../shared/components/ToastNotification";
@@ -54,6 +54,7 @@ const CLASS_LEVELS = [
 const SECTIONS = ["A", "B", "C", "D"];
 
 const TeachersPage = () => {
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -88,7 +89,6 @@ const TeachersPage = () => {
   ]);
 
   // Preview & Edit states
-  const [previewTeacher, setPreviewTeacher] = useState(null);
   const [editTeacher, setEditTeacher] = useState(null);
   const [addTeacherOpen, setAddTeacherOpen] = useState(false);
 
@@ -721,16 +721,7 @@ const TeachersPage = () => {
                   <td className="py-4 px-3 text-right last:pr-2">
                     <div className="flex items-center justify-end gap-1">
                       <button
-                        onClick={() =>
-                          setPreviewTeacher({
-                            ...tch,
-                            subjects,
-                            isClassTeacher: !!classTeacherRole,
-                            classAssigned: classTeacherRole?.name,
-                            dept: tch.department,
-                            phone: tch.phoneNumber,
-                          })
-                        }
+                        onClick={() => navigate(`/admin/staff/${tch.id || tch.employeeId}/overview`)}
                         className="text-[#0077b6] hover:text-[#03045e] transition-colors p-1.5 hover:bg-[#caf0f8]/40 rounded-lg"
                       >
                         <ChevronRight size={16} />
@@ -753,14 +744,7 @@ const TeachersPage = () => {
         </div>
       </AdminSectionCard>
 
-      {/* Sliding Profile Drawer */}
-      <AdminProfilePreview
-        isOpen={!!previewTeacher}
-        onClose={() => setPreviewTeacher(null)}
-        type="teacher"
-        data={previewTeacher}
-        onEdit={(teacherData) => setEditTeacher(teacherData)}
-      />
+      {/* Sliding Profile Drawer Removed in UX Alignment */}
 
       {/* Centred Edit Modal */}
       <AdminEditForm

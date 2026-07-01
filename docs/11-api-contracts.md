@@ -199,3 +199,7 @@ Endpoints for parent portal access.
 **Current State:** Planned - Not Implemented | **Future:** apiProvider
 ### `GET /api/v1/employees`
 - **Response Shape:** `EmployeeDTO[]`
+
+## 16. Identity Card
+**Current State:** Frontend Only | **Future:** Planned - Not Implemented
+- **Integration Note:** The current prototype has no ID Card API. It is completely stateless on the frontend. Future backend API endpoints could supply printable identity payloads or QR verification metadata, but this is strictly a future API placeholder.

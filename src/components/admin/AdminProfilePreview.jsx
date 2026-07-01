@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -438,7 +439,18 @@ const AdminProfilePreview = ({
 
             {/* Drawer Actions Footer */}
             {onEdit && (
-              <div className="p-4 border-t border-[#caf0f8] bg-gray-50 flex items-center justify-end">
+              <div className="p-4 border-t border-[#caf0f8] bg-gray-50 flex items-center justify-between">
+                {(type === "teacher" || type === "admin") ? (
+                  <Link
+                    to={`/admin/staff/${data.id || data.employeeId}`}
+                    onClick={onClose}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-sm transition-all"
+                  >
+                    <span>OPEN WORKSPACE</span>
+                  </Link>
+                ) : (
+                  <div></div>
+                )}
                 <button
                   onClick={() => {
                     onClose();

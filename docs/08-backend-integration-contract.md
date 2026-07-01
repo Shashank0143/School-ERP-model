@@ -190,4 +190,10 @@ Must be returned as a nested structure or flat list filterable by `classId` or `
 }
 ```
 
+## Special Cases
+
+### Identity Card Module
+- **Integration Rule**: None.
+- **Contract**: The current implementation of the ID Card module is completely frontend-only. There is NO backend endpoint required, NO backend logic, and NO API payload expected. ID Cards render purely by mapping data from existing profile/student/teacher endpoints.
+
 *(For detailed Schema configurations and exact field names, refer to `02-technical-reference.md` and `04-database-architecture.md`).*

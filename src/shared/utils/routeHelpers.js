@@ -157,8 +157,6 @@ export function getRouteForNavItem(id, role) {
       case "admin_documents":
         return "/admin/documents";
       case "admin_clubs":
-        return "/admin/clubs";
-      case "admin_club_management":
         return "/admin/club-management";
       case "admin_achievements":
         return "/admin/achievements";

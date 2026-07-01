@@ -77,12 +77,11 @@ export const ROLE_NAVIGATION = {
     { id: "admin_fees", icon: "WalletCards" },
     { id: "admin_documents", icon: "FolderOpen" },
     { id: "student_duty", icon: "BadgeCheck" },
-    { id: "admin_clubs", icon: "Palette" },
+    { id: "admin_clubs", icon: "Tent" },
     { id: "admin_achievements", icon: "Trophy" },
     { id: "admin_calendar", icon: "CalendarDays" },
     { id: "admin_notices", icon: "Megaphone" },
     { id: "admin_institutional_planning", icon: "Target" },
-    { id: "admin_club_management", icon: "Tent" },
     { id: "admin_manage_departments", icon: "Layers" },
     { id: "admin_communication_center", icon: "Send" },
     { id: "admin_support_management", icon: "Headset" },
@@ -137,7 +136,6 @@ export const ADMIN_SECTIONS = [
   {
     titleKey: "nav.section.activities",
     items: [
-      { id: "admin_clubs", icon: "Palette" },
       { id: "admin_achievements", icon: "Trophy" },
       { id: "admin_calendar", icon: "CalendarDays" },
       { id: "admin_notices", icon: "Megaphone" },
@@ -151,7 +149,7 @@ export const ADMIN_SECTIONS = [
     titleKey: "nav.section.institutional",
     items: [
       { id: "admin_institutional_planning", icon: "LayoutDashboard" },
-      { id: "admin_club_management", icon: "Tent" },
+      { id: "admin_clubs", icon: "Tent" },
       { id: "admin_manage_departments", icon: "Layers" },
       { id: "admin_communication_center", icon: "Send" },
       { id: "admin_support_management", icon: "Headset" },

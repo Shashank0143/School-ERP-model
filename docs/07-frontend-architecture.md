@@ -30,3 +30,9 @@ Managed by `react-router-dom`. Routes are deeply nested inside specific portals 
 - **Styling**: Strict utility-first Tailwind CSS. No custom CSS files unless absolutely necessary.
 - **Palette**: The standard brand colors (`#03045e`, `#0077b6`, `#00b4d8`, `#caf0f8`) must be strictly followed.
 - **Animations**: `framer-motion` is used globally for page transitions and modal popups to maintain an enterprise-grade, smooth UX.
+
+## Shared UI Platform (Identity Card Module)
+The Identity Card module is a pure presentation component shared across Student360, Staff360, and Profile portals.
+- **Component Architecture**: The `IDCard` entry component routes normalized data to `IDCardFront` and `IDCardBack`.
+- **Variant System**: Relies on a `variant` prop (`student` or `staff`) to render context-appropriate layouts without business logic.
+- **Preview & Print**: `IDCardPreviewModal` acts as an isolation wrapper, employing print-specific styling using `@media print` to optimize the browser's native print-to-PDF engine.

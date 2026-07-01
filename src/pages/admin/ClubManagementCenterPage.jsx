@@ -4,10 +4,13 @@ import { clubsService } from "../../services/clubsService";
 import { getAllTeachers } from "../../services/teacherService";
 import { 
   Building2, Users, FileText, Plus, Edit, Power, 
-  PowerOff, Search, Filter, ShieldCheck, Activity, Award
+  PowerOff, Search, Filter, ShieldCheck, Activity, Award, ShieldAlert, BookOpen, Info
 } from "lucide-react";
 import PermissionGate from "../../components/admin/PermissionGate";
 import PageAuthorityBanner from "../../components/admin/PageAuthorityBanner";
+import { getDataProvider } from "../../data";
+import ClubDetailPanel from "../../components/clubs/ClubDetailPanel";
+import AdminEditForm from "../../components/admin/AdminEditForm";
 
 const ClubManagementCenterPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -15,6 +18,8 @@ const ClubManagementCenterPage = () => {
   // Data State
   const [clubs, setClubs] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [membershipRequests, setMembershipRequests] = useState([]);
   const [clubProposals, setClubProposals] = useState([]);
   const [participations, setParticipations] = useState([]);
@@ -26,6 +31,20 @@ const ClubManagementCenterPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create"); // 'create' or 'edit'
   const [currentClub, setCurrentClub] = useState(null);
+
+  // Merged Features State
+  const [viewingClub, setViewingClub] = useState(null);
+  
+  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [selectedClub, setSelectedClub] = useState(null);
+
+  const [reviewProposalOpen, setReviewProposalOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [decisionRemarks, setDecisionRemarks] = useState("");
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+
+  const [successBanner, setSuccessBanner] = useState("");
+  const [errorBanner, setErrorBanner] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -39,12 +58,18 @@ const ClubManagementCenterPage = () => {
       const fetchedRequests = await clubsService.getAllClubMembershipRequests() || [];
       const fetchedProposals = await clubsService.getAllClubProposals() || [];
       const fetchedParts = await clubsService.getAllActivityParticipations() || [];
+      
+      const provider = getDataProvider();
+      const allStudents = await provider.getStudents();
+      const allEnrollments = await provider.getClubEnrollments();
 
       setClubs(fetchedClubs);
       setTeachers(fetchedTeachers);
       setMembershipRequests(fetchedRequests);
       setClubProposals(fetchedProposals);
       setParticipations(fetchedParts);
+      setStudents(allStudents || []);
+      setEnrollments(allEnrollments || []);
     } catch (error) {
       console.error("Error fetching club management data", error);
     } finally {
@@ -111,6 +136,104 @@ const ClubManagementCenterPage = () => {
     }
   };
 
+  const handleEnrollStudent = async (formData) => {
+    const studentId = formData.studentId;
+    if (!studentId || !selectedClub) return;
+
+    try {
+      const studentEnrollments = enrollments.filter(
+        (e) => e.studentId === studentId,
+      );
+
+      if (studentEnrollments.length >= 2) {
+        const studentObj = students.find((s) => s.id === studentId);
+        setErrorBanner(
+          `Validation Failed: Student "${studentObj ? studentObj.name : "Selected Student"}" has already joined 2 clubs (maximum limit reached)!`,
+        );
+        setTimeout(() => setErrorBanner(""), 4500);
+        return;
+      }
+
+      const alreadyJoined = studentEnrollments.some(
+        (e) => e.clubId === selectedClub.id,
+      );
+      if (alreadyJoined) {
+        setErrorBanner(
+          "Validation Failed: Student is already registered in this club.",
+        );
+        setTimeout(() => setErrorBanner(""), 4000);
+        return;
+      }
+
+      const newRecord = {
+        id: `enroll-${Date.now()}`,
+        studentId,
+        clubId: selectedClub.id,
+        enrollmentDate: new Date().toISOString().split("T")[0],
+      };
+
+      const provider = getDataProvider();
+      await provider.createClubEnrollment(newRecord);
+      const updatedEnrollments = await provider.getClubEnrollments();
+      setEnrollments(updatedEnrollments);
+
+      setSuccessBanner(
+        "Student has been successfully enrolled as a Club Member.",
+      );
+      setTimeout(() => setSuccessBanner(""), 3000);
+      setEnrollOpen(false);
+    } catch (e) {
+      console.error(e);
+      setErrorBanner("Failed to enroll student. Please try again.");
+      setTimeout(() => setErrorBanner(""), 4000);
+    }
+  };
+
+  const handleApproveProposal = async () => {
+    setIsSubmittingDecision(true);
+    try {
+      await clubsService.approveClubProposal(selectedProposal.proposalId, decisionRemarks);
+      setSuccessBanner("Proposal has been approved.");
+      setTimeout(() => setSuccessBanner(""), 3000);
+      setReviewProposalOpen(false);
+      setDecisionRemarks("");
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      setErrorBanner("Failed to approve proposal.");
+      setTimeout(() => setErrorBanner(""), 4000);
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  };
+
+  const handleRejectProposal = async () => {
+    setIsSubmittingDecision(true);
+    try {
+      await clubsService.rejectClubProposal(selectedProposal.proposalId, decisionRemarks);
+      setSuccessBanner("Proposal has been rejected.");
+      setTimeout(() => setSuccessBanner(""), 3000);
+      setReviewProposalOpen(false);
+      setDecisionRemarks("");
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      setErrorBanner("Failed to reject proposal.");
+      setTimeout(() => setErrorBanner(""), 4000);
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  };
+
+  const enrollFields = [
+    {
+      name: "studentId",
+      label: "Select Student to Register",
+      type: "select",
+      options: students.map((s) => s.id),
+    },
+  ];
+
   const renderOverviewDashboard = () => {
     const totalClubs = clubs.length;
     const activeClubs = clubs.filter(c => c.status === "Active").length;
@@ -159,104 +282,169 @@ const ClubManagementCenterPage = () => {
 
   const renderOverviewTab = () => (
     <div className="space-y-6">
-      {renderOverviewDashboard()}
+      {/* Success Notification Alert */}
+      {successBanner && (
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-3xl text-emerald-700 text-xs font-black shadow-sm transition-all animate-bounce">
+          {successBanner}
+        </div>
+      )}
+
+      {/* Error Alert */}
+      {errorBanner && (
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-3xl text-rose-700 text-xs font-black shadow-sm transition-all">
+          <div className="flex items-center gap-2">
+            <ShieldAlert size={14} className="text-rose-500" />
+            <span>{errorBanner}</span>
+          </div>
+        </div>
+      )}
+
+      {viewingClub ? (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+          <ClubDetailPanel
+            club={viewingClub}
+            onBack={() => setViewingClub(null)}
+            teacherId="admin"
+            isReadOnly={false}
+          />
+        </div>
+      ) : (
+        <>
+          {renderOverviewDashboard()}
+          
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-black text-[#03045e]">Institutional Clubs</h2>
+              <PermissionGate moduleId="admin_clubs" permission="create" mode="hidden">
+                <button 
+                  onClick={openCreateModal}
+                  className="px-4 py-2 bg-[#03045e] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:bg-[#023e8a] transition-colors"
+                >
+                  <Plus size={16} /> Create Club
+                </button>
+              </PermissionGate>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Club Name</th>
+                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Coordinator</th>
+                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Members</th>
+                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {clubs.map((club) => {
+                    const clubMembers = enrollments.filter((e) => e.clubId === club.id).length;
+                    return (
+                      <tr key={club.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="p-4">
+                          <div className="font-bold text-[#03045e]">{club.name}</div>
+                        </td>
+                        <td className="p-4">
+                          <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg">
+                            {club.category}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="text-sm font-semibold text-gray-700">{club.coordinatorTeacherName || "Unassigned"}</div>
+                        </td>
+                        <td className="p-4">
+                          <div className="text-sm font-bold text-[#0077b6] bg-[#caf0f8]/30 px-3 py-1 rounded-full inline-block">
+                            {clubMembers || club.membershipCount || 0}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 text-xs font-bold rounded-lg ${
+                            club.status === "Active" 
+                              ? "bg-green-100 text-green-700" 
+                              : "bg-red-100 text-red-700"
+                          }`}>
+                            {club.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right space-x-2">
+                          <button 
+                            onClick={() => setViewingClub(club)}
+                            className="px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold rounded-lg transition-colors inline-block"
+                            title="View Club Details"
+                          >
+                            Details
+                          </button>
+                          <PermissionGate moduleId="admin_clubs" permission="create" mode="hidden">
+                            {club.status === "Active" && (
+                              <button 
+                                onClick={() => { setSelectedClub(club); setEnrollOpen(true); }}
+                                className="px-2 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 text-xs font-bold rounded-lg transition-colors inline-block"
+                                title="Enroll Student"
+                              >
+                                Enroll
+                              </button>
+                            )}
+                          </PermissionGate>
+                          <PermissionGate moduleId="admin_clubs" permission="edit" mode="hidden">
+                            <button 
+                              onClick={() => openEditModal(club)}
+                              className="p-1.5 text-gray-500 hover:text-[#0077b6] hover:bg-[#caf0f8]/50 rounded-lg transition-colors inline-block"
+                              title="Edit Club"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          </PermissionGate>
+                          <PermissionGate moduleId="admin_clubs" permission="delete" mode="hidden">
+                            {club.status === "Active" ? (
+                              <button 
+                                onClick={() => handleDeactivate(club.id)}
+                                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-block"
+                                title="Deactivate Club"
+                              >
+                                <PowerOff size={16} />
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleActivate(club.id)}
+                                className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors inline-block"
+                                title="Activate Club"
+                              >
+                                <Power size={16} />
+                              </button>
+                            )}
+                          </PermissionGate>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {clubs.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-gray-500 font-semibold">
+                        No clubs found. Create one to get started.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
       
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-lg font-black text-[#03045e]">Institutional Clubs</h2>
-          <PermissionGate moduleId="admin_clubs" permission="create" mode="hidden">
-            <button 
-              onClick={openCreateModal}
-              className="px-4 py-2 bg-[#03045e] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:bg-[#023e8a] transition-colors"
-            >
-              <Plus size={16} /> Create Club
-            </button>
-          </PermissionGate>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Club Name</th>
-                <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Coordinator</th>
-                <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Members</th>
-                <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {clubs.map((club) => (
-                <tr key={club.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4">
-                    <div className="font-bold text-[#03045e]">{club.name}</div>
-                  </td>
-                  <td className="p-4">
-                    <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg">
-                      {club.category}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-sm font-semibold text-gray-700">{club.coordinatorTeacherName || "Unassigned"}</div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-sm font-bold text-[#0077b6] bg-[#caf0f8]/30 px-3 py-1 rounded-full inline-block">
-                      {club.membershipCount || 0}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-2.5 py-1 text-xs font-bold rounded-lg ${
-                      club.status === "Active" 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-red-100 text-red-700"
-                    }`}>
-                      {club.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right space-x-2">
-                    <PermissionGate moduleId="admin_clubs" permission="edit" mode="hidden">
-                      <button 
-                        onClick={() => openEditModal(club)}
-                        className="p-1.5 text-gray-500 hover:text-[#0077b6] hover:bg-[#caf0f8]/50 rounded-lg transition-colors inline-block"
-                        title="Edit Club"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    </PermissionGate>
-                    <PermissionGate moduleId="admin_clubs" permission="delete" mode="hidden">
-                      {club.status === "Active" ? (
-                        <button 
-                          onClick={() => handleDeactivate(club.id)}
-                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-block"
-                          title="Deactivate Club"
-                        >
-                          <PowerOff size={16} />
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => handleActivate(club.id)}
-                          className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors inline-block"
-                          title="Activate Club"
-                        >
-                          <Power size={16} />
-                        </button>
-                      )}
-                    </PermissionGate>
-                  </td>
-                </tr>
-              ))}
-              {clubs.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="p-8 text-center text-gray-500 font-semibold">
-                    No clubs found. Create one to get started.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Enroll Student Modal */}
+      <AdminEditForm
+        isOpen={enrollOpen}
+        onClose={() => setEnrollOpen(false)}
+        title={
+          selectedClub
+            ? `Enroll Student in "${selectedClub.name}"`
+            : "Register Student in Club"
+        }
+        data={{ studentId: "" }}
+        fields={enrollFields}
+        onSubmit={handleEnrollStudent}
+      />
     </div>
   );
 
@@ -278,10 +466,10 @@ const ClubManagementCenterPage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {membershipRequests.map((req) => {
+            {membershipRequests.map((req, index) => {
               const club = clubs.find(c => c.id === req.clubId);
               return (
-                <tr key={req.id} className="hover:bg-gray-50/50">
+                <tr key={req.requestId || req.id || index} className="hover:bg-gray-50/50">
                   <td className="p-4 text-sm text-gray-600">{new Date(req.requestDate).toLocaleDateString()}</td>
                   <td className="p-4 font-semibold text-[#03045e]">{req.studentName}</td>
                   <td className="p-4 text-sm text-gray-700">{club?.name || req.clubId}</td>
@@ -327,6 +515,7 @@ const ClubManagementCenterPage = () => {
               <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Proposed Club</th>
               <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category</th>
               <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -345,11 +534,21 @@ const ClubManagementCenterPage = () => {
                     {prop.status}
                   </span>
                 </td>
+                <td className="p-4 text-right">
+                  <PermissionGate moduleId="admin_clubs" permission="edit" mode="hidden">
+                    <button
+                      onClick={() => { setSelectedProposal(prop); setReviewProposalOpen(true); }}
+                      className="text-[10px] font-black text-[#00b4d8] hover:text-[#0077b6] bg-[#caf0f8]/30 hover:bg-[#caf0f8] px-3 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                    >
+                      Review
+                    </button>
+                  </PermissionGate>
+                </td>
               </tr>
             ))}
             {clubProposals.length === 0 && (
               <tr>
-                <td colSpan="5" className="p-8 text-center text-gray-500 font-semibold">
+                <td colSpan="6" className="p-8 text-center text-gray-500 font-semibold">
                   No club proposals found.
                 </td>
               </tr>
@@ -357,6 +556,109 @@ const ClubManagementCenterPage = () => {
           </tbody>
         </table>
       </div>
+      
+      {/* Review Proposal Modal */}
+      {reviewProposalOpen && selectedProposal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+          <div className="max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl w-full w-[95vw] md:w-[90vw] lg:max-w-lg overflow-hidden border border-gray-100">
+            <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#00b4d8]" />
+                <h3 className="font-black text-sm text-[#03045e] uppercase tracking-wider">
+                  Review Club Proposal
+                </h3>
+              </div>
+              <button 
+                onClick={() => setReviewProposalOpen(false)}
+                className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50 transition-colors"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Proposed By</span>
+                  <p className="text-sm font-black text-[#03045e] mt-0.5">{selectedProposal.proposedByStudentName}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Submitted On</span>
+                  <p className="text-xs font-bold text-gray-600 mt-1">
+                    {new Date(selectedProposal.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Club Name</span>
+                  <p className="text-sm font-black text-[#03045e] mt-0.5">{selectedProposal.clubName}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Category</span>
+                  <p className="text-xs font-bold text-gray-600 mt-1">{selectedProposal.category}</p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                  Purpose <span className="bg-[#caf0f8] text-[#00b4d8] px-1.5 py-0.5 rounded text-[8px]">{selectedProposal.interestCount || 1} Interested</span>
+                </span>
+                <p className="text-xs font-medium text-gray-700 mt-1 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  {selectedProposal.purpose}
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Decision Remarks</label>
+                <textarea
+                  required
+                  maxLength={300}
+                  rows={3}
+                  value={decisionRemarks}
+                  onChange={(e) => setDecisionRemarks(e.target.value)}
+                  disabled={selectedProposal.status !== "Pending"}
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-[#00b4d8] focus:ring-1 focus:ring-[#00b4d8] transition-all resize-none disabled:opacity-70 disabled:cursor-not-allowed"
+                  placeholder="e.g. Approved. Strong student interest."
+                />
+              </div>
+
+              {selectedProposal.status === "Pending" ? (
+                <div className="mt-6 flex gap-3">
+                  <PermissionGate moduleId="admin_clubs" permission="edit" mode="disabled">
+                    <button
+                      onClick={handleRejectProposal}
+                      disabled={isSubmittingDecision}
+                      className="flex-1 h-10 rounded-xl bg-rose-50 text-rose-600 font-black text-[11px] uppercase tracking-wider hover:bg-rose-100 transition-colors disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate moduleId="admin_clubs" permission="edit" mode="disabled">
+                    <button
+                      onClick={handleApproveProposal}
+                      disabled={isSubmittingDecision}
+                      className="flex-1 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-black text-[11px] uppercase tracking-wider hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                  </PermissionGate>
+                </div>
+              ) : (
+                <div className="mt-6">
+                  <div className={`p-3 rounded-xl border text-center text-xs font-black uppercase tracking-wider ${
+                    selectedProposal.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                    'bg-rose-50 text-rose-600 border-rose-100'
+                  }`}>
+                    This proposal has already been {selectedProposal.status.toLowerCase()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

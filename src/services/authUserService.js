@@ -58,6 +58,20 @@ const authUserService = {
     return provider.deleteAuthUser(authUserId);
   },
 
+  updateSuperAdminStatus: async (authUserId, isSuperAdmin) => {
+    if (!isSuperAdmin) {
+      // Lockout prevention
+      const allAdmins = await authUserService.getAllAdminUsers();
+      const activeSuperAdmins = allAdmins.filter(u => u.isSuperAdmin && u.status === "ACTIVE" && u.active !== false);
+      
+      if (activeSuperAdmins.length <= 1 && activeSuperAdmins.some(u => u.id === authUserId)) {
+        throw new Error("Cannot remove the last active System Administrator. At least one System Administrator must exist.");
+      }
+    }
+    
+    return authUserService.updateAdminUser(authUserId, { isSuperAdmin: !!isSuperAdmin });
+  },
+
   updateManualOverrides: async (authUserId, moduleIds) => {
     const provider = getDataProvider();
     const user = await provider.getAuthUserById(authUserId);

@@ -1375,4 +1375,22 @@ GET  /api/templates           → Template[]
 
 ---
 
+## 16. Shared Reusable Components
+
+### Identity Card Module (Shared UI Platform)
+- **Architecture**: The ID Card is a pure presentation module. It is part of the Shared UI Platform and is intentionally domain-agnostic. It accepts normalized identity data and renders the appropriate variant without knowledge of Student, Teacher, or Employee business logic.
+- **Component Hierarchy**:
+  - `IDCardPreviewModal.jsx` (Wrapper for preview and print styles)
+  - `IDCard.jsx` (Main entry component)
+    - `IDCardFront.jsx` (Front face)
+      - `IDCardHeader.jsx`
+      - `IDCardBody.jsx`
+      - `IDCardFooter.jsx`
+    - `IDCardBack.jsx` (Back face)
+- **Variant System**: Supports `student` and `staff` variants natively. Renders specific fields/styling dynamically.
+- **Service & Persistence**: None. There is **no persistence or service layer**, no database, no CRUD, and no API. It uses purely in-memory data mapped from existing profiles.
+- **Print Implementation**: Browser native printing (`window.print()`). Print-specific styling is injected exclusively using `@media print` when the `IDCardPreviewModal` is open.
+
+---
+
 *Document generated: 2026-05-26 | Project: EduDash School ERP | Version: 1.0*

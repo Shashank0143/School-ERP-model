@@ -5,6 +5,17 @@ import authUserService from "./authUserService";
 const employeeService = {
   getEmployees: () => getDataProvider().getEmployees(),
 
+  getEmployee: async (id) => {
+    const provider = getDataProvider();
+    const employees = await provider.getEmployees();
+    let emp = employees.find(e => e.employeeId === id || e.id === id);
+    if (!emp) {
+      const teachers = await provider.getTeachers();
+      emp = teachers.find(t => t.teacherId === id || t.id === id);
+    }
+    return emp;
+  },
+
   createEmployee: async (data) => {
     if (data.gender) data.gender = normalizeGender(data.gender);
 
@@ -35,6 +46,51 @@ const employeeService = {
   // === OPERATIONAL PROFILES ===
   getOperationalProfiles: async () => {
     return await getDataProvider().getOperationalProfiles();
+  },
+
+  togglePortalAccess: async (employeeId, enabled) => {
+    const provider = getDataProvider();
+    const employee = await employeeService.getEmployee(employeeId);
+    if (!employee) throw new Error("Employee not found");
+
+    let result = { employee: null, credentials: null };
+
+    if (enabled) {
+      if (employee.linkedAuthUserId) {
+        await authUserService.updateAdminUser(employee.linkedAuthUserId, { status: "ACTIVE" });
+        result.employee = await employeeService.updateEmployee(employeeId, { portalAccess: true });
+      } else {
+        const { default: identityService } = await import("./identityProvisioningService");
+        const username = await identityService.generateUsername(employee);
+        const tempPassword = identityService.generateTemporaryPassword();
+        
+        const authUserPayload = {
+          username: username,
+          password: tempPassword,
+          role: "ADMIN",
+          status: "ACTIVE",
+          employeeId: employee.employeeId,
+          isSuperAdmin: false,
+          manualOverrides: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastLogin: null
+        };
+        const authUser = await provider.createAuthUser(authUserPayload);
+        result.employee = await employeeService.updateEmployee(employeeId, { 
+          portalAccess: true, 
+          linkedAuthUserId: authUser.id,
+          identityStatus: "PROVISIONED"
+        });
+        result.credentials = { username, password: tempPassword };
+      }
+    } else {
+      if (employee.linkedAuthUserId) {
+        await authUserService.updateAdminUser(employee.linkedAuthUserId, { status: "INACTIVE" });
+      }
+      result.employee = await employeeService.updateEmployee(employeeId, { portalAccess: false });
+    }
+    return result;
   },
 
   getOperationalProfile: async (employeeId) => {

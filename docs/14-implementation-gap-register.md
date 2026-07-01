@@ -26,6 +26,7 @@ This register provides a reality-check on the current state of EduDash modules. 
 | **Departments** | ✅ | ✅ | ❌ | ✅ | ⚠️ |
 | **Access Control** | ✅ | ✅ | ❌ | ⚠️ (Partial) | ❌ |
 | **Communication Center** | ⚠️ (Stub) | ❌ | ❌ | ❌ | ❌ |
+| **Identity Card** | ✅ | ❌ (N/A) | ❌ (N/A) | ❌ (N/A) | ✅ (Presentation Only) |
 
 ## Legend
 * ✅ **Implemented**: The layer exists and functions correctly.

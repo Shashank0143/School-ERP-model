@@ -357,3 +357,4 @@ This grid maps features to roles using permissions. You can easily add rows for 
 | **Notices & Announcements** | `✍️ Manage` | `✍️ Manage (Class)` | `👁️ View` | `👁️ View` |
 | **Student Duty Management** | `👁️ View` | `✍️ Manage` | `👁️ View (Self)` | `👁️ View (Child)` |
 | **Workload Analytics** | `👁️ View` | `❌ None` | `❌ None` | `❌ None` |
+| **Identity Card (View/Print)** | `👁️ View (Self/All)` | `👁️ View (Self)` | `👁️ View (Self)` | `👁️ View (Child)` |
