@@ -36,6 +36,34 @@ const format12Hour = (timeStr) => {
 };
 
 /**
+ * Derives a new Date object safely from the Exam Cycle bounds,
+ * ensuring we never accidentally fall back to the system's current year/month.
+ */
+export const getCycleBasedDate = (examSession, offsetDays = 0) => {
+  if (!examSession?.startDate) {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d;
+  }
+  
+  // Use exact year, month, and day from the cycle's startDate
+  const [y, m, d] = examSession.startDate.split('-');
+  const baseDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+  baseDate.setDate(baseDate.getDate() + offsetDays);
+  return baseDate;
+};
+
+export const parseCycleDateLocal = (dateStr) => {
+  if (!dateStr) return new Date();
+  const [y, m, d] = dateStr.split('-');
+  return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+};
+
+export const toLocalISOString = (d) => {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/**
  * Fetches all examination sessions
  */
 export const getExams = async () => {
@@ -885,6 +913,11 @@ export const transitionExamCycleStatus = async ({
   if (!existingExam) {
     throw new Error("Exam session not found");
   }
+
+  if (toStatus === "evaluation") {
+    return await transitionToEvaluation(sessionId, changedBy);
+  }
+
   if (toStatus === "published") {
     await finalizeEvaluationRecords(sessionId, changedBy);
     return await updateExamSession(sessionId, {
@@ -894,4 +927,292 @@ export const transitionExamCycleStatus = async ({
     });
   }
   return await updateExamSession(sessionId, { status: toStatus });
+};
+
+// ============================================================================
+// DATA RELATIONSHIP ABSTRACTION HELPERS
+// ============================================================================
+
+export const normalizeExam = (exam) => {
+  if (!exam) return null;
+  const normalized = { ...exam };
+  if (!normalized.targetClasses && normalized.classes) {
+    normalized.targetClasses = {};
+    normalized.classes.forEach(c => {
+      const id = c.classId || c.id || c;
+      if (typeof id === 'string') {
+        normalized.targetClasses[id] = { selected: true, sections: [c.section || 'A'] };
+      }
+    });
+  }
+  if (!normalized.targetClasses) {
+    normalized.targetClasses = {};
+  }
+  return normalized;
+};
+
+export const getTargetClasses = (exam) => {
+  if (!exam) return [];
+  const normalized = normalizeExam(exam);
+  if (normalized.targetClasses) {
+    return Object.entries(normalized.targetClasses)
+      .filter(([_, val]) => val && typeof val === 'object' && val.selected)
+      .map(([id]) => id);
+  }
+  return [];
+};
+
+export const getParticipatingClasses = (exam, allClasses) => {
+  if (!exam || !allClasses || !Array.isArray(allClasses)) return [];
+  const targetIds = getTargetClasses(exam);
+  return allClasses.filter(c => targetIds.includes(c.id || c.classId));
+};
+
+export const validateExamSave = (examForm) => {
+  if (!examForm.name || examForm.name.trim() === '') {
+    return { valid: false, message: 'Exam name is required.' };
+  }
+  if (!examForm.assessmentCategoryId) {
+    return { valid: false, message: 'Assessment Category is required.' };
+  }
+  const targetIds = getTargetClasses(examForm);
+  if (targetIds.length === 0) {
+    return { valid: false, message: 'At least one target class must be selected.' };
+  }
+  const uniqueIds = new Set(targetIds);
+  if (uniqueIds.size !== targetIds.length) {
+    return { valid: false, message: 'Duplicate target classes are not allowed.' };
+  }
+  return { valid: true };
+};
+
+export const validateClassRemoval = async (examId, classId) => {
+  const { getDataProvider } = await import('../data');
+  const provider = getDataProvider();
+  const existingPapers = await provider.getExamPapers();
+  const hasPapers = existingPapers.some(p => p.examId === examId && p.classId === classId);
+  if (hasPapers) {
+    return { 
+      canRemove: false, 
+      message: 'Cannot remove this class because it already has scheduled Date Sheets.' 
+    };
+  }
+  return { canRemove: true };
+};
+
+
+// ============================================================================
+// DATA RELATIONSHIP ABSTRACTION HELPERS
+// ============================================================================
+
+/**
+ * Returns Exam Cycles that have scheduled papers assigned to a specific teacher.
+ */
+export const getVisibleExamCycles = (teacherId, allExams, allPapers, assignments) => {
+  if (!allExams || !allPapers || !assignments) return [];
+  
+  // Find classes & subjects assigned to this teacher
+  // If assignments lack a teacherId, they are likely already resolved for the teacher (e.g. profileData.assignedSubjects)
+  const teacherAssignments = assignments.filter(a => a.teacherId === teacherId || !('teacherId' in a));
+  if (teacherAssignments.length === 0) return [];
+
+  // Filter papers that are assigned to the teacher
+  const assignedPapers = allPapers.filter(paper => 
+    teacherAssignments.some(a => a.classId === paper.classId && a.subjectId === paper.subjectId)
+  );
+
+  const assignedSessionIds = new Set(assignedPapers.map(p => p.examSessionId));
+  
+  // Return exam sessions that contain those papers
+  return allExams.filter(exam => assignedSessionIds.has(exam.id) || assignedSessionIds.has(exam.examId));
+};
+
+/**
+ * Returns strictly academic subjects by inspecting their canonical type property.
+ */
+export const getAcademicSubjects = (allSubjects) => {
+  if (!allSubjects || !Array.isArray(allSubjects)) return [];
+  // Use subjectType to filter out activities
+  return allSubjects.filter(sub => sub.subjectType !== 'activity');
+};
+
+/**
+ * Validates and returns only scheduled papers that map back to a valid academic subject.
+ */
+export const getScheduledExamPapers = (examSession, allPapers, allSubjects) => {
+  if (!examSession || !allPapers || !Array.isArray(allPapers) || !allSubjects) return [];
+  
+  const examSessionId = typeof examSession === 'string' ? examSession : (examSession.id || examSession.examId);
+  const targetClassIds = typeof examSession === 'object' ? getTargetClasses(examSession) : null;
+  
+  const academicSubjects = getAcademicSubjects(allSubjects);
+  const academicSubjectIds = new Set(academicSubjects.map(s => s.id));
+
+  return allPapers.filter(p => {
+    // 1. Must belong to the session
+    // 2. Must be scheduled
+    // 3. Must relate to a strictly academic subject
+    // 4. Must belong to a target class (if examSession object was provided)
+    return (
+      p.examSessionId === examSessionId &&
+      ['scheduled', 'evaluation_pending', 'locked'].includes(p.status) &&
+      academicSubjectIds.has(p.subjectId) &&
+      (targetClassIds === null || targetClassIds.includes(p.classId))
+    );
+  });
+};
+
+/**
+ * Calculates a centralized, robust paper status.
+ */
+export const getExamPaperStatus = (paper, currentTime = new Date()) => {
+  if (!paper.date) return 'not_scheduled';
+
+  const paperDate = new Date(paper.date);
+  paperDate.setHours(0, 0, 0, 0);
+
+  const today = new Date(currentTime);
+  today.setHours(0, 0, 0, 0);
+
+  if (paperDate > today) return 'upcoming';
+  if (paperDate < today) return 'completed';
+
+  // If paper is today, check times
+  const parseTime = (timeStr) => {
+    if (!timeStr) return null;
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    hours = parseInt(hours, 10);
+    if (hours === 12) hours = 0;
+    if (modifier && modifier.toUpperCase() === 'PM') hours += 12;
+    const d = new Date(currentTime);
+    d.setHours(hours, parseInt(minutes, 10), 0, 0);
+    return d;
+  };
+
+  const start = parseTime(paper.startTime);
+  const end = parseTime(paper.endTime);
+
+  if (start && end) {
+    if (currentTime < start) return 'upcoming';
+    if (currentTime > end) return 'completed';
+    return 'running';
+  }
+
+  // Fallback if no specific time provided but it is today
+  return 'upcoming';
+};
+
+
+export const submitMarks = async (teacherId, teacherName, classId, subjectId, examId, marksData, isSubmitAction = false) => {
+  const provider = getDataProvider();
+  const allResults = await provider.getResults();
+  
+  const allPapers = await provider.getExamPapers();
+  const paper = allPapers.find(p => p.examSessionId === examId && (p.subjectId === subjectId || p.subjectId === subjectId) && p.classId === classId);
+  const paperTheoryMarks = paper?.theoryMarks ?? 100;
+  const paperPracticalMarks = paper?.practicalMarks ?? 0;
+  const maxM = paperTheoryMarks + paperPracticalMarks;
+
+  const isAdminOverride = teacherId === "Admin" || teacherName === "Admin";
+
+  for (const mark of marksData) {
+    const existingResult = allResults.find(
+      r => r.studentId === mark.studentId && 
+           r.classId === classId && 
+           r.subjectId === subjectId && 
+           r.examId === examId
+    );
+
+    const nowStr = new Date().toISOString();
+    
+    const theoryObtained = Number(mark.marks || 0);
+    const practicalObtained = Number(mark.practicalMarks || 0);
+    const totalObtained = theoryObtained + practicalObtained;
+    
+    // Determine effective marks based on who is saving
+    let newTeacherMarks = existingResult?.teacherMarks !== undefined ? existingResult.teacherMarks : totalObtained;
+    let newAdminOverride = existingResult?.adminOverride;
+    let newOverrideReason = existingResult?.overrideReason;
+    let newOverrideDate = existingResult?.overrideDate;
+    
+    if (isAdminOverride) {
+      newAdminOverride = totalObtained;
+      newOverrideReason = mark.overrideReason || "Admin Override";
+      newOverrideDate = nowStr;
+    } else {
+      newTeacherMarks = totalObtained;
+    }
+
+    const effectiveMarks = newAdminOverride !== undefined ? newAdminOverride : newTeacherMarks;
+
+    const percent = maxM > 0 ? (effectiveMarks / maxM) * 100 : 0;
+    let grade = "C";
+    if (percent >= 90) grade = "A+";
+    else if (percent >= 80) grade = "A";
+    else if (percent >= 70) grade = "B+";
+    else if (percent >= 60) grade = "B";
+
+    const isSubmitted = isSubmitAction || !!existingResult?.isSubmitted;
+
+    if (existingResult) {
+      const updates = {
+        marksObtained: effectiveMarks, // keeping marksObtained for legacy compatibility
+        effectiveMarks: effectiveMarks,
+        teacherMarks: newTeacherMarks,
+        adminOverride: newAdminOverride,
+        overrideReason: newOverrideReason,
+        overrideDate: newOverrideDate,
+        theoryMarks: isAdminOverride ? existingResult.theoryMarks : theoryObtained, // don't overwrite teacher's breakdown if admin overrides
+        maxMarks: maxM,
+        grade: grade,
+        remarks: mark.remarks,
+        isAbsent: mark.isAbsent,
+        practicalMarks: isAdminOverride ? existingResult.practicalMarks : practicalObtained,
+        updatedAt: nowStr,
+        updatedBy: teacherId,
+        isSubmitted: isSubmitted,
+        submittedAt: (isSubmitAction && !existingResult.isSubmitted) ? nowStr : existingResult.submittedAt,
+        submittedBy: (isSubmitAction && !existingResult.isSubmitted) ? teacherId : existingResult.submittedBy,
+      };
+
+      // Add to history for audits
+      if (existingResult.marksObtained !== effectiveMarks) {
+        updates.marksHistory = existingResult.marksHistory || [];
+        updates.marksHistory.push({
+          previousMarks: existingResult.marksObtained,
+          newMarks: effectiveMarks,
+          changedBy: teacherId,
+          changedAt: nowStr,
+          reason: mark.overrideReason || (isAdminOverride ? "Admin Override" : "Teacher Update")
+        });
+      }
+
+      await provider.updateResult(existingResult.id, updates);
+    } else {
+      await provider.createResult({
+        studentId: mark.studentId,
+        classId: classId,
+        subjectId: subjectId,
+        examId: examId,
+        marksObtained: effectiveMarks,
+        effectiveMarks: effectiveMarks,
+        teacherMarks: newTeacherMarks,
+        theoryMarks: theoryObtained,
+        maxMarks: maxM,
+        grade: grade,
+        remarks: mark.remarks,
+        isAbsent: mark.isAbsent,
+        practicalMarks: practicalObtained,
+        createdAt: nowStr,
+        createdBy: teacherId,
+        isSubmitted: isSubmitted,
+        submittedAt: isSubmitAction ? nowStr : null,
+        submittedBy: isSubmitAction ? teacherId : null,
+        marksHistory: []
+      });
+    }
+  }
+
+  return { success: true };
 };

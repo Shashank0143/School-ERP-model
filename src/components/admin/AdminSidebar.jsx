@@ -332,7 +332,7 @@ function AdminSidebar({
       <motion.aside
         animate={{ width: isCollapsed ? 64 : 240 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="hidden md:flex flex-col flex-shrink-0 fixed left-0 top-0 h-full z-30 shadow-xl overflow-hidden"
+        className="hidden md:flex flex-col flex-shrink-0 fixed left-0 top-0 h-full z-30 shadow-xl overflow-hidden print:hidden"
         style={{ backgroundColor: "#03045e" }}
         aria-label={t("admin.sidebar")}
       >

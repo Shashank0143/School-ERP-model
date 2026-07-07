@@ -246,7 +246,7 @@ const ClubsActivitiesPage = () => {
                           <tr key={req.requestId} className="border-b border-gray-50 hover:bg-gray-50/30 transition-colors">
                             <td className="py-4 px-5">
                               <span className="text-xs font-black text-[#03045e]">{req.studentName}</span>
-                              <div className="text-[10px] font-bold text-gray-400 mt-0.5">{t("clubs.class", { fallback: "Class " })}{req.className}-{req.section}</div>
+                              <div className="text-[10px] font-bold text-gray-400 mt-0.5">{t("clubs.class", { fallback: "Class " })}{req.className}</div>
                             </td>
                             <td className="py-4 px-5 text-xs font-bold text-gray-600">{req.clubName}</td>
                             <td className="py-4 px-5 text-xs font-bold text-gray-600">

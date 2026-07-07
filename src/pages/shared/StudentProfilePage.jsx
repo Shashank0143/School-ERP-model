@@ -32,6 +32,7 @@ import { useAuth } from "../../context/AuthContext";
 import ChildScopeSwitcher from "../../components/parent/ChildScopeSwitcher";
 import { IDCard } from "../../components/common/id-card";
 import IDCardPreviewModal from "../../components/common/id-card/IDCardPreviewModal";
+import StudentStatusBadge from "../../components/common/StudentStatusBadge";
 
 // ── Reusable UI Components ──────────────────────────────────────────────────
 
@@ -213,7 +214,7 @@ const StudentProfilePage = ({ onNavigatePage }) => {
 
               <div className="flex flex-col">
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-2.5 mb-2.5">
-                  <StatusBadge type="success" text={data.personal.status} />
+                  <StudentStatusBadge status={data.personal.status} />
                   <span className="px-2.5 py-1 rounded-lg bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest border border-gray-100">
                     Class {data.academic.class}
                   </span>

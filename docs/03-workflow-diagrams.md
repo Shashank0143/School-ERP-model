@@ -392,3 +392,43 @@ flowchart LR
     F -->|Clicks View ID Card| G[Preview Modal]
     G -->|Browser Print| H[Print / Save as PDF]
 ```
+
+# End-to-End Academic Pipeline
+
+```mermaid
+flowchart TD
+    subgraph "Phase 1: Teacher Marks Submission"
+        A[Teacher] -->|Enters Marks & Grades| B[Draft Status]
+        B -->|Submits| C[Submitted Status]
+        C -.->|Locked for Teacher| D[Awaiting Admin Review]
+    end
+
+    subgraph "Phase 2: Admin Evaluation & Publication"
+        D -->|Admin Reviews| E{Approval}
+        E -->|Rejects| F[Returned to Teacher]
+        F -->|Teacher Edits| B
+        E -->|Approves| G[Evaluated Status]
+        G -->|Admin Publishes| H[Published Status]
+        H -.->|Student/Parent Visibility| I[Exam-wise Result Preview]
+    end
+
+    subgraph "Phase 3: Academic Governance"
+        J[Admin] -->|Configures| K[Assessment Governance]
+        K -->|Defines| L[Assessment Categories & Weightages]
+        K -->|Defines| M[Grade Boundaries & Passing Rules]
+    end
+
+    subgraph "Phase 4: Academic Report Cards"
+        N[Admin] -->|Selects Class & Session| O[Generation Wizard]
+        O -->|Applies Governance Rules| P[Calculation Pipeline]
+        H -->|Aggregates Published Exams| P
+        L --> P
+        M --> P
+        P --> Q[Generated Report Cards]
+        Q -->|Admin Freezes| R[Frozen Status]
+        R -.->|Immutable| S[Final Records]
+        Q -->|Admin Publishes| T[Published Academic Report Cards]
+        T -.->|Student/Parent Visibility| U[Final Session Result]
+        T -.->|Admin| V[Print Operations]
+    end
+```

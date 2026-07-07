@@ -39,7 +39,7 @@ export function LanguageProvider({ children }) {
         if (process.env.NODE_ENV === "development") {
           console.warn(`Missing translation for key: "${key}" in lang: "${lang}"`);
         }
-        text = key; // Fallback to key
+        text = params?.fallback || key; // Fallback to params.fallback or key
       }
 
       // Ensure text is a string before calling replace

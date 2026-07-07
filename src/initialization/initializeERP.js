@@ -101,10 +101,110 @@ export const initializeERP = () => {
       setItem("erp_tsa_schema_version", CURRENT_TSA_SCHEMA);
     }
 
+    // ── Exam targetClasses Migration (Phase: Examination Context Fix) ────────────
+    // Patches existing exam records that were seeded without targetClasses.
+    // generateMockData previously wrote bare exam objects with no targetClasses,
+    // causing downstream workspaces to show zero or all classes incorrectly.
+    const CURRENT_EXAMS_SCHEMA = 3;
+    const storedExamsSchema = parseInt(getItem("erp_exams_schema_version") || "1", 10);
+    if (storedExamsSchema < CURRENT_EXAMS_SCHEMA) {
+      console.log("[InitializationEngine] Upgrading Exams schema v1 → v2 (backfilling targetClasses)");
+      const allExams = getItem(STORAGE_KEYS.EXAMS) || [];
+      const ALL_TARGET_CLASSES = {
+        "class-10a": { selected: true, sections: ["A"] },
+        "class-10b": { selected: true, sections: ["B"] },
+        "class-10c": { selected: true, sections: ["C"] },
+        "class-10d": { selected: true, sections: ["D"] },
+        "class-11a": { selected: true, sections: ["A"] },
+        "class-11b": { selected: true, sections: ["B"] },
+        "class-11c": { selected: true, sections: ["C"] },
+        "class-11d": { selected: true, sections: ["D"] },
+      };
+      const patchedExams = allExams.map(exam => {
+        let updatedExam = { ...exam };
+
+        if (!updatedExam.targetClasses) {
+          if (updatedExam.classes && Array.isArray(updatedExam.classes) && updatedExam.classes.length > 0) {
+            const targetClasses = {};
+            updatedExam.classes.forEach(c => {
+              const id = c.classId || c.id || c;
+              if (typeof id === 'string') {
+                targetClasses[id] = { selected: true, sections: [c.section || 'A'] };
+              }
+            });
+            updatedExam.targetClasses = targetClasses;
+          } else {
+            updatedExam.targetClasses = ALL_TARGET_CLASSES;
+          }
+        }
+
+        if (!updatedExam.id) {
+          updatedExam.id = `exam-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+
+        return updatedExam;
+      });
+      setItem(STORAGE_KEYS.EXAMS, patchedExams);
+      setItem("erp_exams_schema_version", CURRENT_EXAMS_SCHEMA);
+    }
+
+    // ── Assessment Governance Initial Seed & Exam Migration (Phase 3) ────────────
+    const CURRENT_GOVERNANCE_SCHEMA = 1;
+    let storedGovernance = getItem(STORAGE_KEYS.ASSESSMENT_GOVERNANCE);
+    
+    if (!storedGovernance || !storedGovernance.version || storedGovernance.version < CURRENT_GOVERNANCE_SCHEMA) {
+      console.log("[InitializationEngine] Seeding Assessment Governance (Phase 3) & Migrating Exams");
+      
+      const defaultGovernance = {
+        version: CURRENT_GOVERNANCE_SCHEMA,
+        categories: [
+          { id: "cat-1", name: "Unit Test", isActive: true },
+          { id: "cat-2", name: "Term Examination", isActive: true },
+          { id: "cat-3", name: "Other Assessment", isActive: true }
+        ],
+        weightages: [
+          { categoryId: "cat-1", weightage: 30 },
+          { categoryId: "cat-2", weightage: 50 },
+          { categoryId: "cat-3", weightage: 20 },
+        ],
+        gradeBoundaries: [
+          { id: "gb-1", name: "A+", min: 90, max: 100, point: 10, order: 1 },
+          { id: "gb-2", name: "A", min: 80, max: 89, point: 9, order: 2 },
+          { id: "gb-3", name: "B+", min: 70, max: 79, point: 8, order: 3 },
+          { id: "gb-4", name: "B", min: 60, max: 69, point: 7, order: 4 },
+          { id: "gb-5", name: "C", min: 50, max: 59, point: 6, order: 5 },
+          { id: "gb-6", name: "D", min: 33, max: 49, point: 5, order: 6 },
+          { id: "gb-7", name: "F", min: 0, max: 32, point: 0, order: 7 },
+        ],
+        passingRules: {
+          overallPercentage: 33
+        }
+      };
+      
+      setItem(STORAGE_KEYS.ASSESSMENT_GOVERNANCE, defaultGovernance);
+      
+      // Migrate existing exams to have a default category ("Other Assessment")
+      const allExams = getItem(STORAGE_KEYS.EXAMS) || [];
+      let examsModified = false;
+      const patchedExams = allExams.map(exam => {
+        if (!exam.assessmentCategoryId) {
+          examsModified = true;
+          return { ...exam, assessmentCategoryId: "cat-3" };
+        }
+        return exam;
+      });
+      
+      if (examsModified) {
+        setItem(STORAGE_KEYS.EXAMS, patchedExams);
+      }
+    }
+
     // 2. First-load seeding if empty
     const seedIfEmpty = (key, data, name) => {
       const existing = getItem(key);
-      if (!existing || existing.length === 0) {
+      // Only seed if the item is truly missing (null/undefined).
+      // If it is an empty array [], it means the user deleted all items, so we shouldn't re-seed.
+      if (!existing) {
         setItem(key, data);
         console.log(`[InitializationEngine] Seeded ${name}`);
         return true;
@@ -236,6 +336,7 @@ export const resetERPData = () => {
     setItem(STORAGE_KEYS.PARENTS, parentsSeed);
     setItem(STORAGE_KEYS.TEACHER_SUBJECT_ASSIGNMENTS, teacherSubjectAssignmentsSeed);
     setItem(STORAGE_KEYS.QUESTION_PAPERS, questionPapersSeed);
+    setItem(STORAGE_KEYS.SUBJECTS, subjectsSeed);
     console.log("[InitializationEngine] Demo data reset complete");
 
     // Auth users will be regenerated by initializeERP

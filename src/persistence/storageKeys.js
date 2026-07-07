@@ -29,6 +29,8 @@ export const STORAGE_KEYS = {
   EXAM_PAPERS: "erp_exam_papers",
   QUESTION_PAPERS: "erp_question_papers_v2",
   RESULTS: "erp_results",
+  REPORT_CARDS: "erp_reportCards",
+  ASSESSMENT_GOVERNANCE: "erp_assessmentGovernance",
   ASSIGNMENTS: "erp_assignments",
   SUBMISSIONS: "erp_submissions",
   PERIODS: "erp_periods",

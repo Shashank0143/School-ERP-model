@@ -27,7 +27,10 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarRange,
-  GraduationCap
+  GraduationCap,
+  FileMinus,
+  Scale,
+  Award
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
@@ -54,7 +57,10 @@ const iconMap = {
   FileQuestion,
   LineChart,
   Megaphone,
-  CalendarRange
+  CalendarRange,
+  FileMinus,
+  Scale,
+  Award
 };
 
 const backdropVariants = {

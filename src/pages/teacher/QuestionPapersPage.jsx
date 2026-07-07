@@ -23,24 +23,12 @@ import {
   Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import EmptyState from "../../components/common/EmptyState";
+import StatusBadge from "../../components/common/StatusBadge";
 
-const StatusBadge = ({ status }) => {
-  const styles = {
-    Draft: "bg-gray-100 text-gray-600 border-gray-200",
-    Submitted: "bg-blue-50 text-blue-600 border-blue-200",
-    Approved: "bg-emerald-50 text-emerald-600 border-emerald-200",
-    Rejected: "bg-rose-50 text-rose-600 border-rose-200",
-  };
-  
-  const { t } = useLanguage();
-  return (
-    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${styles[status] || styles.Draft}`}>
-      {status === 'Submitted' ? t("questionPapers.pendingApproval", { fallback: 'Pending Approval' }) : t(`questionPapers.status${status}`, { fallback: status })}
-    </span>
-  );
-};
 
-const QuestionPapersPage = () => {
+
+const QuestionPapersPage = ({ isEmbedded = false }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const teacherProfile = user?.profile;
@@ -123,13 +111,15 @@ const QuestionPapersPage = () => {
   }
 
   return (
-    <div className="space-y-8 pb-12 w-full max-w-7xl mx-auto">
-      <TeacherModuleHeader 
-        titleKey="nav.question_papers"
-        descriptionKey="questionPapers.moduleDesc"
-        helperContentEn="The Question Paper module lets you draft textual papers or upload formatted PDF/Images, submitting them directly to the administration for review."
-        helperContentHi="प्रश्न पत्र मॉड्यूल आपको प्रश्न पत्र का मसौदा तैयार करने या स्वरूपित पीडीएफ / चित्र अपलोड करने की अनुमति देता है, उन्हें समीक्षा के लिए सीधे प्रशासन को प्रस्तुत करता है।"
-      />
+    <div className={`space-y-8 w-full max-w-7xl mx-auto ${!isEmbedded ? 'pb-12' : ''}`}>
+      {!isEmbedded && (
+        <TeacherModuleHeader 
+          titleKey="nav.question_papers"
+          descriptionKey="questionPapers.moduleDesc"
+          helperContentEn="The Question Paper module lets you draft textual papers or upload formatted PDF/Images, submitting them directly to the administration for review."
+          helperContentHi="प्रश्न पत्र मॉड्यूल आपको प्रश्न पत्र का मसौदा तैयार करने या स्वरूपित पीडीएफ / चित्र अपलोड करने की अनुमति देता है, उन्हें समीक्षा के लिए सीधे प्रशासन को प्रस्तुत करता है।"
+        />
+      )}
 
       {/* Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -262,7 +252,7 @@ const QuestionPapersPage = () => {
                       </div>
                     </td>
                     <td className="py-4 px-5">
-                      <StatusBadge status={paper.status} />
+                      <StatusBadge status={paper.status === 'Submitted' ? 'Pending' : paper.status} />
                       {paper.status === 'Rejected' && paper.remarks && (
                         <p className="text-[10px] text-rose-500 font-bold mt-1 max-w-[150px] truncate" title={paper.remarks}>
                           {paper.remarks}
@@ -303,12 +293,12 @@ const QuestionPapersPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-400">
-                      <FileText size={32} className="mb-3 opacity-20" />
-                      <p className="text-sm font-black text-[#03045e]">{t("questionPapers.noPapers", { fallback: "No question papers found" })}</p>
-                      <p className="text-xs font-bold mt-1">{t("questionPapers.noPapersHelp", { fallback: "Create a new paper or adjust your filters." })}</p>
-                    </div>
+                  <td colSpan="6" className="p-0">
+                    <EmptyState 
+                      icon={FileText} 
+                      title={t("questionPapers.noPapers", { fallback: "No question papers found" })} 
+                      description={t("questionPapers.noPapersHelp", { fallback: "Create a new paper or adjust your filters." })} 
+                    />
                   </td>
                 </tr>
               )}

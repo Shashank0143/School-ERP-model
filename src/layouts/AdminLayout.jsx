@@ -84,7 +84,7 @@ const AdminLayout = ({ children, navItems = [], activePage, setActivePage, notif
         <motion.div
           animate={{ marginLeft: window.innerWidth < 768 ? 0 : (sidebarCollapsed ? 64 : 240) }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="flex-1 flex flex-col min-w-0"
+          className="flex-1 flex flex-col min-w-0 print:!m-0 print:w-full"
         >
           <Header
             student={user}

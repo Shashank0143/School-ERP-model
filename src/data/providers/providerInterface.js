@@ -215,6 +215,13 @@ export const DataProviderInterface = {
   cancelStudentDutyRequest: async (_id) => false,
   completeStudentDutyRequest: async (_id) => false,
 
+  // === REPORT CARDS ===
+  getReportCards: async () => [],
+  getReportCardsByClass: async (_classId, _sessionId) => [],
+  getReportCardsByStudent: async (_studentId) => [],
+  saveReportCards: async (_cards) => [],
+  updateReportCard: async (_id, _updates) => null,
+
   // === ADMIN / SYSTEM ===
   resetSeedData: async () => false,
 };

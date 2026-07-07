@@ -20,6 +20,7 @@ import AdminEditForm from "../../components/admin/AdminEditForm";
 import ConfirmationModal from "../../shared/components/ConfirmationModal";
 import ToastNotification from "../../shared/components/ToastNotification";
 import LoadingSkeleton from "../../shared/components/LoadingSkeleton";
+import StudentStatusBadge from "../../components/common/StudentStatusBadge";
 
 import {
   getAllStudents,
@@ -556,15 +557,10 @@ const StudentsPage = () => {
                     </div>
                   </td>
                   <td className="py-4 px-3">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-wider ${
-                        stu.isActive === false
-                          ? "text-gray-500 bg-gray-50 border-gray-200"
-                          : "text-emerald-600 bg-emerald-50 border-emerald-100"
-                      }`}
-                    >
-                      {stu.isActive === false ? "Inactive" : "Active"}
-                    </span>
+                    <StudentStatusBadge 
+                      status={stu.status || (stu.isActive === false ? false : "Active")}
+                      size="sm"
+                    />
                   </td>
                   <td className="py-4 px-3 text-right last:pr-2">
                     <div className="flex items-center justify-end gap-1">

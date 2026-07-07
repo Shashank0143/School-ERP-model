@@ -168,7 +168,7 @@ const Header = React.memo(function Header({ student, notifications = [], current
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm w-full">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm w-full print:hidden">
       <div className="flex items-center justify-between px-3 md:px-6 lg:px-8 h-16 max-w-full">
         {/* Left: mobile hamburger + logo */}
         <div className="flex items-center gap-3">

@@ -9,7 +9,7 @@ import { classesSeed } from "../data/mockDB/seed/classes";
 export const generateMissingMockData = () => {
   // 1. Seed Clubs
   const existingClubs = getItem(STORAGE_KEYS.CLUBS);
-  if (!existingClubs || existingClubs.length === 0) {
+  if (!existingClubs ) {
     const allClubs = [...clubsData.joinedClubs, ...clubsData.availableClubs].map(c => ({
       id: c.id,
       name: c.name,
@@ -29,7 +29,7 @@ export const generateMissingMockData = () => {
 
   // 2. Seed Club Enrollments (only for 'stud-001' to match the legacy 'joinedClubs')
   const existingEnrollments = getItem(STORAGE_KEYS.CLUB_ENROLLMENTS);
-  if (!existingEnrollments || existingEnrollments.length === 0) {
+  if (!existingEnrollments ) {
     const enrollments = clubsData.joinedClubs.map(c => ({
       id: `enroll-${c.id}-stud-001`,
       studentId: "stud-001",
@@ -44,7 +44,7 @@ export const generateMissingMockData = () => {
 
   // 3. Seed Club Activities
   const existingActivities = getItem(STORAGE_KEYS.CLUB_ACTIVITIES);
-  if (!existingActivities || existingActivities.length === 0) {
+  if (!existingActivities ) {
     const activities = clubsData.activities.map((a, i) => {
       // Find matching club id based on name
       const matchingClub = [...clubsData.joinedClubs, ...clubsData.availableClubs].find(c => c.name === a.club);
@@ -67,7 +67,7 @@ export const generateMissingMockData = () => {
 
   // 4. Generate Invoices and Receipts from feesSeed and feeStructuresSeed
   const existingInvoices = getItem(STORAGE_KEYS.INVOICES);
-  if (!existingInvoices || existingInvoices.length === 0) {
+  if (!existingInvoices ) {
     const invoices = [];
     const receipts = [];
     
@@ -154,7 +154,7 @@ export const generateMissingMockData = () => {
 
   // 5. Seed School Events for the Event Board
   const existingEvents = getItem(STORAGE_KEYS.EVENTS);
-  if (!existingEvents || existingEvents.length === 0) {
+  if (!existingEvents ) {
     const today = new Date();
     
     // Format date properly (e.g. "15 May 2025")
@@ -216,7 +216,7 @@ export const generateMissingMockData = () => {
 
   // 6. Seed Documents
   const existingDocs = getItem(STORAGE_KEYS.DOCUMENTS);
-  if (!existingDocs || existingDocs.length === 0) {
+  if (!existingDocs ) {
     const documents = studentsSeed.flatMap((student) => [
       {
         id: `doc-1-${student.id}`,
@@ -264,7 +264,7 @@ export const generateMissingMockData = () => {
 
   // 7. Seed Achievements
   const existingAchievements = getItem(STORAGE_KEYS.ACHIEVEMENTS);
-  if (!existingAchievements || existingAchievements.length === 0) {
+  if (!existingAchievements ) {
     const achievements = studentsSeed.flatMap((student) => [
       {
         id: `ach-1-${student.id}`,
@@ -305,7 +305,7 @@ export const generateMissingMockData = () => {
 
   // 8. Seed Transport Data
   const existingTransportAssignments = getItem(STORAGE_KEYS.TRANSPORT_ASSIGNMENTS);
-  if (!existingTransportAssignments || existingTransportAssignments.length === 0) {
+  if (!existingTransportAssignments ) {
     const zones = ["North Zone", "South Zone", "East Zone", "West Zone", "Central Zone"];
     const attendantNames = [
       "Geeta Devi", "Satish Mehra", "Sunita Rani", "Rakesh Bhai", "Meena Kumari",
@@ -426,7 +426,7 @@ export const generateMissingMockData = () => {
 
   // 8b. Back-fill stops if missing (partial reset scenario)
   const existingStops = getItem(STORAGE_KEYS.TRANSPORT_STOPS);
-  if (!existingStops || existingStops.length === 0) {
+  if (!existingStops ) {
     // If routes exist but stops are missing, re-seed stops from routes
     const routes = getItem(STORAGE_KEYS.TRANSPORT_ROUTES) || [];
     const stopNamesByZone = {
@@ -467,7 +467,7 @@ export const generateMissingMockData = () => {
 
   // 9. Seed Mentor Support Data
   const existingMentorAssignments = getItem(STORAGE_KEYS.MENTOR_ASSIGNMENTS);
-  if (!existingMentorAssignments || existingMentorAssignments.length === 0) {
+  if (!existingMentorAssignments ) {
     // No explicit overrides, so it uses class teacher as mentor
     const mentorAssignments = [];
 
@@ -500,16 +500,32 @@ export const generateMissingMockData = () => {
 
   // 10. Seed Exams and Results Data
   const existingResults = getItem(STORAGE_KEYS.RESULTS);
-  if (!existingResults || existingResults.length === 0) {
+  if (!existingResults) {
+    // All classes targeted by default for seeded exams.
+    // targetClasses must always be present — downstream workspaces depend on it.
+    const ALL_TARGET_CLASSES = {
+      "class-10a": { selected: true, sections: ["A"] },
+      "class-10b": { selected: true, sections: ["B"] },
+      "class-10c": { selected: true, sections: ["C"] },
+      "class-10d": { selected: true, sections: ["D"] },
+      "class-11a": { selected: true, sections: ["A"] },
+      "class-11b": { selected: true, sections: ["B"] },
+      "class-11c": { selected: true, sections: ["C"] },
+      "class-11d": { selected: true, sections: ["D"] },
+    };
     const mockExams = [
-      { id: "exam-ut1", name: "Unit Test 1", type: "UNIT", status: "published", startDate: "2025-04-10", endDate: "2025-04-15", academicYear: "2025-2026" },
-      { id: "exam-ut2", name: "Unit Test 2", type: "UNIT", status: "published", startDate: "2025-06-10", endDate: "2025-06-15", academicYear: "2025-2026" },
-      { id: "exam-term1", name: "Term 1 Examination", type: "TERM", status: "published", startDate: "2025-09-18", endDate: "2025-09-28", academicYear: "2025-2026" },
-      { id: "exam-ut3", name: "Unit Test 3", type: "UNIT", status: "scheduled", startDate: "2025-11-10", endDate: "2025-11-15", academicYear: "2025-2026" },
-      { id: "exam-ut4", name: "Unit Test 4", type: "UNIT", status: "draft", startDate: "2026-01-10", endDate: "2026-01-15", academicYear: "2025-2026" },
-      { id: "exam-term2", name: "Term 2 Examination", type: "TERM", status: "scheduled", startDate: "2026-03-01", endDate: "2026-03-15", academicYear: "2025-2026" }
+      { id: "exam-ut1", name: "Unit Test 1", type: "UNIT", status: "published", startDate: "2025-04-10", endDate: "2025-04-15", academicYear: "2025-2026", targetClasses: ALL_TARGET_CLASSES },
+      { id: "exam-ut2", name: "Unit Test 2", type: "UNIT", status: "published", startDate: "2025-06-10", endDate: "2025-06-15", academicYear: "2025-2026", targetClasses: ALL_TARGET_CLASSES },
+      { id: "exam-term1", name: "Term 1 Examination", type: "TERM", status: "published", startDate: "2025-09-18", endDate: "2025-09-28", academicYear: "2025-2026", targetClasses: ALL_TARGET_CLASSES },
+      { id: "exam-ut3", name: "Unit Test 3", type: "UNIT", status: "scheduled", startDate: "2025-11-10", endDate: "2025-11-15", academicYear: "2025-2026", targetClasses: ALL_TARGET_CLASSES },
+      { id: "exam-ut4", name: "Unit Test 4", type: "UNIT", status: "draft", startDate: "2026-01-10", endDate: "2026-01-15", academicYear: "2025-2026", targetClasses: ALL_TARGET_CLASSES },
+      { id: "exam-term2", name: "Term 2 Examination", type: "TERM", status: "scheduled", startDate: "2026-03-01", endDate: "2026-03-15", academicYear: "2025-2026", targetClasses: ALL_TARGET_CLASSES }
     ];
-    setItem(STORAGE_KEYS.EXAMS, mockExams);
+    // Only overwrite EXAMS if they are also missing (do NOT clobber user-created cycles).
+    const existingExams = getItem(STORAGE_KEYS.EXAMS);
+    if (!existingExams) {
+      setItem(STORAGE_KEYS.EXAMS, mockExams);
+    }
 
     const mockResults = [];
     studentsSeed.forEach((student) => {
@@ -556,7 +572,7 @@ export const generateMissingMockData = () => {
 
   // 11. Seed Class Updates
   const existingClassUpdates = getItem(STORAGE_KEYS.CLASS_UPDATES);
-  if (!existingClassUpdates || existingClassUpdates.length === 0) {
+  if (!existingClassUpdates ) {
     const mockClassUpdates = [];
     
     classesSeed.forEach((cls, i) => {
@@ -599,7 +615,7 @@ export const generateMissingMockData = () => {
 
   // 12. Seed Leave Requests
   const existingLeaves = getItem(STORAGE_KEYS.LEAVE_REQUESTS);
-  if (!existingLeaves || existingLeaves.length === 0) {
+  if (!existingLeaves ) {
     const mockLeaves = [];
     
     studentsSeed.forEach((student, i) => {

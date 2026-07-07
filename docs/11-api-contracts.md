@@ -203,3 +203,26 @@ Endpoints for parent portal access.
 ## 16. Identity Card
 **Current State:** Frontend Only | **Future:** Planned - Not Implemented
 - **Integration Note:** The current prototype has no ID Card API. It is completely stateless on the frontend. Future backend API endpoints could supply printable identity payloads or QR verification metadata, but this is strictly a future API placeholder.
+
+## 17. Assessment Governance
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/assessment-governance`
+- **Response Shape:** `AssessmentGovernanceDTO`
+### `PUT /api/v1/assessment-governance`
+- **Request Body:** `{ categories, weightages, grades, passingRules }`
+- **Response Shape:** `AssessmentGovernanceDTO`
+
+## 18. Academic Report Cards
+**Current State:** localProvider | **Future:** apiProvider
+### `GET /api/v1/report-cards`
+- **Query Params:** `?classId=UUID`, `?sessionId=String`
+- **Response Shape:** `ReportCardDTO[]`
+### `POST /api/v1/report-cards/generate`
+- **Request Body:** `{ classId, sessionId, targetExams: UUID[] }`
+- **Response Shape:** `{ message: "Generated successfully", count: Number }`
+### `POST /api/v1/report-cards/publish`
+- **Request Body:** `{ reportCardIds: UUID[] }`
+- **Response Shape:** `{ message: "Published successfully" }`
+### `POST /api/v1/report-cards/freeze`
+- **Request Body:** `{ reportCardIds: UUID[] }`
+- **Response Shape:** `{ message: "Frozen successfully" }`

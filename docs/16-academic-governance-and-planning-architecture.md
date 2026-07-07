@@ -1,9 +1,24 @@
-# 16. Academic Analytics & Institutional Planning Architecture
+# 16. Academic Governance & Institutional Planning Architecture
 
 ## Executive Summary
-This document covers the architectural approach and implementation details for the advanced academic, performance, and institutional planning modules within the EduDash ERP. These modules provide critical insights into student performance trajectories, workforce utilization, and departmental workflows.
+This document serves as the canonical architectural reference for the EduDash academic pipeline. It covers the end-to-end flow from marks submission to report card generation, as well as institutional planning and academic analytics.
 
-## 1. Academic Analytics & Performance
+## 1. The Canonical Academic Pipeline
+The academic lifecycle in EduDash follows a strict, sequential pipeline. This pipeline ensures data integrity, proper administrative oversight, and consistent application of governance rules before any student performance data is published.
+
+1. **Teacher Marks Submission**: Teachers enter marks and grades for their assigned courses. The data remains in a `draft` state until explicitly `submitted`. Once submitted, it is locked for the teacher and awaits administrative review.
+2. **Admin Evaluation**: Administrators review the submitted marks. They can either reject the submission (returning it to the teacher for correction) or approve and `publish` the marks.
+3. **Results Publication**: Published marks become visible to students and parents as individual "Exam-wise Result Previews". However, this is not the final report card.
+4. **Assessment Governance**: The system applies global, centralized academic policies configured by the administrator. This includes defining **Assessment Categories** (e.g., Formative, Summative), **Category Weightages** (how much each category contributes to the final grade), and **Grade Boundaries** (the percentage thresholds for letter grades like A+, B, etc.).
+5. **Academic Report Cards**: At the end of a session, administrators use the Generation Wizard to aggregate all published exams for a class. The calculation pipeline applies the Assessment Governance weightages and grade boundaries to produce the final, aggregated Academic Report Cards.
+6. **Student / Parent Consumption**: Once the generated report cards are reviewed, administrators `publish` them. Only then do they become visible in the student and parent portals as the final, official session result. Administrators may also `freeze` report cards to make them immutable.
+
+## 2. Assessment Governance Details
+**Target Portals:** Admin
+- **Components**: `AssessmentGovernancePage.jsx`
+- **Implementation Strategy**: A centralized configuration interface that persists rules to `assessment_governance`. It defines the grading scales and pass/fail criteria that the Report Card Generator relies on.
+
+## 3. Academic Analytics & Performance
 **Target Portals:** Admin, Teacher
 
 ### Components
@@ -17,7 +32,7 @@ These modules aggregate data from the underlying evaluation and examination serv
 - **State Management**: Consumes raw data arrays from `localStorage` mock APIs (`getResults`, `getStudentPerformance`), performing heavy client-side aggregation before rendering.
 - **Future Integration**: The backend should provide pre-aggregated metrics via a dedicated Analytics API to reduce frontend computational overhead.
 
-## 2. Institutional Planning & Workload
+## 4. Institutional Planning & Workload
 **Target Portals:** Admin
 
 ### Components
@@ -28,7 +43,7 @@ These tools help administrators balance teacher workload against institutional r
 - **Workload Registry**: Calculates the total hours, assigned classes, and committee obligations per teacher. It visualizes over-allocation and under-utilization.
 - **Persistence**: Workload parameters are derived from `assignedSubjects` and `timetable` records. Any modifications made during planning scenarios are intended to be staged and eventually merged into the live timetable and employee allocation stores.
 
-## 3. Mentor Support & Guidance
+## 5. Mentor Support & Guidance
 **Target Portals:** Teacher
 
 ### Components
@@ -39,7 +54,7 @@ Provides homeroom teachers and assigned mentors with deep dives into student emo
 - **Workflow**: Mentors log guidance sessions, tag behavioral observations, and escalate severe issues to the Support Center workflow.
 - **Integration**: Tightly integrated with the Support Center module, allowing mentors to track the resolution of student welfare tickets.
 
-## 4. Document Management
+## 6. Document Management
 **Target Portals:** Admin (and Shared)
 
 ### Components
@@ -50,7 +65,7 @@ Centralized repository for institutional policies, circulars, and teacher lesson
 - **Storage**: Currently mocked as metadata records in `localStorage`.
 - **Future Integration**: Will require integration with an S3-compatible blob storage service. The backend must enforce signed URLs and time-limited access tokens for sensitive documents (e.g., medical records, disciplinary actions).
 
-## 5. Attendance Management
+## 7. Attendance Management
 **Target Portals:** Admin, Teacher
 
 ### Components

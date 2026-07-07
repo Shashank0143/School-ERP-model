@@ -20,6 +20,7 @@ import AdminSectionCard from "../../components/admin/AdminSectionCard";
 import AdminEditForm from "../../components/admin/AdminEditForm";
 import ToastNotification from "../../shared/components/ToastNotification";
 import LoadingSkeleton from "../../shared/components/LoadingSkeleton";
+import StudentStatusBadge from "../../components/common/StudentStatusBadge";
 import { IDCard } from "../../components/common/id-card";
 import IDCardPreviewModal from "../../components/common/id-card/IDCardPreviewModal";
 
@@ -189,9 +190,7 @@ const StudentDetailsPage = () => {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-black text-[#03045e]">{profile.personal?.fullName}</h1>
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black uppercase rounded-full tracking-wider">
-                Active
-              </span>
+              <StudentStatusBadge status={profile.status || "Active"} />
             </div>
             <p className="text-xs text-gray-400 font-bold mt-1">
               {profile.academic?.class}-{profile.academic?.section} • Adm No: {profile.personal?.admissionNumber}

@@ -79,6 +79,32 @@ Must be returned as a nested structure or flat list filterable by `classId` or `
 }
 ```
 
+### Assessment Governance
+```json
+{
+  "id": "string (UUID)",
+  "categories": "array (JSON objects with weightages)",
+  "grades": "array (JSON objects with boundaries)",
+  "passingRules": "object (JSON object with pass thresholds)",
+  "lastUpdated": "string (ISO-8601)"
+}
+```
+
+### Academic Report Card
+```json
+{
+  "id": "string (UUID)",
+  "studentId": "string (UUID)",
+  "classId": "string (UUID)",
+  "sessionId": "string",
+  "metrics": "object (JSON object with subject-wise results)",
+  "totalPercentage": "number",
+  "overallGrade": "string",
+  "status": "string (draft | published | frozen)",
+  "publishedAt": "string (ISO-8601) | null"
+}
+```
+
 ### Assignment
 ```json
 {
@@ -195,5 +221,9 @@ Must be returned as a nested structure or flat list filterable by `classId` or `
 ### Identity Card Module
 - **Integration Rule**: None.
 - **Contract**: The current implementation of the ID Card module is completely frontend-only. There is NO backend endpoint required, NO backend logic, and NO API payload expected. ID Cards render purely by mapping data from existing profile/student/teacher endpoints.
+
+### Academic Operations Lifecycle
+- **Integration Rule**: The backend must support the sequential lifecycle: `Teacher Submission` -> `Admin Evaluation` -> `Governance Configuration` -> `Report Card Generation` -> `Freeze/Publish`.
+- **Contract**: Expected endpoints include Governance CRUD, Report Card Generation, and state transitions (Draft -> Published -> Frozen). See `11-api-contracts.md` for exact endpoints.
 
 *(For detailed Schema configurations and exact field names, refer to `02-technical-reference.md` and `04-database-architecture.md`).*

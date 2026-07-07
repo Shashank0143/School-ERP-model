@@ -98,6 +98,20 @@ When migrating to the backend, the future `apiProvider` MUST satisfy the **Imple
 | `getApprovalSettings`, `updateApprovalSetting` | 🔴 Implemented + Not Contracted | Bypasses service layer, used by `AccessControlPage.jsx` directly |
 | `getCampaigns`, `createCampaign` | ⚪ Planned + Not Implemented | UI Stub Only in `CommunicationCenterPage.jsx` |
 
+## 12. Assessment Governance
+| Method | Classification | Status | Intent |
+|---|---|---|---|
+| `getAssessmentGovernance` | 🔴 Implemented + Not Contracted | Used by `assessmentGovernanceService.js` | Retrieve global categories, weightages, grade boundaries. |
+| `saveAssessmentGovernance` | 🔴 Implemented + Not Contracted | Used by `assessmentGovernanceService.js` | Save updated governance configuration. |
+
+## 13. Academic Report Cards
+| Method | Classification | Status | Intent |
+|---|---|---|---|
+| `getReportCardsByClassAndSession` | 🔴 Implemented + Not Contracted | Used by `reportCardService.js` | Retrieve existing report cards. |
+| `saveReportCards` | 🔴 Implemented + Not Contracted | Used by `reportCardService.js` | Bulk persist newly generated or updated report cards. |
+| `freezeReportCards` | 🔴 Implemented + Not Contracted | Used by `reportCardService.js` | Lock report cards to prevent further modifications. |
+| `publishReportCards` | 🔴 Implemented + Not Contracted | Used by `reportCardService.js` | Expose report cards to Student/Parent portals. |
+
 ---
 
 ## Action Plan for Backend Migration

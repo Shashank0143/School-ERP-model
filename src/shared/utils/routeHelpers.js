@@ -18,6 +18,8 @@ export function getRouteForNavItem(id, role) {
         return "/student/timetable";
       case "examination":
         return "/student/examinations";
+      case "academicResults":
+        return "/student/academic-results";
       case "feeDetails":
         return "/student/fees";
       case "transport":
@@ -40,6 +42,8 @@ export function getRouteForNavItem(id, role) {
         return "/student/support";
       case "student_duty":
         return "/student/my-duties";
+      case "withdrawal_request":
+        return "/student/withdrawal_request";
       default:
         return "/student/dashboard";
     }
@@ -58,6 +62,8 @@ export function getRouteForNavItem(id, role) {
         return "/parent/timetable";
       case "examination":
         return "/parent/examinations";
+      case "academicResults":
+        return "/parent/academic-results";
       case "feeDetails":
         return "/parent/fees";
       case "transport":
@@ -76,6 +82,8 @@ export function getRouteForNavItem(id, role) {
         return "/parent/leave";
       case "support_center":
         return "/parent/support";
+      case "withdrawal_request":
+        return "/parent/withdrawal_request";
       case "duty_records":
         return "/parent/duty-records";
       default:
@@ -94,10 +102,10 @@ export function getRouteForNavItem(id, role) {
         return "/teacher/attendance";
       case "assignments_mgmt":
         return "/teacher/assignments";
-      case "marks_exams":
-        return "/teacher/marks";
-      case "question_papers":
-        return "/teacher/question-papers";
+      case "teacher_examinations":
+        return "/teacher/examinations";
+      case "teacher_academic_results":
+        return "/teacher/academic-results";
       case "class_timetable":
         return "/teacher/timetable";
       case "student_perf":
@@ -116,6 +124,8 @@ export function getRouteForNavItem(id, role) {
         return "/teacher/support";
       case "student_duty":
         return "/teacher/student-duty";
+      case "teacher_exit_tracking":
+        return "/teacher/student-exit-tracking";
       default:
         return "/teacher/dashboard";
     }
@@ -134,6 +144,8 @@ export function getRouteForNavItem(id, role) {
         return "/admin/teachers";
       case "admin_parents":
         return "/admin/parents";
+      case "admin_student_exit":
+        return "/admin/student-exit-management";
       case "admin_classes":
         return "/admin/classes";
       case "admin_subjects":
@@ -141,7 +153,11 @@ export function getRouteForNavItem(id, role) {
       case "admin_timetable":
         return "/admin/timetable";
       case "admin_exams":
-        return "/admin/exams";
+        return "/admin/examinations/cycles";
+      case "admin_assessment_governance":
+        return "/admin/assessment-governance";
+      case "admin_report_cards":
+        return "/admin/examinations/report-cards";
       case "admin_question_papers":
         return "/admin/question-papers";
       case "admin_academic_performance":
@@ -205,6 +221,9 @@ export function isNavItemActive(id, role, pathname) {
   }
   if (id === "admin_students") {
     return pathname === targetRoute || pathname.startsWith(`${targetRoute}/`);
+  }
+  if (id === "admin_exams") {
+    return pathname.startsWith("/admin/examinations");
   }
 
   return pathname === targetRoute;

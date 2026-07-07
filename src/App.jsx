@@ -38,6 +38,7 @@ const CoursesPage = lazy(() => import("./pages/shared/CoursesPage"));
 const FacultyPage = lazy(() => import("./pages/shared/FacultyPage"));
 const WeeklyTimetablePage = lazy(() => import("./pages/shared/WeeklyTimetablePage"));
 const ExaminationPage = lazy(() => import("./pages/shared/ExaminationPage"));
+const AcademicResultsPage = lazy(() => import("./pages/shared/AcademicResultsPage"));
 const SchoolCalendarPage = lazy(() => import("./pages/shared/SchoolCalendarPage"));
 const FeeDetailsPage = lazy(() => import("./pages/shared/FeeDetailsPage"));
 const SubjectDetailPage = lazy(() => import("./pages/shared/SubjectDetailPage"));
@@ -51,6 +52,7 @@ const StudentProfilePage = lazy(() => import("./pages/shared/StudentProfilePage"
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const ForcePasswordResetPage = lazy(() => import("./pages/auth/ForcePasswordResetPage"));
 const LeavePage = lazy(() => import("./pages/student/LeavePage"));
+const WithdrawalRequestPage = lazy(() => import("./pages/shared/WithdrawalRequestPage"));
 const SupportCenterPage = lazy(() => import("./pages/shared/SupportCenterPage"));
 
 // Teacher Portal Pages
@@ -61,8 +63,7 @@ const AttendanceMgmtPage = lazy(
 const AssignmentsManagementPage = lazy(
   () => import("./pages/teacher/AssignmentsManagementPage"),
 );
-const QuestionPapersPage = lazy(() => import("./pages/teacher/QuestionPapersPage"));
-const MarksExamsPage = lazy(() => import("./pages/teacher/MarksExamsPage"));
+const TeacherExaminationWorkspace = lazy(() => import("./pages/teacher/examinations/TeacherExaminationWorkspace"));
 const ClassTimetablePage = lazy(
   () => import("./pages/teacher/ClassTimetablePage"),
 );
@@ -87,6 +88,8 @@ const TeacherLeavePage = lazy(() => import("./pages/teacher/TeacherLeavePage"));
 const StudentDutyManagementPage = lazy(() => import("./pages/teacher/StudentDutyManagementPage"));
 const StudentDutyRecordsPage = lazy(() => import("./pages/student/StudentDutyRecordsPage"));
 const ParentDutyRecordsPage = lazy(() => import("./pages/parent/ParentDutyRecordsPage"));
+const StudentExitManagementPage = lazy(() => import("./pages/admin/StudentExitManagementPage"));
+const StudentExitTrackingPage = lazy(() => import("./pages/teacher/StudentExitTrackingPage"));
 
 // Admin Portal Pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -97,7 +100,15 @@ const ParentsPage = lazy(() => import("./pages/admin/ParentsPage"));
 const ClassesPage = lazy(() => import("./pages/admin/ClassesPage"));
 const SubjectsPage = lazy(() => import("./pages/admin/SubjectsPage"));
 const TimetablePage = lazy(() => import("./pages/admin/TimetablePage"));
-const ExaminationsPage = lazy(() => import("./pages/admin/ExaminationsPage"));
+const ExamCyclesPage = lazy(() => import("./pages/admin/examinations/ExamCyclesPage"));
+const AcademicReportCardsPage = lazy(() => import("./pages/admin/examinations/academic-report-cards/AcademicReportCardsPage"));
+const TeacherAcademicResultsPage = lazy(() => import("./pages/teacher/TeacherAcademicResultsPage"));
+const AssessmentGovernancePage = lazy(() => import("./pages/admin/examinations/assessment-governance/AssessmentGovernancePage"));
+const DateSheetsPage = lazy(() => import("./pages/admin/examinations/DateSheetsPage"));
+const LiveOperationsPage = lazy(() => import("./pages/admin/examinations/LiveOperationsPage"));
+const EvaluationCenterPage = lazy(() => import("./pages/admin/examinations/EvaluationCenterPage"));
+const ResultsPublicationPage = lazy(() => import("./pages/admin/examinations/ResultsPublicationPage"));
+
 const QuestionPapersAdminPage = lazy(() => import("./pages/admin/QuestionPapersAdminPage"));
 const AttendanceOverviewPage = lazy(
   () => import("./pages/admin/AttendanceOverviewPage"),
@@ -775,6 +786,7 @@ function AppContent() {
         />
         <Route path="faculty" element={<LazyRoute Component={FacultyPage} />} />
         <Route path="leave" element={<LazyRoute Component={LeavePage} />} />
+        <Route path="withdrawal_request" element={<LazyRoute Component={WithdrawalRequestPage} />} />
         <Route path="support" element={<LazyRoute Component={SupportCenterPage} />} />
       </Route>
 
@@ -858,6 +870,7 @@ function AppContent() {
           }
         />
         <Route path="faculty" element={<LazyRoute Component={FacultyPage} />} />
+        <Route path="withdrawal_request" element={<LazyRoute Component={WithdrawalRequestPage} />} />
         <Route path="leave" element={<LazyRoute Component={LeavePage} />} />
         <Route path="support" element={<LazyRoute Component={SupportCenterPage} />} />
       </Route>
@@ -886,12 +899,8 @@ function AppContent() {
           element={<LazyRoute Component={AssignmentsManagementPage} />}
         />
         <Route
-          path="question-papers"
-          element={<LazyRoute Component={QuestionPapersPage} />}
-        />
-        <Route
-          path="marks"
-          element={<LazyRoute Component={MarksExamsPage} />}
+          path="examinations"
+          element={<LazyRoute Component={TeacherExaminationWorkspace} />}
         />
         <Route
           path="timetable"
@@ -900,6 +909,10 @@ function AppContent() {
         <Route
           path="students"
           element={<LazyRoute Component={StudentPerfPage} />}
+        />
+        <Route
+          path="academic-results"
+          element={<LazyRoute Component={TeacherAcademicResultsPage} />}
         />
         <Route
           path="mentorship"
@@ -912,6 +925,14 @@ function AppContent() {
         <Route
           path="student-duty"
           element={<LazyRoute Component={StudentDutyManagementPage} />}
+        />
+        <Route
+          path="reports"
+          element={<LazyRoute Component={ReportsAnalyticsPage} />}
+        />
+        <Route
+          path="student-exit-tracking"
+          element={<LazyRoute Component={StudentExitTrackingPage} />}
         />
         <Route
           path="clubs"
@@ -972,10 +993,34 @@ function AppContent() {
           path="timetable"
           element={<AdminRouteGuard requiredModule="admin_timetable"><LazyRoute Component={TimetablePage} /></AdminRouteGuard>}
         />
-        <Route
-          path="exams"
-          element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={ExaminationsPage} /></AdminRouteGuard>}
-        />
+          <Route
+            path="examinations/cycles"
+            element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={ExamCyclesPage} /></AdminRouteGuard>}
+          />
+          <Route
+            path="assessment-governance"
+            element={<AdminRouteGuard requiredModule="admin_assessment_governance"><LazyRoute Component={AssessmentGovernancePage} /></AdminRouteGuard>}
+          />
+          <Route
+            path="examinations/datesheets"
+            element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={DateSheetsPage} /></AdminRouteGuard>}
+          />
+          <Route
+            path="examinations/ongoing"
+            element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={LiveOperationsPage} /></AdminRouteGuard>}
+          />
+          <Route
+            path="examinations/evaluation"
+            element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={EvaluationCenterPage} /></AdminRouteGuard>}
+          />
+          <Route
+            path="examinations/results"
+            element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={ResultsPublicationPage} /></AdminRouteGuard>}
+          />
+          <Route
+            path="examinations/report-cards"
+            element={<AdminRouteGuard requiredModule="admin_exams"><LazyRoute Component={AcademicReportCardsPage} /></AdminRouteGuard>}
+          />
         <Route
           path="question-papers"
           element={<AdminRouteGuard requiredModule="admin_question_papers"><LazyRoute Component={QuestionPapersAdminPage} /></AdminRouteGuard>}
@@ -1055,6 +1100,7 @@ function AppContent() {
         />
         <Route path="support" element={<AdminRouteGuard requiredModule="support_center"><LazyRoute Component={SupportCenterPage} /></AdminRouteGuard>} />
         <Route path="support-management" element={<AdminRouteGuard requiredModule="admin_support_management"><LazyRoute Component={SupportManagementPage} /></AdminRouteGuard>} />
+        <Route path="student-exit-management" element={<AdminRouteGuard requiredModule="admin_student_exit"><LazyRoute Component={StudentExitManagementPage} /></AdminRouteGuard>} />
         <Route
           path="school-settings"
           element={
@@ -1106,3 +1152,4 @@ export default App;
 
 
 
+// Trigger HMR

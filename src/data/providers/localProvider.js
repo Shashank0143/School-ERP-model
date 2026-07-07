@@ -380,6 +380,16 @@ const localProvider = {
     return exams.find((e) => e.examId === examId || e.id === examId) || null;
   },
 
+  // === ASSESSMENT GOVERNANCE ===
+  getAssessmentGovernance: async () => {
+    return getItem(STORAGE_KEYS.ASSESSMENT_GOVERNANCE) || null;
+  },
+
+  updateAssessmentGovernance: async (updates) => {
+    setItem(STORAGE_KEYS.ASSESSMENT_GOVERNANCE, updates);
+    return updates;
+  },
+
   getResults: async () => {
     return getItem(STORAGE_KEYS.RESULTS) || [];
   },
@@ -1412,8 +1422,8 @@ const localProvider = {
   // === EXAMS WRITE ===
   createExam: async (examData) => {
     const newExam = {
-      id: `exam-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       ...examData,
+      id: `exam-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     };
     const exams = getItem(STORAGE_KEYS.EXAMS) || [];
     exams.push(newExam);
@@ -1422,8 +1432,9 @@ const localProvider = {
   },
 
   updateExam: async (examId, updates) => {
+    if (!examId) throw new Error(`updateExam: examId must be a non-empty string, received: ${JSON.stringify(examId)}`);
     const exams = getItem(STORAGE_KEYS.EXAMS) || [];
-    const idx = exams.findIndex((e) => e.id === examId);
+    const idx = exams.findIndex((e) => e.id === examId || e.examId === examId);
     if (idx === -1) throw new Error("Exam session not found");
     exams[idx] = { ...exams[idx], ...updates };
     setItem(STORAGE_KEYS.EXAMS, exams);
@@ -1432,7 +1443,7 @@ const localProvider = {
 
   deleteExam: async (examId) => {
     const exams = getItem(STORAGE_KEYS.EXAMS) || [];
-    const filteredExams = exams.filter((e) => e.id !== examId);
+    const filteredExams = exams.filter((e) => e.id !== examId && e.examId !== examId);
     if (filteredExams.length === exams.length) return false;
 
     // Cascade delete papers
@@ -2725,6 +2736,45 @@ const localProvider = {
     const updated = { ...current, ...updates };
     setItem(STORAGE_KEYS.INSTITUTION_SETTINGS, updated);
     return updated;
+  },
+
+  // === REPORT CARDS ===
+  getReportCards: async () => {
+    return getItem(STORAGE_KEYS.REPORT_CARDS) || [];
+  },
+
+  getReportCardsByClass: async (classId, sessionId) => {
+    const cards = getItem(STORAGE_KEYS.REPORT_CARDS) || [];
+    return cards.filter(c => c.classId === classId && c.sessionId === sessionId);
+  },
+
+  getReportCardsByStudent: async (studentId) => {
+    const cards = getItem(STORAGE_KEYS.REPORT_CARDS) || [];
+    return cards.filter(c => c.studentId === studentId);
+  },
+
+  saveReportCards: async (cards) => {
+    let list = getItem(STORAGE_KEYS.REPORT_CARDS) || [];
+    // Update or insert
+    cards.forEach(card => {
+      const idx = list.findIndex(c => c.id === card.id);
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...card, updatedAt: new Date().toISOString() };
+      } else {
+        list.push({ ...card, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      }
+    });
+    setItem(STORAGE_KEYS.REPORT_CARDS, list);
+    return cards;
+  },
+
+  updateReportCard: async (id, updates) => {
+    const list = getItem(STORAGE_KEYS.REPORT_CARDS) || [];
+    const idx = list.findIndex(c => c.id === id);
+    if (idx === -1) throw new Error("Report card not found");
+    list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
+    setItem(STORAGE_KEYS.REPORT_CARDS, list);
+    return list[idx];
   },
 
   // === ADMIN / SYSTEM ===

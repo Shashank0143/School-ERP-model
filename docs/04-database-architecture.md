@@ -59,7 +59,14 @@ We recommend using **PostgreSQL Schemas** (Deliverable 15) to logically group ta
 *   **`assignments`** & **`assignment_submissions`**: Tracks homework/tasks.
 *   **`question_papers`**: Handles the creation and approval workflow of exam papers.
     *   *Fields*: `id`, `title`, `teacher_id`, `subject_id`, `class_section_id`, `status` (draft, pending_approval, approved, rejected), `content`, `uploaded_file`, `approved_by` (admin user id), `approved_at`, `remarks`, `created_at`, `updated_at`.
-*   **`exams`**, **`exam_schedules`**, **`results`**: Handles examination lifecycle.
+*   **`assessment_governance`**: Central configuration for academic policies.
+    *   *Fields*: `categories` (jsonb array of Assessment Categories), `weightages` (jsonb configuration mapping categories to final weight), `grades` (jsonb array of grade boundaries), `passing_rules` (jsonb configuration).
+*   **`exams`**: Defines an examination cycle.
+    *   *Fields*: `id`, `name`, `academic_year`, `start_date`, `end_date`, `assessment_category_id`, `status` (draft, published, frozen).
+*   **`exam_results`**: Teacher submissions of student marks for a specific exam and subject.
+    *   *Fields*: `id`, `exam_id`, `student_id`, `subject_id`, `marks_obtained`, `max_marks`, `status` (draft, submitted, evaluated).
+*   **`academic_report_cards`**: Final aggregated session results for a student.
+    *   *Fields*: `id`, `student_id`, `class_id`, `session_id`, `total_percentage`, `overall_grade`, `status` (draft, published, frozen), `metrics` (jsonb snapshot of subject-wise performance).
 
 ### Schema: `finance`
 *   **`fee_structures`**: Defines fee plans per class per academic year.

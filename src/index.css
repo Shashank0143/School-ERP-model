@@ -58,3 +58,37 @@
 .sidebar-nav:hover::-webkit-scrollbar {
   width: 5px;
 }
+
+/* ── Global Print Utilities ── */
+@media print {
+  /* Reset layout constraints that break printing (like framer-motion transforms and min-h-screen) */
+  html, body, #root {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background-color: white !important;
+  }
+
+  * {
+    /* Transforms create stacking contexts that destroy page breaks */
+    transform: none !important;
+  }
+
+  /* Specifically fix the AdminLayout flex wrapper */
+  .min-h-screen.flex {
+    display: block !important;
+  }
+
+  /* Isolate print container if used - no absolute positioning to avoid scroll cutoff */
+  .print-isolate {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Foolproof hiding of UI elements during print */
+  aside, header {
+    display: none !important;
+  }
+}

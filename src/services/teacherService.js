@@ -153,61 +153,7 @@ export const getMarksForClass = async (classId, subjectId, examId) => {
   );
 };
 
-/**
- * Submits marks for a list of students
- */
-export const submitMarks = async (
-  teacherId,
-  classId,
-  subjectId,
-  examId,
-  marksList,
-  publishResults = false,
-) => {
-  const provider = getDataProvider();
-  const records = marksList.map((item) => ({
-    studentId: item.studentId,
-    classId: classId,
-    subjectId: subjectId,
-    examId: examId,
-    marksObtained: parseFloat(item.marks),
-    maxMarks: parseFloat(item.maxMarks || 100),
-    remarks: item.remarks || "",
-    grade: calculateGrade(item.marks, item.maxMarks || 100),
-    teacherId: teacherId,
-  }));
 
-  const results = await provider.getResults();
-  records.forEach(async (record) => {
-    const existingIdx = results.findIndex(
-      (r) =>
-        r.studentId === record.studentId &&
-        r.examId === record.examId &&
-        r.subjectId === record.subjectId,
-    );
-
-    if (existingIdx !== -1) {
-      await provider.updateResult(results[existingIdx].id, record);
-    } else {
-      await provider.createResult(record);
-    }
-  });
-
-  return true;
-};
-
-/**
- * Simple grade calculator
- */
-const calculateGrade = (marks, max) => {
-  const percentage = (marks / max) * 100;
-  if (percentage >= 90) return "A+";
-  if (percentage >= 80) return "A";
-  if (percentage >= 70) return "B";
-  if (percentage >= 60) return "C";
-  if (percentage >= 50) return "D";
-  return "F";
-};
 
 /**
  * Fetches the complete detailed professional teacher profile relationally.

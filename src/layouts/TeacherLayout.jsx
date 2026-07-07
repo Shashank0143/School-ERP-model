@@ -4,6 +4,7 @@ import { ROLES } from "../auth/roles";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import MainCard from "../components/MainCard";
 import { Monitor } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const PortalInDevelopment = ({ title }) => (
   <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
@@ -24,12 +25,26 @@ const PortalInDevelopment = ({ title }) => (
   </div>
 );
 
-const TeacherLayout = ({ children, ...props }) => (
-  <ProtectedRoute allowedRoles={[ROLES.TEACHER]}>
-    <BaseLayout {...props}>
-      {children}
-    </BaseLayout>
-  </ProtectedRoute>
-);
+const TeacherLayout = ({ children, navItems, ...props }) => {
+  const { user } = useAuth();
+
+  const filteredNavItems = React.useMemo(() => {
+    if (!user) return navItems;
+    return navItems.filter(item => {
+      if (item.id === "teacher_exit_tracking") {
+        return user.isClassTeacher === true;
+      }
+      return true;
+    });
+  }, [navItems, user]);
+
+  return (
+    <ProtectedRoute allowedRoles={[ROLES.TEACHER]}>
+      <BaseLayout navItems={filteredNavItems} {...props}>
+        {children}
+      </BaseLayout>
+    </ProtectedRoute>
+  );
+};
 
 export default TeacherLayout;

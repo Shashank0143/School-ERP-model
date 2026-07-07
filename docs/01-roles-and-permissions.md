@@ -68,10 +68,10 @@ graph TD
         M_Exams["🎯 Exams & Grading Database"]
     end
 
-    Admin -->|✍️ Configures Lifecycle & Formally Publishes| M_Exams
-    Teacher -->|✍️ Enters Course Marks & Grades| M_Exams
-    Student -->|👁️ Views Published Grade Reports / Cards| M_Exams
-    Parent -->|👁️ Monitors Child's Report Card| M_Exams
+    Admin -->|✍️ Evaluates Teacher Submissions & Formally Publishes| M_Exams
+    Teacher -->|✍️ Submits Marks for Assigned Courses| M_Exams
+    Student -->|👁️ Views Published Academic Report Cards| M_Exams
+    Parent -->|👁️ Monitors Child's Academic Report Card| M_Exams
 
     style M_Exams fill:#fbcfe8,stroke:#ec4899,stroke-width:2px
 ```

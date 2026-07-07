@@ -192,7 +192,7 @@ export default function UpdateForm({ teacherProfile, onPublishSuccess }) {
           >
             {classesList.map(c => (
               <option key={c.id} value={c.id}>
-                Class {c.name} - {c.section}
+                Class {c.name}
               </option>
             ))}
           </select>

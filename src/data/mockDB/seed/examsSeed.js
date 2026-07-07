@@ -178,13 +178,23 @@ const buildStudentResults = (resultMap, subjects) => {
 export const examsSeed = [
   // === UT1 EXAMS ===
   {
-    examId: "exam-ut1-2025",
-    examName: "Unit Test 1 (UT1)",
-    examType: "Unit Test",
+    id: "exam-ut1-2025",
+    name: "Unit Test 1 (UT1)",
+    type: "Unit Test",
     academicYear: "2025-2026",
     startDate: "2025-07-15",
     endDate: "2025-07-20",
     status: "Completed",
+    targetClasses: {
+      "class-10a": { selected: true, sections: ["A"] },
+      "class-10b": { selected: true, sections: ["B"] },
+      "class-10c": { selected: true, sections: ["C"] },
+      "class-10d": { selected: true, sections: ["D"] },
+      "class-11a": { selected: true, sections: ["A"] },
+      "class-11b": { selected: true, sections: ["B"] },
+      "class-11c": { selected: true, sections: ["C"] },
+      "class-11d": { selected: true, sections: ["D"] },
+    },
     
     // Class 10 UT1
     classes: [
@@ -263,13 +273,23 @@ export const examsSeed = [
   
   // === HALF YEARLY EXAMS ===
   {
-    examId: "exam-halfyearly-2025",
-    examName: "Half-Yearly Examination",
-    examType: "Half-Yearly",
+    id: "exam-hy-2025",
+    name: "Half Yearly Examination",
+    type: "Half-Yearly",
     academicYear: "2025-2026",
     startDate: "2025-09-15",
     endDate: "2025-09-25",
     status: "Completed",
+    targetClasses: {
+      "class-10a": { selected: true, sections: ["A"] },
+      "class-10b": { selected: true, sections: ["B"] },
+      "class-10c": { selected: true, sections: ["C"] },
+      "class-10d": { selected: true, sections: ["D"] },
+      "class-11a": { selected: true, sections: ["A"] },
+      "class-11b": { selected: true, sections: ["B"] },
+      "class-11c": { selected: true, sections: ["C"] },
+      "class-11d": { selected: true, sections: ["D"] },
+    },
     
     // Class 10 Half-Yearly
     classes: [
@@ -351,7 +371,7 @@ export const examsSeed = [
 // QUICK LOOKUP HELPERS
 // ============================================================================
 
-export const getExamById = (examId) => examsSeed.find(e => e.examId === examId);
+export const getExamById = (examId) => examsSeed.find(e => e.id === examId);
 
 export const getStudentResult = (examId, studentId) => {
   const exam = getExamById(examId);
