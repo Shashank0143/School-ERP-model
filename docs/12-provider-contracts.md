@@ -112,7 +112,13 @@ When migrating to the backend, the future `apiProvider` MUST satisfy the **Imple
 | `freezeReportCards` | 🔴 Implemented + Not Contracted | Used by `reportCardService.js` | Lock report cards to prevent further modifications. |
 | `publishReportCards` | 🔴 Implemented + Not Contracted | Used by `reportCardService.js` | Expose report cards to Student/Parent portals. |
 
+## 14. Academic Calendar (LocalStorage Direct Storage)
+Note: The Academic Calendar subsystem bypasses the DataProvider interface for its initial prototype architecture.
+| Key | Classification | Status | Intent |
+|---|---|---|---|
+| `ACADEMIC_CALENDAR` | 🔴 Implemented + Direct Storage | Used by `academicCalendarService.js` | Single Source of Truth for the centralized institutional calendar. |
+
 ---
 
 ## Action Plan for Backend Migration
-The backend team MUST ensure that the future `apiProvider.js` implements all 🟢 **and** 🔴 methods. Before backend work begins, the frontend team should backport all 🔴 methods into `providerInterface.js` to properly formally document the expected signatures.
+The backend team MUST ensure that the future `apiProvider.js` implements all 🟢 **and** 🔴 methods. Before backend work begins, the frontend team should backport all 🔴 methods into `providerInterface.js` to properly formally document the expected signatures. The `ACADEMIC_CALENDAR` key must also be migrated to a backend relational table.

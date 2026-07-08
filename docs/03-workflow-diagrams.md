@@ -1,3 +1,15 @@
+# Institutional Academic Calendar Workflow
+
+```mermaid
+flowchart TD
+    A[Admin] -->|Creates / Edits / Overrides| B[Centralized Academic Calendar]
+    B -->|Provides Read-Only Data| C[Student Portal]
+    B -->|Provides Read-Only Data| D[Teacher Portal]
+    B -->|Provides Read-Only Data| E[Parent Portal]
+    B -->|Syncs EventBoard| F[Dashboard]
+    B -->|Determines Holidays & Overrides| G[Attendance Module]
+```
+
 # Student Module
 
 ```mermaid

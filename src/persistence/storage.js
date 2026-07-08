@@ -105,12 +105,21 @@ export const hasKey = (key) => {
  */
 export const clearAllData = () => {
   try {
-    Object.values(STORAGE_KEYS).forEach((key) => {
-      if (key !== STORAGE_KEYS.AUTH_STATE) {
-        localStorage.removeItem(key);
-        memoryCache.delete(key);
+    // Collect all keys to remove first to avoid modifying while iterating
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("erp_") && key !== STORAGE_KEYS.AUTH_STATE) {
+        keysToRemove.push(key);
       }
+    }
+    
+    // Remove all collected keys
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      memoryCache.delete(key);
     });
+    
     return true;
   } catch (error) {
     console.error("Storage error clearing all data:", error);

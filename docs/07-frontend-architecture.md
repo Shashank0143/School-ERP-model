@@ -42,3 +42,18 @@ The Student Portal is a read-only consumer of the centralized Examination Module
 - **Data Flow**: Business logic remains entirely inside `examService.js`. The UI exclusively owns presentation state (such as the active tab or helper popups).
 - **Component Hierarchy**: `ExaminationPage` → `CycleSelector` → `ScheduleSection` → `InstructionsSection`.
 - **Synchronization**: `ExaminationPage` handles dynamic Exam Cycle navigation and synchronizes Date Sheets and General Instructions dynamically, perfectly matching the admin configurations with absolutely zero presentation-layer mock data.
+
+## Academic Calendar Architecture
+The Academic Calendar is a centralized, institution-wide subsystem.
+- **Data Flow**: Admin owns all write operations via the Admin Portal. The data flows downstream to Student, Teacher, Parent, Dashboard, and Attendance portals as read-only.
+- **Service Architecture**: `academicCalendarService` acts as the definitive engine for CRUD, holiday logic, and Working Day Overrides.
+- **Attendance Synchronization**: The Attendance module routes all holiday checks (`getDayClassification`) through the centralized calendar service, ensuring complete alignment on working days across the ERP.
+
+### Architecture Freeze
+The Academic Calendar subsystem is considered stable and **frozen**. Future feature development must respect the following architectural decisions:
+1. **Centralized Service**: `academicCalendarService` is the sole source of truth for calendar logic.
+2. **Persistence**: `ACADEMIC_CALENDAR` (LocalStorage) is the only persistence key for calendar data.
+3. **Admin Ownership**: Admin owns all calendar write operations.
+4. **Read-Only Consumers**: Student, Teacher, Parent, Dashboard, and Attendance are strictly read-only consumers.
+5. **Seed-Only Legacy**: `calendar.js` is strictly used for initial seed data and must not be used as a runtime dependency.
+6. **Single Source of Truth**: LocalStorage remains the SSOT until backend migration.

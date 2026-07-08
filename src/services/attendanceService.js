@@ -1,5 +1,5 @@
 import { getDataProvider } from "../data";
-import { schoolCalendar } from "../data/shared/calendar";
+import { getDayClassification } from "./academicCalendarService";
 
 /**
  * Centralized service layer for the Institutional Daily Attendance Workflow System.
@@ -83,43 +83,22 @@ export const isHolidayOrWeekend = (dateStr) => {
   const day = parseInt(parts[2], 10);
   const dateObj = new Date(year, monthIndex, day);
 
+  // 1. Check Working Day Overrides & Institutional Holidays via centralized service
+  const classification = getDayClassification(dateStr);
+  
+  if (classification.isHoliday && classification.event) {
+    return { isHoliday: true, title: classification.event.title };
+  }
+  
+  // 2. Check for explicit working day overrides 
+  // If the admin explicitly made this date a working day, bypass the weekend check.
+  if (classification.isWorkingDayOverride) {
+    return { isHoliday: false };
+  }
+  
   const dayOfWeek = dateObj.getDay();
   if (dayOfWeek === 0 || dayOfWeek === 6) {
     return { isHoliday: true, title: "Weekend" };
-  }
-
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const month = monthNames[dateObj.getMonth()];
-
-  const holidays = schoolCalendar.events.filter((e) => e.type === "holiday");
-  const matchedHoliday = holidays.find((h) => {
-    const hParts = h.date.split(" ");
-    if (hParts.length >= 2) {
-      const hDay = parseInt(hParts[0], 10);
-      const hMonth = hParts[1];
-      return (
-        hDay === day &&
-        hMonth.toLowerCase().startsWith(month.toLowerCase().substring(0, 3))
-      );
-    }
-    return false;
-  });
-
-  if (matchedHoliday) {
-    return { isHoliday: true, title: matchedHoliday.title };
   }
 
   return { isHoliday: false };

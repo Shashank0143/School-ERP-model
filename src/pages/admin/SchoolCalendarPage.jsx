@@ -12,12 +12,15 @@ import {
   Info,
   X,
   Plus,
-  Calendar
+  Calendar,
+  Edit,
+  Trash
 } from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import AdminEditForm from "../../components/admin/AdminEditForm";
 import MainCard from "../../components/MainCard";
 import { getSchoolCalendar } from "../../services/sharedService";
+import { createEvent, updateEvent, deleteEvent, overrideHoliday } from "../../services/academicCalendarService";
 
 const NAVY = "#03045e";
 const TEAL = "#0077b6";
@@ -131,7 +134,7 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
   );
 }
 
-function EventRow({ event, index, isHovered, onHover, onClick }) {
+function EventRow({ event, index, isHovered, onHover, onClick, onEdit, onDelete }) {
   const cfg = TYPE_CONFIG[event.type] ?? TYPE_CONFIG.event;
   const IconComponent = cfg.icon;
   const parts = (event.date || "").split(" ");
@@ -186,6 +189,24 @@ function EventRow({ event, index, isHovered, onHover, onClick }) {
           {event.description || "System mapped event"}
         </p>
       </div>
+      
+      {/* Action Buttons visible on hover, but we will render them and rely on group hover or just show them for admin */}
+      <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${isHovered ? 'opacity-100' : ''}`} onClick={e => e.stopPropagation()}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(event); }}
+          className={`p-1.5 rounded-lg transition-colors ${isHovered ? 'text-white hover:bg-white/20' : 'text-[#0077b6] hover:text-[#03045e] hover:bg-[#caf0f8]/40'}`}
+          title="Edit Event"
+        >
+          <Edit size={14} />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(event); }}
+          className={`p-1.5 rounded-lg transition-colors ${isHovered ? 'text-white hover:bg-white/20' : 'text-red-500 hover:text-red-700 hover:bg-red-50'}`}
+          title={event.isSeeded ? "Override/Cancel Holiday" : "Delete Event"}
+        >
+          <Trash size={14} />
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -200,6 +221,7 @@ function AdminSchoolCalendarPage() {
   const scrollContainerRef = useRef(null);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -209,7 +231,10 @@ function AdminSchoolCalendarPage() {
     try {
       const data = await getSchoolCalendar();
       setCalendarData(data);
-      setEvents(data?.events || []);
+      // Wait, we should just getEvents() from academicCalendarService, but since getSchoolCalendar calls getAcademicCalendar, it's fine.
+      // But let's filter out cancelled events in the view, or we know they are already filtered by the service?
+      // Wait, the service filters them! So we just use data.events.
+      setEvents(data?.events?.filter(e => e.status !== 'cancelled') || []);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -219,22 +244,66 @@ function AdminSchoolCalendarPage() {
 
   const handleScheduleEvent = async (data) => {
     try {
-      const newEvent = {
-        ...data,
-        id: "evt_" + Date.now(),
-        title: data.name,
-        type: data.category.toLowerCase(),
-        date: new Date(data.date).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short', // 'short' gives Apr instead of April, matching mock data
-          year: 'numeric'
-        }),
-        status: "Upcoming"
-      };
-      setEvents((prev) => [...prev, newEvent]);
+      if (editingEvent) {
+        const updatedEvents = updateEvent(editingEvent.id, {
+          title: data.name,
+          type: data.category.toLowerCase(),
+          date: new Date(data.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          description: data.description,
+        });
+        setEvents(updatedEvents);
+      } else {
+        const newEvent = {
+          title: data.name,
+          type: data.category.toLowerCase(),
+          date: new Date(data.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          description: data.description,
+          status: "Upcoming"
+        };
+        const updatedEvents = createEvent(newEvent);
+        setEvents(updatedEvents);
+      }
       setCreateOpen(false);
+      setEditingEvent(null);
     } catch (error) {
-      console.error("Failed to create event", error);
+      console.error("Failed to save event", error);
+    }
+  };
+
+  const handleEditClick = (event) => {
+    // Parse the date back to YYYY-MM-DD for the date picker
+    const parts = event.date.split(" ");
+    let dateStr = "";
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthIdx = monthNames.findIndex(m => parts[1].startsWith(m));
+      if (monthIdx !== -1) {
+        const month = String(monthIdx + 1).padStart(2, '0');
+        dateStr = `${parts[2]}-${month}-${day}`;
+      }
+    }
+
+    setEditingEvent({
+      ...event,
+      name: event.title,
+      category: event.type.charAt(0).toUpperCase() + event.type.slice(1),
+      date: dateStr || "2024-04-01"
+    });
+    setCreateOpen(true);
+  };
+
+  const handleDeleteClick = (event) => {
+    if (event.isSeeded) {
+      if (window.confirm("Are you sure you want to cancel this seeded holiday? It will be hidden from the calendar.")) {
+        const updatedEvents = overrideHoliday(event.id, 'cancelled');
+        setEvents(updatedEvents);
+      }
+    } else {
+      if (window.confirm("Are you sure you want to permanently delete this event?")) {
+        const updatedEvents = deleteEvent(event.id);
+        setEvents(updatedEvents);
+      }
     }
   };
 
@@ -276,13 +345,7 @@ function AdminSchoolCalendarPage() {
       name: "category",
       label: "Category",
       type: "select",
-      options: [
-        { value: "Academic", label: "Academic Event" },
-        { value: "Holiday", label: "Holiday" },
-        { value: "Event", label: "General Event" },
-        { value: "Exam", label: "Examination" },
-        { value: "PTM", label: "Parent Teacher Meeting" },
-      ],
+      options: ALL_TYPES.filter(t => t !== "all").map(t => ({ value: t.charAt(0).toUpperCase() + t.slice(1), label: TYPE_CONFIG[t].label })),
       required: true,
     },
     { name: "description", label: "Description", type: "text" },
@@ -308,7 +371,7 @@ function AdminSchoolCalendarPage() {
         icon={Calendar}
         actionButton={
           <button
-            onClick={() => setCreateOpen(true)}
+            onClick={() => { setEditingEvent(null); setCreateOpen(true); }}
             className="flex items-center gap-2 bg-[#03045e] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#0077b6] transition-colors"
           >
             <Plus size={16} />
@@ -375,6 +438,8 @@ function AdminSchoolCalendarPage() {
                       const parts = (event.date || "").split(" ");
                       handleDateClick(parseInt(parts[0]), parts[1], parseInt(parts[2]), [event]);
                     }}
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
                   />
                 ))
               )}
@@ -469,7 +534,14 @@ function AdminSchoolCalendarPage() {
                 {selectedDayInfo.events.map((e, idx) => (
                   <div key={idx} className="flex items-start gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 group hover:bg-white/10 transition-colors">
                     <div className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} />
-                    <div><p className="text-xs font-black mb-0.5 group-hover:text-[#00b4d8] transition-colors">{e.title}</p><p className="text-[10px] text-white/60 font-medium leading-relaxed">{e.description || "System mapped event"}</p></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black mb-0.5 group-hover:text-[#00b4d8] transition-colors">{e.title}</p>
+                      <p className="text-[10px] text-white/60 font-medium leading-relaxed">{e.description || "System mapped event"}</p>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
+                      <button onClick={(ev) => { ev.stopPropagation(); handleEditClick(e); setSelectedDayInfo(null); }} className="p-1.5 text-white/60 hover:text-white hover:bg-white/20 rounded-lg transition-colors" title="Edit Event"><Edit size={12} /></button>
+                      <button onClick={(ev) => { ev.stopPropagation(); handleDeleteClick(e); setSelectedDayInfo(null); }} className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors" title={e.isSeeded ? "Override/Cancel Holiday" : "Delete Event"}><Trash size={12} /></button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -481,9 +553,9 @@ function AdminSchoolCalendarPage() {
       {/* Schedule Event Modal */}
       <AdminEditForm
         isOpen={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Schedule Institutional Event"
-        data={{ name: "", date: "2026-07-15", category: "Academic", description: "" }}
+        onClose={() => { setCreateOpen(false); setEditingEvent(null); }}
+        title={editingEvent ? "Edit Institutional Event" : "Schedule Institutional Event"}
+        data={editingEvent || { name: "", date: "2026-07-15", category: "Academic", description: "" }}
         fields={eventFields}
         onSubmit={handleScheduleEvent}
       />

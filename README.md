@@ -143,9 +143,10 @@ Detailed architectural documentation is available under the `docs/` directory an
 The project is actively being developed. 
 
 Recently completed:
-- ✔ Examination Module
-- ✔ Assessment Governance
-- ✔ Academic Report Cards
+- ✅ Examination Engine (Frozen)
+- ✅ Assessment Governance (Frozen)
+- ✅ Academic Report Cards
+- ✅ Academic Calendar (Frozen)
 - ✔ Student Examination Synchronization
 
 ## 🗺️ Roadmap

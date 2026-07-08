@@ -872,6 +872,7 @@ function AppContent() {
         <Route path="faculty" element={<LazyRoute Component={FacultyPage} />} />
         <Route path="withdrawal_request" element={<LazyRoute Component={WithdrawalRequestPage} />} />
         <Route path="leave" element={<LazyRoute Component={LeavePage} />} />
+        <Route path="calendar" element={<LazyRoute Component={SchoolCalendarPage} />} />
         <Route path="support" element={<LazyRoute Component={SupportCenterPage} />} />
       </Route>
 
@@ -949,6 +950,10 @@ function AppContent() {
         <Route
           path="leaves"
           element={<LazyRoute Component={TeacherLeavePage} />}
+        />
+        <Route
+          path="calendar"
+          element={<LazyRoute Component={SchoolCalendarPage} />}
         />
         <Route path="support" element={<LazyRoute Component={SupportCenterPage} />} />
       </Route>

@@ -34,7 +34,7 @@ This document tracks the completion status of all modules across the ERP portals
 ├── 📅 Attendance Management (✔ Complete)
 ├── 📄 Document Management (✔ Complete)
 ├── 🏢 Institutional Planning (✔ Complete)
-├── 📅 School Calendar (✔ Complete)
+├── 📅 Academic Calendar (✅ Complete / Frozen)
 ├── 📚 Subjects Management (✔ Complete)
 ├── ⚖️ Workload Analytics (✔ Complete)
 ├── ⚙️ School Settings (🚧 Planned)
@@ -84,3 +84,6 @@ This document tracks the completion status of all modules across the ERP portals
     - Entry points: Profile settings, Student360, Staff360, Admin Profile.
     - Dependencies: Student Profile, Staff Profile, Shared IDCard Component, Browser Print API.
     - Future Scope: Digital verification, Server-side template generation, QR/RFID integration.
+
+## 📅 Academic Calendar Subsystem
+The Academic Calendar subsystem is intentionally prepared for Academic Session Management through the presence of the `academicSession` field, but session lifecycle management, filtering, and archival remain outside the scope of this module.

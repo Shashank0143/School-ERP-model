@@ -32,8 +32,10 @@ export const initializeStorage = {
       }
 
       if (!hasKey(key)) {
-        console.info(`[InitializationEngine] Initializing missing collection key: "${key}" to []`);
-        setItem(key, []);
+        // We no longer initialize to [] here. 
+        // If we do, seedIfEmpty and generateMissingMockData will see []
+        // and mistakenly assume the user deleted all data, bypassing seeding.
+        console.info(`[InitializationEngine] Missing collection key: "${key}" (will be handled by seeders)`);
       } else {
         // Double check JSON parsability
         try {

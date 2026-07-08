@@ -960,9 +960,9 @@ const FeeManagementPage = () => {
                 items={filteredFees}
                 isEmpty={filteredFees.length === 0}
                 emptyTitle="No fee records found matching filters"
-                renderRow={(fee) => (
+                renderRow={(fee, index) => (
                   <tr
-                    key={fee.id}
+                    key={fee.id || `${fee.studentId}-${index}`}
                     className="hover:bg-slate-50 transition-colors text-xs text-gray-700 font-bold border-b border-slate-100"
                   >
                     <td className="py-3 px-2 text-[#03045e] font-black first:pl-2">
