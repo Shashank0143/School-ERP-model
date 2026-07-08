@@ -227,6 +227,15 @@ export const initializeERP = () => {
       setItem("erp_mock_schema_version", CURRENT_MOCK_SCHEMA);
     }
 
+    // ── Academic Calendar 2026 Update Fix ───────────────────────────────────
+    const CURRENT_CALENDAR_SCHEMA = 2;
+    const storedCalendarSchema = parseInt(getItem("erp_calendar_schema_version") || "1", 10);
+    if (storedCalendarSchema < CURRENT_CALENDAR_SCHEMA) {
+      console.log("[InitializationEngine] Upgrading Academic Calendar schema v1 → v2 (2026 update)");
+      removeItem(STORAGE_KEYS.ACADEMIC_CALENDAR);
+      setItem("erp_calendar_schema_version", CURRENT_CALENDAR_SCHEMA);
+    }
+
     // 2. First-load seeding if empty
     const seedIfEmpty = (key, data, name) => {
       const existing = getItem(key);

@@ -126,6 +126,8 @@ export function getRouteForNavItem(id, role) {
         return "/teacher/student-duty";
       case "teacher_exit_tracking":
         return "/teacher/student-exit-tracking";
+      case "calendar":
+        return "/teacher/calendar";
       default:
         return "/teacher/dashboard";
     }

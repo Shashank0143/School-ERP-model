@@ -39,7 +39,7 @@ const TYPE_CONFIG = {
   },
 };
 
-const ALL_TYPES = ["all", "holiday", "exam", "event", "ptm", "academic"];
+const ALL_TYPES = ["upcoming", "all", "holiday", "exam", "event", "ptm", "academic"];
 
 const getMonthData = (year, monthIndex) => {
   const firstDay = new Date(year, monthIndex, 1).getDay();
@@ -103,16 +103,17 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
           if (day === null) return <div key={i} />;
           const dayEvents = eventsByDay[day] || [];
           const isHovered = dayEvents.some(e => e.id === hoveredEventId);
+          const isToday = isCurrent && day === new Date().getDate();
           return (
             <div 
               key={i} 
               className={`relative h-6 w-full flex flex-col items-center justify-center rounded-md text-[9px] font-bold transition-all duration-200 pb-1
                 ${dayEvents.length > 0 ? "cursor-pointer" : "text-gray-300"}
-                ${isHovered ? "bg-[#03045e] text-white scale-110 z-10 shadow-lg" : "hover:bg-[#caf0f8]"}
+                ${isHovered ? "bg-[#03045e] text-white scale-110 z-10 shadow-lg" : isToday ? "ring-1 ring-[#00b4d8] bg-[#00b4d8]/10 text-[#00b4d8]" : "hover:bg-[#caf0f8]"}
               `}
               onClick={() => dayEvents.length > 0 && onDateClick(day, monthName, year, dayEvents)}
             >
-              <span className={dayEvents.length > 0 && !isHovered ? "text-[#03045e]" : ""}>
+              <span className={dayEvents.length > 0 && !isHovered && !isToday ? "text-[#03045e]" : ""}>
                 {day}
               </span>
               {dayEvents.length > 0 && !isHovered && (
@@ -121,7 +122,7 @@ function MiniMonth({ year, monthIndex, events, hoveredEventId, onDateClick, isCu
                     <div 
                       key={idx} 
                       className="w-1.5 h-1.5 rounded-full ring-1 ring-white" 
-                      style={{ backgroundColor: TYPE_CONFIG[e.category]?.color || TEAL }} 
+                      style={{ backgroundColor: TYPE_CONFIG[e.type]?.color || TEAL }} 
                     />
                   ))}
                 </div>
@@ -215,7 +216,7 @@ function AdminSchoolCalendarPage() {
   const [calendarData, setCalendarData] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("upcoming");
   const [hoveredEventId, setHoveredEventId] = useState(null);
   const [selectedDayInfo, setSelectedDayInfo] = useState(null);
   const scrollContainerRef = useRef(null);
@@ -327,12 +328,39 @@ function AdminSchoolCalendarPage() {
   const currentMonthIdx = now.getMonth();
   const currentYearIdx = now.getFullYear();
 
-  const filtered = useMemo(() => 
-    activeFilter === "all"
-      ? events
-      : events.filter((e) => e.type === activeFilter),
-    [activeFilter, events]
-  );
+  const filtered = useMemo(() => {
+    // 1. Filter by category
+    let result = (activeFilter === "all" || activeFilter === "upcoming")
+      ? events 
+      : events.filter((e) => e.type === activeFilter);
+      
+    // 2. Helper to parse event date strings like "15 Jul 2026"
+    const parseEventDate = (dateStr) => {
+      if (!dateStr) return 0;
+      const parts = dateStr.split(" ");
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthIdx = monthNames.findIndex(m => parts[1].startsWith(m));
+        const year = parseInt(parts[2], 10);
+        return new Date(year, monthIdx, day).getTime();
+      }
+      return new Date(dateStr).getTime();
+    };
+
+    // 3. Sort chronologically
+    result = [...result].sort((a, b) => parseEventDate(a.date) - parseEventDate(b.date));
+
+    // 4. If viewing "upcoming", only show upcoming events in the timeline (from today onwards)
+    if (activeFilter === "upcoming") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayTime = today.getTime();
+      result = result.filter(e => parseEventDate(e.date) >= todayTime);
+    }
+    
+    return result;
+  }, [activeFilter, events]);
 
   const handleDateClick = (day, month, year, dayEvents) => {
     setSelectedDayInfo({ day, month, year, events: dayEvents });
@@ -345,7 +373,7 @@ function AdminSchoolCalendarPage() {
       name: "category",
       label: "Category",
       type: "select",
-      options: ALL_TYPES.filter(t => t !== "all").map(t => ({ value: t.charAt(0).toUpperCase() + t.slice(1), label: TYPE_CONFIG[t].label })),
+      options: ALL_TYPES.filter(t => t !== "all" && t !== "upcoming").map(t => ({ value: t.charAt(0).toUpperCase() + t.slice(1), label: TYPE_CONFIG[t].label })),
       required: true,
     },
     { name: "description", label: "Description", type: "text" },
@@ -409,7 +437,7 @@ function AdminSchoolCalendarPage() {
                         ${isActive ? "bg-[#03045e] text-white shadow-lg shadow-[#03045e]/20" : "bg-[#caf0f8]/50 text-[#03045e] hover:bg-[#caf0f8]"}
                       `}
                     >
-                      {type === "all" ? "All Events" : (cfg?.label ?? type)}
+                      {type === "all" ? "All Events" : type === "upcoming" ? "Upcoming" : (cfg?.label ?? type)}
                     </button>
                   );
                 })}
