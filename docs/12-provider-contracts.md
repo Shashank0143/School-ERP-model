@@ -55,8 +55,12 @@ When migrating to the backend, the future `apiProvider` MUST satisfy the **Imple
 ## 6. Finance
 | Method | Classification | Status |
 |---|---|---|
-| `getFees`, `getFeesByStudent` | 🟢 Implemented + Contracted | Active |
-| `getInvoices`, `getReceipts` | 🟢 Implemented + Contracted | Active |
+| `getFees`, `getFeesByStudent`, `updateFee` | 🟢 Implemented + Contracted | Active |
+| `getInvoices`, `getReceipts`, `getInvoicesByStudent`, `getReceiptsByStudent` | 🟢 Implemented + Contracted | Active |
+| `getFeeStructures`, `getFeeStructureById`, `updateFeeStructure` | 🟢 Implemented + Contracted | Active |
+| `getFeeHeads`, `getFeeHeadById`, `createFeeHead`, `updateFeeHead`, `deleteFeeHead` | 🔴 Implemented + Not Contracted | Used heavily by `financeService.js` and `FeeManagementPage.jsx` |
+| `getStudentFeeAdjustments`, `getStudentFeeAdjustmentById`, `createStudentFeeAdjustment`, `updateStudentFeeAdjustment`, `deleteStudentFeeAdjustment` | 🔴 Implemented + Not Contracted | Used heavily by `financeService.js` and `FeeManagementPage.jsx` |
+| `getFeeConfiguration`, `updateFeeConfiguration` | 🔴 Implemented + Not Contracted | Used heavily by `financeService.js` and `FeeManagementPage.jsx` |
 
 ## 7. Transport
 | Method | Classification | Status |

@@ -504,20 +504,79 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
 }
 ```
 
-### Fee
+### Fee (Invoice / Bill)
 
 ```js
 {
   id: "fee-001",
   studentId: "stud-001",          // FK → students.id
-  classId: "class-11a",          // FK → classes.id
-  academicYear: "2025-26",
-  totalAmount: 85000,             // Derived from feeStructures
-  paidAmount: 42500,
-  balance: 42500,
-  dueDate: "2026-04-30",
-  status: "partial",              // paid | partial | unpaid | overdue
-  lastPaymentDate: "2026-03-15"
+  invoiceNo: "INV-2025-001",
+  billingMonth: "April 2025",     // e.g. "April 2025"
+  amount: 8500,                   // Net Invoice Amount
+  paidAmount: 8500,
+  dueDate: "2025-04-10",
+  status: "Paid",                 // Paid | Partially Paid | Pending | Overdue | Upcoming
+  lineItems: [
+    {
+      headId: "head-1",
+      label: "Tuition Fee",
+      amount: 4000,               // Net Amount
+      originalAmount: 5000,
+      waivedAmount: 0,
+      adjustmentAmount: 1000,
+      adjustmentType: "FIXED_AMOUNT",
+      billingType: "RECURRING",
+      billingFrequency: "MONTHLY"
+    }
+  ],
+  createdAt: "2025-04-01T00:00:00Z"
+}
+```
+
+### FeeHead
+
+```js
+{
+  id: "head-1",
+  name: "Tuition Fee",
+  description: "Monthly Tuition Fee",
+  isActive: true,
+  displayOrder: 1,
+  type: "CORE",
+  createdAt: "2025-01-01T00:00:00Z"
+}
+```
+
+### FeeConfiguration
+
+```js
+{
+  billing: {
+    "head-1": {
+      type: "RECURRING",          // ONE_TIME | RECURRING
+      frequency: "MONTHLY",       // MONTHLY | QUARTERLY | HALF_YEARLY | ANNUAL
+      vacationBehavior: "CHARGE", // CHARGE | WAIVE
+      isOptional: false,
+      dueDay: 10
+    }
+  },
+  vacationMonths: ["may", "jun"]
+}
+```
+
+### StudentFeeAdjustment
+
+```js
+{
+  id: "adj-1",
+  studentId: "stud-001",
+  feeHeadId: "head-1",
+  adjustmentType: "PERCENTAGE",   // FULL_WAIVER | PERCENTAGE | FIXED_AMOUNT
+  adjustmentValue: 20,            // e.g. 20%
+  reason: "Staff Child Concession",
+  effectiveFrom: "2025-04-01",
+  effectiveTo: "2026-03-31",
+  active: true
 }
 ```
 
@@ -528,10 +587,8 @@ All values are stored as JSON arrays (or objects). Below is the complete key reg
   id: "fs-senior",
   classLevel: "11",               // Applies to this level
   feeHeads: [
-    { name: "Tuition Fee", annualAmount: 60000, termAmount: 20000 },
-    { name: "Development Fee", annualAmount: 10000 },
-    { name: "Lab Fee", annualAmount: 8000 },
-    ...
+    { headId: "head-1", annualAmount: 60000 },
+    { headId: "head-2", annualAmount: 10000 }
   ]
 }
 ```

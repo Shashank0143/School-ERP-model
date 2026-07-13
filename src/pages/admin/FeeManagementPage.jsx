@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -15,6 +15,12 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
+  Calendar,
+  Plus,
+  Trash2,
+  Settings2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import PageAuthorityBanner from "../../components/admin/PageAuthorityBanner";
@@ -27,7 +33,6 @@ import StatusBadge from "../../components/admin/operations/StatusBadge";
 import ConfirmationModal from "../../shared/components/ConfirmationModal";
 import ToastNotification from "../../shared/components/ToastNotification";
 import LoadingSkeleton from "../../shared/components/LoadingSkeleton";
-import ChartWrapper from "../../shared/components/ChartWrapper";
 import { getDataProvider } from "../../data";
 import { formatClassLevel } from "../../shared/utils/classIdentity";
 import {
@@ -113,7 +118,9 @@ const FEE_MONTHS = [
 
 const TABS = [
   { id: "dashboard", label: "Collection Dashboard" },
+  { id: "feeHeads", label: "Fee Heads" },
   { id: "structure", label: "Fee Structure" },
+  { id: "adjustments", label: "Student Adjustments" },
   { id: "demand", label: "Demand Generation" },
   { id: "receipts", label: "Receipts" },
   { id: "reports", label: "Reports" },
@@ -134,13 +141,307 @@ const STAGE_LABEL = {
   senior_secondary: "Senior Secondary (Class 11–12)",
 };
 
+// ─── FeeHeadsTab component ────────────────────────────────────────────────
+function FeeHeadsTab() {
+  const [feeHeads, setFeeHeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newHeadName, setNewHeadName] = useState("");
+  const [expandedConfigId, setExpandedConfigId] = useState(null);
+  const provider = getDataProvider();
+
+  const loadHeads = useCallback(async () => {
+    setLoading(true);
+    const heads = await provider.getFeeHeads();
+    setFeeHeads(heads.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
+    setLoading(false);
+  }, [provider]);
+
+  useEffect(() => {
+    loadHeads();
+  }, [loadHeads]);
+
+  const handleAdd = async () => {
+    if (!newHeadName.trim()) return;
+    await provider.createFeeHead({
+      name: newHeadName.trim(),
+      active: true,
+      displayOrder: feeHeads.length + 1
+    });
+    setNewHeadName("");
+    setIsAdding(false);
+    loadHeads();
+  };
+
+  const handleToggleActive = async (id, currentStatus) => {
+    await provider.updateFeeHead(id, { active: !currentStatus });
+    loadHeads();
+  };
+
+  const handleDelete = async (id) => {
+    // Check if unused
+    const structures = await provider.getFeeStructures();
+    const isUsed = structures.some(fs => fs.feeHeads?.some(h => h.id === id || h.headId === id));
+    
+    if (isUsed) {
+      alert("Cannot delete this fee head because it is currently used in one or more fee structures.");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this fee head?")) {
+      await provider.deleteFeeHead(id);
+      loadHeads();
+    }
+  };
+
+  const handleUpdateName = async (id, newName) => {
+    if (!newName.trim()) return;
+    await provider.updateFeeHead(id, { name: newName.trim() });
+    loadHeads();
+  };
+
+  const handleUpdateConfig = async (id, field, value) => {
+    await provider.updateFeeHead(id, { [field]: value });
+    loadHeads();
+  };
+
+  const moveOrder = async (index, direction) => {
+    if (direction === -1 && index === 0) return;
+    if (direction === 1 && index === feeHeads.length - 1) return;
+    
+    const newHeads = [...feeHeads];
+    const temp = newHeads[index];
+    newHeads[index] = newHeads[index + direction];
+    newHeads[index + direction] = temp;
+    
+    await Promise.all(newHeads.map((h, i) => provider.updateFeeHead(h.id, { displayOrder: i + 1 })));
+    loadHeads();
+  };
+
+  if (loading) return <div className="p-8 text-center text-slate-400 font-bold">Loading Fee Heads...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between bg-white p-5 rounded-2xl border-2 border-slate-100">
+        <div>
+          <h3 className="text-sm font-black text-[#03045e]">Fee Heads Configuration</h3>
+          <p className="text-xs text-slate-400 font-bold mt-1">Manage global fee categories and visibility.</p>
+        </div>
+        <PermissionGate moduleId="admin_fees" permission="edit" mode="hidden">
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className="bg-[#03045e] text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-[#020344] transition-colors flex items-center gap-2"
+          >
+            {isAdding ? <X size={14} /> : <Plus size={14} />}
+            {isAdding ? "Cancel" : "Add Fee Head"}
+          </button>
+        </PermissionGate>
+      </div>
+
+      {isAdding && (
+        <div className="bg-sky-50 border-2 border-[#0077b6] p-4 rounded-xl flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="e.g. Robotics Lab Fee"
+            value={newHeadName}
+            onChange={(e) => setNewHeadName(e.target.value)}
+            className="flex-1 bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm font-bold focus:outline-none focus:border-[#0077b6]"
+            autoFocus
+          />
+          <button
+            onClick={handleAdd}
+            disabled={!newHeadName.trim()}
+            className="bg-[#0077b6] text-white px-5 py-2 rounded-lg text-xs font-black disabled:opacity-50"
+          >
+            Create
+          </button>
+        </div>
+      )}
+
+      <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b-2 border-slate-100">
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider w-16 text-center">Order</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">Fee Head Name</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-center">Status</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {feeHeads.map((h, i) => (
+              <React.Fragment key={h.id}>
+              <tr className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-5 py-4">
+                  <PermissionGate moduleId="admin_fees" permission="edit" mode="disabled">
+                    <div className="flex flex-col items-center gap-1 text-slate-300">
+                      <button onClick={() => moveOrder(i, -1)} disabled={i === 0} className="hover:text-[#0077b6] disabled:opacity-30"><ArrowUp size={14}/></button>
+                      <button onClick={() => moveOrder(i, 1)} disabled={i === feeHeads.length - 1} className="hover:text-[#0077b6] disabled:opacity-30"><ArrowDown size={14}/></button>
+                    </div>
+                  </PermissionGate>
+                </td>
+                <td className="px-5 py-4">
+                  <PermissionGate moduleId="admin_fees" permission="edit" mode="disabled">
+                    <input
+                      type="text"
+                      defaultValue={h.name}
+                      onBlur={(e) => handleUpdateName(h.id, e.target.value)}
+                      className="bg-transparent font-bold text-[#03045e] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#0077b6]/20 rounded px-2 py-1 -ml-2 w-full"
+                    />
+                  </PermissionGate>
+                </td>
+                <td className="px-5 py-4 text-center">
+                  <PermissionGate moduleId="admin_fees" permission="edit" mode="disabled">
+                    <button
+                      onClick={() => handleToggleActive(h.id, h.active)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-colors ${h.active ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}
+                    >
+                      {h.active ? "Active" : "Disabled"}
+                    </button>
+                  </PermissionGate>
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <PermissionGate moduleId="admin_fees" permission="edit" mode="hidden">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setExpandedConfigId(expandedConfigId === h.id ? null : h.id)}
+                        className={`p-2 rounded-lg transition-colors ${expandedConfigId === h.id ? "bg-[#0077b6] text-white" : "text-slate-400 hover:bg-slate-100"}`}
+                        title="Billing Configuration"
+                      >
+                        <Settings2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(h.id)}
+                        className="text-slate-300 hover:text-red-500 transition-colors p-2"
+                        title="Delete Fee Head"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </PermissionGate>
+                </td>
+              </tr>
+              {expandedConfigId === h.id && (
+                <tr key={`config-${h.id}`} className="bg-slate-50 border-b border-slate-200">
+                  <td colSpan={4} className="px-5 py-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Billing Frequency</label>
+                        <select 
+                          className="w-full text-xs font-bold text-[#03045e] bg-white border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-[#0077b6]"
+                          value={h.billingFrequency || "MONTHLY"}
+                          onChange={(e) => handleUpdateConfig(h.id, "billingFrequency", e.target.value)}
+                        >
+                          <option value="MONTHLY">Monthly</option>
+                          <option value="QUARTERLY">Quarterly</option>
+                          <option value="HALF_YEARLY">Half Yearly</option>
+                          <option value="ANNUAL">Annual</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Billing Type</label>
+                        <select 
+                          className="w-full text-xs font-bold text-[#03045e] bg-white border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-[#0077b6]"
+                          value={h.billingType || "RECURRING"}
+                          onChange={(e) => handleUpdateConfig(h.id, "billingType", e.target.value)}
+                        >
+                          <option value="RECURRING">Recurring</option>
+                          <option value="ONE_TIME">One-Time</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Due Day</label>
+                        <input 
+                          type="number"
+                          min="1" max="31"
+                          className="w-full text-xs font-bold text-[#03045e] bg-white border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-[#0077b6]"
+                          value={h.dueDay || 15}
+                          onChange={(e) => handleUpdateConfig(h.id, "dueDay", parseInt(e.target.value) || 15)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Vacation Behavior</label>
+                        <select 
+                          className="w-full text-xs font-bold text-[#03045e] bg-white border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-[#0077b6]"
+                          value={h.vacationBehavior || "CHARGE"}
+                          onChange={(e) => handleUpdateConfig(h.id, "vacationBehavior", e.target.value)}
+                        >
+                          <option value="CHARGE">Charge</option>
+                          <option value="WAIVE">Waive</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Optional Fee</label>
+                        <select 
+                          className="w-full text-xs font-bold text-[#03045e] bg-white border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-[#0077b6]"
+                          value={h.optional ? "YES" : "NO"}
+                          onChange={(e) => handleUpdateConfig(h.id, "optional", e.target.value === "YES")}
+                        >
+                          <option value="NO">Mandatory</option>
+                          <option value="YES">Optional</option>
+                        </select>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+            ))}
+            {feeHeads.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-5 py-8 text-center text-sm font-bold text-slate-400">
+                  No fee heads configured. Add one to get started.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── FeeStructureTab component ────────────────────────────────────────────────
+// eslint-disable-next-line react/prop-types
 function FeeStructureTab({ feeStructures, onSave }) {
   const [expandedStage, setExpandedStage] = useState("foundation");
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState(null);
+  
+  const [globalFeeHeads, setGlobalFeeHeads] = useState([]);
+  const [feeConfig, setFeeConfig] = useState({ vacationMonths: [] });
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configSaved, setConfigSaved] = useState(false);
+  const provider = getDataProvider();
+
+  useEffect(() => {
+    provider.getFeeConfiguration().then((config) => {
+      setFeeConfig(config);
+    });
+    provider.getFeeHeads().then((heads) => {
+      setGlobalFeeHeads(heads);
+    });
+  }, []);
+
+  const toggleVacationMonth = (monthId) => {
+    setFeeConfig((prev) => {
+      const current = prev.vacationMonths || [];
+      const newMonths = current.includes(monthId)
+        ? current.filter((m) => m !== monthId)
+        : [...current, monthId];
+      return { ...prev, vacationMonths: newMonths };
+    });
+  };
+
+  const handleSaveConfig = async () => {
+    setSavingConfig(true);
+    await provider.updateFeeConfiguration({ vacationMonths: feeConfig.vacationMonths });
+    setSavingConfig(false);
+    setConfigSaved(true);
+    setTimeout(() => setConfigSaved(false), 2500);
+  };
 
   const grouped = useMemo(() => {
     const map = {};
@@ -190,6 +491,53 @@ function FeeStructureTab({ feeStructures, onSave }) {
 
   return (
     <div className="space-y-4">
+      {/* Billing Configuration */}
+      <div className="border-2 border-slate-100 rounded-2xl p-5 bg-white mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 className="text-sm font-black text-[#03045e]">Vacation & Billing Configuration</h3>
+            <p className="text-xs text-slate-400 font-bold mt-1">Define global billing rules, including vacation months for automated fee adjustments.</p>
+          </div>
+          <PermissionGate moduleId="admin_fees" permission="edit" mode="hidden">
+            <button
+              onClick={handleSaveConfig}
+              disabled={savingConfig || configSaved}
+              className={`${
+                configSaved ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#03045e] hover:bg-[#020344]"
+              } text-white px-4 py-2 rounded-xl text-[10px] font-black transition-colors disabled:opacity-60 shrink-0 flex items-center justify-center gap-1.5`}
+            >
+              {savingConfig ? "Saving..." : configSaved ? <><Check size={12} /> Configuration Saved</> : "Save Configuration"}
+            </button>
+          </PermissionGate>
+        </div>
+        
+        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+          <h4 className="text-xs font-black text-[#03045e] mb-3 flex items-center gap-2">
+            <Calendar size={14} className="text-[#0077b6]" />
+            Select Vacation Months
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {FEE_MONTHS.map((m) => {
+              const isSelected = (feeConfig.vacationMonths || []).includes(m.id);
+              return (
+                <PermissionGate key={m.id} moduleId="admin_fees" permission="edit" mode="disabled">
+                  <button
+                    onClick={() => toggleVacationMonth(m.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors ${
+                      isSelected 
+                        ? "border-[#0077b6] bg-sky-50 text-[#0077b6]" 
+                        : "border-slate-200 text-slate-400 hover:border-slate-300 bg-white"
+                    }`}
+                  >
+                    {m.name.split(" ")[0]}
+                  </button>
+                </PermissionGate>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* Info banner */}
       <div className="flex items-start gap-3 bg-sky-50 border border-sky-100 rounded-2xl p-4">
         <Info size={15} className="text-[#0077b6] flex-shrink-0 mt-0.5" />
@@ -311,7 +659,7 @@ function FeeStructureTab({ feeStructures, onSave }) {
                             >
                               <div className="flex items-center justify-between mb-1.5">
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-tight">
-                                  {head.label}
+                                  {globalFeeHeads.find(gh => gh.id === head.id)?.name || head.label || head.id}
                                 </span>
                                 {isOneTime && (
                                   <span className="text-[8px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-1 py-0.5 rounded uppercase">
@@ -365,6 +713,163 @@ function FeeStructureTab({ feeStructures, onSave }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── StudentAdjustmentsTab component ────────────────────────────────────────────────
+function StudentAdjustmentsTab() {
+  const [adjustments, setAdjustments] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [feeHeads, setFeeHeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const provider = getDataProvider();
+  
+  const [newAdj, setNewAdj] = useState({
+    studentId: "",
+    feeHeadId: "",
+    adjustmentType: "FULL_WAIVER",
+    adjustmentValue: 0,
+    reason: "",
+    effectiveFrom: "",
+    effectiveTo: ""
+  });
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const [adjs, stus, heads] = await Promise.all([
+      provider.getStudentFeeAdjustments(),
+      provider.getStudents(),
+      provider.getFeeHeads()
+    ]);
+    setAdjustments(adjs);
+    setStudents(stus || []);
+    setFeeHeads(heads || []);
+    setLoading(false);
+  }, [provider]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleAdd = async () => {
+    if (!newAdj.studentId || !newAdj.feeHeadId || !newAdj.adjustmentType) return;
+    await provider.createStudentFeeAdjustment({
+      ...newAdj,
+      adjustmentValue: parseFloat(newAdj.adjustmentValue) || 0
+    });
+    setNewAdj({ studentId: "", feeHeadId: "", adjustmentType: "FULL_WAIVER", adjustmentValue: 0, reason: "", effectiveFrom: "", effectiveTo: "" });
+    setIsAdding(false);
+    loadData();
+  };
+
+  const handleToggleActive = async (id, currentStatus) => {
+    await provider.updateStudentFeeAdjustment(id, { active: !currentStatus });
+    loadData();
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this adjustment?")) {
+      await provider.deleteStudentFeeAdjustment(id);
+      loadData();
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-slate-400 font-bold">Loading Adjustments...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between bg-white p-5 rounded-2xl border-2 border-slate-100">
+        <div>
+          <h3 className="text-sm font-black text-[#03045e]">Student Fee Adjustments</h3>
+          <p className="text-xs text-slate-400 font-bold mt-1">Manage waivers, concessions, and discounts for specific students.</p>
+        </div>
+        <PermissionGate moduleId="admin_fees" permission="edit" mode="hidden">
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className="bg-[#03045e] text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-[#020344] transition-colors flex items-center gap-2"
+          >
+            {isAdding ? <X size={14} /> : <Plus size={14} />}
+            {isAdding ? "Cancel" : "Add Adjustment"}
+          </button>
+        </PermissionGate>
+      </div>
+
+      {isAdding && (
+        <div className="bg-sky-50 border-2 border-[#0077b6] p-4 rounded-xl space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select value={newAdj.studentId} onChange={e => setNewAdj({...newAdj, studentId: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold">
+              <option value="">Select Student</option>
+              {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.admissionNo})</option>)}
+            </select>
+            <select value={newAdj.feeHeadId} onChange={e => setNewAdj({...newAdj, feeHeadId: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold">
+              <option value="">Select Fee Head</option>
+              {feeHeads.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+            </select>
+            <select value={newAdj.adjustmentType} onChange={e => setNewAdj({...newAdj, adjustmentType: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold">
+              <option value="FULL_WAIVER">Full Waiver</option>
+              <option value="PERCENTAGE">Percentage (%)</option>
+              <option value="FIXED_AMOUNT">Fixed Amount (₹)</option>
+            </select>
+            <input type="number" placeholder="Value (0 for Full Waiver)" value={newAdj.adjustmentValue} onChange={e => setNewAdj({...newAdj, adjustmentValue: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold" />
+            <input type="text" placeholder="Reason" value={newAdj.reason} onChange={e => setNewAdj({...newAdj, reason: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold" />
+            <div className="flex gap-2">
+              <input type="date" placeholder="Valid From" value={newAdj.effectiveFrom} onChange={e => setNewAdj({...newAdj, effectiveFrom: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold w-full" />
+              <input type="date" placeholder="Valid To" value={newAdj.effectiveTo} onChange={e => setNewAdj({...newAdj, effectiveTo: e.target.value})} className="border border-slate-200 rounded p-2 text-xs font-bold w-full" />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button onClick={handleAdd} disabled={!newAdj.studentId || !newAdj.feeHeadId} className="bg-[#0077b6] text-white px-5 py-2 rounded-lg text-xs font-black disabled:opacity-50">Save Adjustment</button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b-2 border-slate-100">
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">Student</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">Fee Head</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">Type / Value</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">Reason</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-center">Status</th>
+              <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {adjustments.map(a => {
+              const stu = students.find(s => s.id === a.studentId);
+              const head = feeHeads.find(h => h.id === a.feeHeadId);
+              return (
+                <tr key={a.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-5 py-4 text-xs font-bold text-[#03045e]">{stu ? stu.name : a.studentId}</td>
+                  <td className="px-5 py-4 text-xs font-bold text-slate-600">{head ? head.name : a.feeHeadId}</td>
+                  <td className="px-5 py-4 text-xs font-bold text-[#0077b6]">
+                    {a.adjustmentType === "FULL_WAIVER" ? "Full Waiver" : 
+                     a.adjustmentType === "PERCENTAGE" ? `${a.adjustmentValue}%` : 
+                     `₹${a.adjustmentValue}`}
+                  </td>
+                  <td className="px-5 py-4 text-xs text-slate-500">{a.reason}</td>
+                  <td className="px-5 py-4 text-center">
+                    <PermissionGate moduleId="admin_fees" permission="edit" mode="disabled">
+                      <button onClick={() => handleToggleActive(a.id, a.active)} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-colors ${a.active ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}>
+                        {a.active ? "Active" : "Disabled"}
+                      </button>
+                    </PermissionGate>
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <PermissionGate moduleId="admin_fees" permission="edit" mode="hidden">
+                      <button onClick={() => handleDelete(a.id)} className="text-slate-300 hover:text-red-500 p-2"><Trash2 size={16} /></button>
+                    </PermissionGate>
+                  </td>
+                </tr>
+              )
+            })}
+            {adjustments.length === 0 && (
+              <tr><td colSpan={6} className="px-5 py-8 text-center text-xs font-bold text-slate-400">No adjustments configured.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -656,7 +1161,6 @@ const FeeManagementPage = () => {
     (sum, f) => sum + (f.totalAmount - f.paidAmount),
     0,
   );
-  const defaultersCount = fees.filter((f) => f.status !== "Paid").length;
   const collectionPercent =
     totalExpected > 0
       ? ((totalCollected / totalExpected) * 100).toFixed(1)
@@ -699,23 +1203,9 @@ const FeeManagementPage = () => {
       monthCounts,
       levelCounts,
     };
-  }, [fees, collectionPercent]);
+  }, [fees, collectionPercent, totalCollected, totalExpected, totalPending]);
 
-  // Chart data (component-level, no service)
-  const statusDistributionData = useMemo(() => {
-    return Object.entries(analytics.statusCounts).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-    }));
-  }, [analytics.statusCounts]);
 
-  const collectionData = useMemo(
-    () => [
-      { name: "Collected", value: analytics.totalCollected },
-      { name: "Pending", value: analytics.totalPending },
-    ],
-    [analytics.totalCollected, analytics.totalPending],
-  );
 
   const feeFields = [
     {
@@ -1053,6 +1543,17 @@ const FeeManagementPage = () => {
         </>
       )}
 
+      {activeTab === "feeHeads" && (
+        <motion.div
+          key="feeHeads"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
+          <FeeHeadsTab />
+        </motion.div>
+      )}
+
       {activeTab === "structure" && (
         <AdminSectionCard>
           <FeeStructureTab
@@ -1060,6 +1561,17 @@ const FeeManagementPage = () => {
             onSave={handleSaveFeeStructure}
           />
         </AdminSectionCard>
+      )}
+
+      {activeTab === "adjustments" && (
+        <motion.div
+          key="adjustments"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
+          <StudentAdjustmentsTab />
+        </motion.div>
       )}
 
       {/* Add Fee Modal */}

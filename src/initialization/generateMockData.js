@@ -7,6 +7,22 @@ import { feeStructuresSeed, getFeeStructureForClass } from "../data/mockDB/seed/
 import { classesSeed } from "../data/mockDB/seed/classes";
 
 export const generateMissingMockData = () => {
+  // 0. Seed Fee Heads
+  const existingFeeHeads = getItem(STORAGE_KEYS.FEE_HEADS);
+  if (!existingFeeHeads) {
+    const defaultHeads = [
+      { id: "tuition", name: "Tuition Fee", active: true, displayOrder: 1, billingFrequency: "MONTHLY", billingType: "RECURRING", dueDay: 15, vacationBehavior: "CHARGE", optional: false },
+      { id: "transport", name: "Transport Fee", active: true, displayOrder: 2, billingFrequency: "MONTHLY", billingType: "RECURRING", dueDay: 15, vacationBehavior: "WAIVE", optional: true },
+      { id: "lab", name: "Laboratory Fee", active: true, displayOrder: 3, billingFrequency: "MONTHLY", billingType: "RECURRING", dueDay: 15, vacationBehavior: "CHARGE", optional: false },
+      { id: "activity", name: "Activity Fee", active: true, displayOrder: 4, billingFrequency: "MONTHLY", billingType: "RECURRING", dueDay: 15, vacationBehavior: "WAIVE", optional: false },
+      { id: "tech", name: "Technology Fee", active: true, displayOrder: 5, billingFrequency: "MONTHLY", billingType: "RECURRING", dueDay: 15, vacationBehavior: "CHARGE", optional: false },
+      { id: "admission", name: "Admission Fee", active: true, displayOrder: 6, billingFrequency: "MONTHLY", billingType: "ONE_TIME", dueDay: 15, vacationBehavior: "CHARGE", optional: false },
+      { id: "security", name: "Security Deposit", active: true, displayOrder: 7, billingFrequency: "MONTHLY", billingType: "ONE_TIME", dueDay: 15, vacationBehavior: "CHARGE", optional: false },
+    ];
+    setItem(STORAGE_KEYS.FEE_HEADS, defaultHeads);
+    console.log(`[InitializationEngine] Generated and Seeded Fee Heads`);
+  }
+
   // 1. Seed Clubs
   const existingClubs = getItem(STORAGE_KEYS.CLUBS);
   if (!existingClubs ) {
@@ -69,7 +85,51 @@ export const generateMissingMockData = () => {
   const existingInvoices = getItem(STORAGE_KEYS.INVOICES);
   if (!existingInvoices ) {
     const invoices = [];
-    const receipts = [];
+    const globalFeeHeads = getItem(STORAGE_KEYS.FEE_HEADS) || [];
+    const feeConfig = getItem(STORAGE_KEYS.FEE_CONFIGURATION) || { vacationMonths: [] };
+    let feeAdjustments = getItem(STORAGE_KEYS.FEE_ADJUSTMENTS);
+    if (!feeAdjustments) {
+      // Seed some mock adjustments
+      feeAdjustments = [
+        {
+          id: "fadj-001",
+          studentId: "stu-001", // Aarav
+          feeHeadId: "transport",
+          adjustmentType: "FULL_WAIVER",
+          adjustmentValue: 0,
+          reason: "Staff Child",
+          effectiveFrom: "2025-04-01",
+          effectiveTo: "2026-03-31",
+          active: true,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: "fadj-002",
+          studentId: "stu-002", // Diya
+          feeHeadId: "tuition",
+          adjustmentType: "PERCENTAGE",
+          adjustmentValue: 50,
+          reason: "Scholarship",
+          effectiveFrom: "2025-04-01",
+          effectiveTo: "2026-03-31",
+          active: true,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: "fadj-003",
+          studentId: "stu-003", // Rohan
+          feeHeadId: "activity",
+          adjustmentType: "FIXED_AMOUNT",
+          adjustmentValue: 500,
+          reason: "Principal Concession",
+          effectiveFrom: "2025-04-01",
+          effectiveTo: "2026-03-31",
+          active: true,
+          createdAt: new Date().toISOString()
+        }
+      ];
+      setItem(STORAGE_KEYS.FEE_ADJUSTMENTS, feeAdjustments);
+    }
     
     // We'll generate 12 invoices for the current academic year for each student
     const months = [
@@ -86,70 +146,175 @@ export const generateMissingMockData = () => {
       const structure = getFeeStructureForClass(feeStructuresSeed, cls);
       if (!structure) return;
       
-      // Calculate monthly fee (just take annual / 12 for simplicity)
-      const monthlyFee = structure.feeHeads.reduce((sum, h) => sum + ((h.annualAmount || 0) / 12), 0);
+      // Get student's active adjustments
+      const studentAdjustments = feeAdjustments.filter(a => a.studentId === student.id && a.active);
       
-      // Look up feesSeed to see how much this student has paid
-      const feeRecord = feesSeed.find(f => f.studentId === student.id) || { balance: monthlyFee * 12, paidAmount: 0 };
-      
-      let remainingPaid = feeRecord.paidAmount;
+      const studentInvoices = [];
+      let totalExpectedYearly = 0;
       
       months.forEach((m, mIndex) => {
-        const invAmount = Math.round(monthlyFee);
+        const isVacationMonth = (feeConfig.vacationMonths || []).includes(m.month.substring(0, 3).toLowerCase());
+        const lineItems = [];
+        let invoiceTotal = 0;
         
-        let invPaid = 0;
-        let invStatus = "Pending";
-        
-        // Distribute the paid amount across invoices
-        if (remainingPaid >= invAmount) {
-          invPaid = invAmount;
-          remainingPaid -= invAmount;
-          invStatus = "Paid";
-        } else if (remainingPaid > 0) {
-          invPaid = remainingPaid;
-          remainingPaid = 0;
-          invStatus = "Partially Paid";
-        }
-        
-        const monthNum = String(mIndex + 4 > 12 ? mIndex - 8 : mIndex + 4).padStart(2, "0");
-        const invId = `inv-${student.id}-${m.month.toLowerCase()}`;
-        
-        invoices.push({
-          id: invId,
-          studentId: student.id,
-          invoiceNo: `INV-${m.year}-${monthNum}-${String(index+1).padStart(3, "0")}`,
-          amount: invAmount,
-          paidAmount: invPaid,
-          status: invStatus,
-          dueDate: `${m.year}-${monthNum}-15`,
-          billingMonth: `${m.month} ${m.year}`,
-          targetLabel: `${m.month} ${m.year} Invoice`,
-          isVacationMonth: false,
-          lineItems: structure.feeHeads.map(h => ({
-            label: h.label,
-            amount: Math.round((h.annualAmount || 0) / 12)
-          }))
+        structure.feeHeads.forEach(h => {
+          const gHead = globalFeeHeads.find(gh => gh.id === h.id || gh.id === h.headId) || {};
+          const freq = gHead.billingFrequency || "MONTHLY";
+          const type = gHead.billingType || "RECURRING";
+          const vBehavior = gHead.vacationBehavior || "CHARGE";
+          
+          let shouldInclude = false;
+          let divisor = 12;
+          
+          if (type === "ONE_TIME") {
+            shouldInclude = (mIndex === 0);
+            divisor = 1;
+          } else if (freq === "MONTHLY") {
+            shouldInclude = true;
+            divisor = 12;
+          } else if (freq === "QUARTERLY") {
+            shouldInclude = (mIndex % 3 === 0);
+            divisor = 4;
+          } else if (freq === "HALF_YEARLY") {
+            shouldInclude = (mIndex % 6 === 0);
+            divisor = 2;
+          } else if (freq === "ANNUAL") {
+            shouldInclude = (mIndex === 0);
+            divisor = 1;
+          }
+          
+          if (shouldInclude) {
+            let originalAmount = Math.round((h.annualAmount || 0) / divisor);
+            let billedAmount = originalAmount;
+            let waivedAmount = 0;
+            let waived = false;
+            
+            let adjustmentType = null;
+            let adjustmentValue = 0;
+            let adjustmentAmount = 0;
+            
+            const headId = gHead.id || h.id;
+            
+            // 1. Vacation waiver takes precedence (it waives everything for the month)
+            if (isVacationMonth && vBehavior === "WAIVE") {
+              billedAmount = 0;
+              waivedAmount = originalAmount;
+              waived = true;
+            } else {
+              // 2. Apply student-specific adjustments
+              // We assume current invoice date is roughly m.year-monthNum-15
+              const monthNumStr = String(mIndex + 4 > 12 ? mIndex - 8 : mIndex + 4).padStart(2, "0");
+              const invDateStr = `${m.year}-${monthNumStr}-15`;
+              
+              const applicableAdj = studentAdjustments.find(a => {
+                if (a.feeHeadId !== headId) return false;
+                if (a.effectiveFrom && invDateStr < a.effectiveFrom) return false;
+                if (a.effectiveTo && invDateStr > a.effectiveTo) return false;
+                return true;
+              });
+              
+              if (applicableAdj) {
+                adjustmentType = applicableAdj.adjustmentType;
+                adjustmentValue = applicableAdj.adjustmentValue;
+                
+                if (adjustmentType === "FULL_WAIVER") {
+                  adjustmentAmount = billedAmount;
+                  billedAmount = 0;
+                } else if (adjustmentType === "PERCENTAGE") {
+                  adjustmentAmount = Math.round(billedAmount * (adjustmentValue / 100));
+                  billedAmount = Math.max(0, billedAmount - adjustmentAmount);
+                } else if (adjustmentType === "FIXED_AMOUNT") {
+                  adjustmentAmount = adjustmentValue;
+                  billedAmount = Math.max(0, billedAmount - adjustmentAmount);
+                }
+              }
+            }
+            
+            lineItems.push({
+              headId,
+              headName: gHead.name || h.label,
+              label: gHead.name || h.label,
+              billingFrequency: freq,
+              billingType: type,
+              originalAmount,
+              billedAmount,
+              amount: billedAmount, // legacy
+              waivedAmount,
+              waived,
+              adjustmentType,
+              adjustmentValue,
+              adjustmentAmount,
+              netAmount: billedAmount, // alias
+              dueDay: gHead.dueDay || 15
+            });
+            
+            invoiceTotal += billedAmount;
+          }
         });
         
-        if (invPaid > 0) {
+        const firstDueDay = lineItems.length > 0 ? (lineItems[0].dueDay || 15) : 15;
+        const monthNum = String(mIndex + 4 > 12 ? mIndex - 8 : mIndex + 4).padStart(2, "0");
+        
+        studentInvoices.push({
+          id: `inv-${student.id}-${m.month.toLowerCase()}`,
+          studentId: student.id,
+          invoiceNo: `INV-${m.year}-${monthNum}-${String(index+1).padStart(3, "0")}`,
+          amount: invoiceTotal,
+          paidAmount: 0,
+          status: "Pending",
+          dueDate: `${m.year}-${monthNum}-${String(firstDueDay).padStart(2, '0')}`,
+          billingMonth: `${m.month} ${m.year}`,
+          targetLabel: `${m.month} ${m.year} Invoice`,
+          isVacationMonth,
+          lineItems
+        });
+        
+        totalExpectedYearly += invoiceTotal;
+      });
+      
+      const feeRecord = feesSeed.find(f => f.studentId === student.id) || { paidAmount: 0 };
+      let remainingPaid = feeRecord.paidAmount;
+      
+      studentInvoices.forEach(inv => {
+        if (remainingPaid >= inv.amount && inv.amount > 0) {
+          inv.paidAmount = inv.amount;
+          remainingPaid -= inv.amount;
+          inv.status = "Paid";
+        } else if (remainingPaid > 0 && inv.amount > 0) {
+          inv.paidAmount = remainingPaid;
+          remainingPaid = 0;
+          inv.status = "Partially Paid";
+        } else if (inv.amount === 0) {
+          inv.status = "Paid";
+        }
+        
+        if (inv.paidAmount > 0) {
+          const mParts = inv.billingMonth.split(" ");
+          const mStr = mParts[0];
+          const yStr = mParts[1];
+          const mIndex = months.findIndex(mx => mx.month === mStr);
+          const monthNum = String(mIndex + 4 > 12 ? mIndex - 8 : mIndex + 4).padStart(2, "0");
+          
           receipts.push({
-            id: `rcp-${student.id}-${m.month.toLowerCase()}`,
+            id: `rcp-${student.id}-${mStr.toLowerCase()}`,
             studentId: student.id,
-            invoiceId: invId,
-            receiptNo: `REC-${m.year}-${monthNum}-${String(index+1).padStart(3, "0")}`,
-            amount: invPaid,
-            date: `${m.year}-${monthNum}-10`,
+            invoiceId: inv.id,
+            receiptNo: `REC-${yStr}-${monthNum}-${String(index+1).padStart(3, "0")}`,
+            amount: inv.paidAmount,
+            date: `${yStr}-${monthNum}-10`,
             mode: "Online Payment",
             transactionId: `TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-            targetLabel: `${m.month} ${m.year} Invoice`
+            targetLabel: `${mStr} ${yStr} Invoice`
           });
         }
+        
+        invoices.push(inv);
       });
     });
     
     setItem(STORAGE_KEYS.INVOICES, invoices);
     setItem(STORAGE_KEYS.RECEIPTS, receipts);
-    console.log(`[InitializationEngine] Generated and Seeded Invoices & Receipts`);
+    console.log(`[InitializationEngine] Generated and Seeded Invoices & Receipts (Config-Aware)`);
   }
 
   // 5. Seed School Events for the Event Board

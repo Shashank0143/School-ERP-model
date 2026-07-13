@@ -7,10 +7,11 @@ export const getStudentFinanceSummary = async (studentId) => {
   const id = studentId || "stud-001";
   const provider = getDataProvider();
 
-  const [students, invoices, receipts] = await Promise.all([
+  const [students, invoices, receipts, feeConfig] = await Promise.all([
     provider.getStudents(),
     provider.getInvoicesByStudent(id),
     provider.getReceiptsByStudent(id),
+    provider.getFeeConfiguration(),
   ]);
 
   const student = students.find((s) => s.id === id);
@@ -31,6 +32,18 @@ export const getStudentFinanceSummary = async (studentId) => {
         inv.status === "Partially Paid",
     )
     .reduce((sum, inv) => sum + (inv.amount - (inv.paidAmount || 0)), 0);
+
+  let totalAdjustmentsGlobal = 0;
+  let totalWaiversGlobal = 0;
+  let totalOriginalGlobal = 0;
+
+  invoices.forEach(inv => {
+    (inv.lineItems || []).forEach(item => {
+      totalOriginalGlobal += (item.originalAmount || 0);
+      totalAdjustmentsGlobal += (item.adjustmentAmount || 0);
+      totalWaiversGlobal += (item.waivedAmount || 0);
+    });
+  });
 
   const pendingInvoices = invoices
     .filter(
@@ -58,40 +71,65 @@ export const getStudentFinanceSummary = async (studentId) => {
     upcomingCount: invoices.filter((inv) => inv.status === "Upcoming").length,
     totalInvoicesCount: invoices.length,
     activeDuesCount: pendingInvoices.length,
+    totalAdjustments: totalAdjustmentsGlobal,
+    totalWaivers: totalWaiversGlobal,
+    totalGrossAmount: totalOriginalGlobal,
   };
 
   const structure = invoices
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-    .map((inv) => ({
-      id: inv.id,
-      label: inv.targetLabel || `${inv.billingMonth} Invoice`,
-      total: inv.amount,
-      paidAmount: inv.paidAmount || 0,
-      remainingAmount: inv.amount - (inv.paidAmount || 0),
-      status: inv.status,
-      dueDate: inv.dueDate,
-      invoiceNo: inv.invoiceNo,
-      isVacationMonth: inv.isVacationMonth,
-      vacationType: inv.vacationType,
-      components: (inv.lineItems || []).map((item) => ({
-        head: item.label,
-        amount: item.amount,
-      })),
-    }));
+    .map((inv) => {
+      const monthPrefix = inv.billingMonth ? inv.billingMonth.substring(0, 3).toLowerCase() : "";
+      const derivedIsVacationMonth = (feeConfig.vacationMonths || []).includes(monthPrefix);
+
+      const invOriginalTotal = (inv.lineItems || []).reduce((sum, item) => sum + (item.originalAmount || 0), 0);
+      const invAdjustmentsTotal = (inv.lineItems || []).reduce((sum, item) => sum + (item.adjustmentAmount || 0), 0);
+      const invWaiversTotal = (inv.lineItems || []).reduce((sum, item) => sum + (item.waivedAmount || 0), 0);
+
+      return {
+        id: inv.id,
+        label: inv.targetLabel || `${inv.billingMonth} Invoice`,
+        total: inv.amount,
+        grossAmount: invOriginalTotal,
+        totalAdjustments: invAdjustmentsTotal,
+        totalWaivers: invWaiversTotal,
+        paidAmount: inv.paidAmount || 0,
+        remainingAmount: inv.amount - (inv.paidAmount || 0),
+        status: inv.status,
+        dueDate: inv.dueDate,
+        invoiceNo: inv.invoiceNo,
+        isVacationMonth: derivedIsVacationMonth,
+        vacationType: derivedIsVacationMonth ? "VACATION" : null,
+        components: (inv.lineItems || []).map((item) => ({
+          head: item.label,
+          amount: item.amount,
+          ...item
+        })),
+      };
+    });
 
   return {
     summary,
     structure,
-    pendingBills: pendingInvoices.map((inv) => ({
-      id: inv.id,
-      invoiceNo: inv.invoiceNo,
-      amount: inv.amount,
-      paidAmount: inv.paidAmount || 0,
-      remainingAmount: inv.amount - (inv.paidAmount || 0),
-      dueDate: inv.dueDate,
-      status: inv.status,
-      targetLabel: inv.targetLabel || `${inv.billingMonth} Invoice`,
-    })),
+    pendingBills: pendingInvoices.map((inv) => {
+      const invOriginalTotal = (inv.lineItems || []).reduce((sum, item) => sum + (item.originalAmount || 0), 0);
+      const invAdjustmentsTotal = (inv.lineItems || []).reduce((sum, item) => sum + (item.adjustmentAmount || 0), 0);
+      const invWaiversTotal = (inv.lineItems || []).reduce((sum, item) => sum + (item.waivedAmount || 0), 0);
+      
+      return {
+        id: inv.id,
+        invoiceNo: inv.invoiceNo,
+        amount: inv.amount,
+        grossAmount: invOriginalTotal,
+        totalAdjustments: invAdjustmentsTotal,
+        totalWaivers: invWaiversTotal,
+        paidAmount: inv.paidAmount || 0,
+        remainingAmount: inv.amount - (inv.paidAmount || 0),
+        dueDate: inv.dueDate,
+        status: inv.status,
+        targetLabel: inv.targetLabel || `${inv.billingMonth} Invoice`,
+      };
+    }),
     receipts: receipts
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .map((rcp) => ({

@@ -38,11 +38,13 @@ export const STORAGE_KEYS = {
   ACADEMIC_CALENDAR: "erp_academicCalendar",
   TIMETABLES: "erp_timetables_v2",
 
-  // Finance
   FEES: "erp_fees",
   INVOICES: "erp_invoices",
   RECEIPTS: "erp_receipts",
   FEE_STRUCTURES: "erp_fee_structures",
+  FEE_CONFIGURATION: "erp_feeConfiguration",
+  FEE_HEADS: "erp_feeHeads",
+  FEE_ADJUSTMENTS: "erp_feeAdjustments",
 
   // Transport
   TRANSPORT_ROUTES: "erp_transportRoutes",

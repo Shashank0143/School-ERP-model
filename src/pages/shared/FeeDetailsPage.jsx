@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import { useStudent } from "../../context/StudentContext";
-import ChildScopeSwitcher from "../../components/parent/ChildScopeSwitcher";
 import HelperButton from "../../components/HelperButton";
 import HelperPopup from "../../components/HelperPopup";
 import MainCard from "../../components/MainCard";
@@ -12,9 +11,6 @@ import {
   FileText,
   Receipt,
   Award,
-  FileSpreadsheet,
-  CheckCircle,
-  AlertCircle,
   Download,
   Printer,
   ChevronDown,
@@ -22,7 +18,8 @@ import {
   Clock,
   Calendar,
   Layers,
-  Info
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { getFeeDetails } from "../../services/financeService";
 import { useService } from "../../hooks/useService";
@@ -49,6 +46,7 @@ const STATUS_STYLE = {
   "Upcoming": { color: "#0077b6", bg: "#caf0f8", icon: Calendar },
 };
 
+// eslint-disable-next-line react/prop-types
 function FeeStructure({ structure }) {
   const { t, lang } = useLanguage();
   const [expandedId, setExpandedId] = useState(structure[0]?.id);
@@ -95,9 +93,11 @@ function FeeStructure({ structure }) {
                     >
                       {t(`feeDetails.billStatus_${(item.status || "").replace(/\s+/g, "")}`, { fallback: item.status })}
                     </div>
+                    {item.isVacationMonth && (
                       <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
                         {t("feeDetails.vacationMonth", { fallback: "Vacation month" })}
                       </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -141,22 +141,69 @@ function FeeStructure({ structure }) {
                     )}
 
                     <div className="bg-white rounded-xl p-4 shadow-inner border border-gray-50 space-y-3">
-                      {(item.components || []).map((comp, idx) => (
-                        <div key={idx} className="flex justify-between items-center pb-2 border-b border-gray-50 last:border-0">
-                          <span className="text-sm font-semibold text-gray-600">{t(`feeDetails.components.${(comp.head || "").toLowerCase().replace(/\s+/g, "")}`, { fallback: comp.head })}</span>
-                          <span className="font-bold text-[#03045e]">
-                            {comp.amount === 0 ? `${t("feeDetails.waived", { fallback: "Waived" })} / ₹0` : `₹${(comp.amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}`}
-                          </span>
-                        </div>
-                      ))}
-                      <div className="pt-3 flex flex-col gap-2">
+                      <div className="space-y-3">
+                        {(item.components || []).map((comp, idx) => (
+                          <div key={idx} className="flex flex-col gap-2 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+                            <div className="flex justify-between items-start">
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-bold text-[#03045e]">{t(`feeDetails.components.${(comp.head || "").toLowerCase().replace(/\s+/g, "")}`, { fallback: comp.head })}</span>
+                                  {comp.billingType === "ONE_TIME" && <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-wider">One-Time</span>}
+                                  {comp.billingFrequency && comp.billingFrequency !== "MONTHLY" && <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-sky-50 text-sky-600 border border-sky-100 uppercase tracking-wider">{comp.billingFrequency}</span>}
+                                </div>
+                                {comp.adjustmentAmount > 0 && (
+                                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 w-fit rounded uppercase tracking-wider flex items-center gap-1">
+                                    {comp.adjustmentType === "FULL_WAIVER" ? "Fully Waived" : `Student Concession (-₹${comp.adjustmentAmount.toLocaleString()})`}
+                                  </span>
+                                )}
+                                {comp.waivedAmount > 0 && (
+                                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 w-fit rounded uppercase tracking-wider">
+                                    Vacation Waiver (-₹{comp.waivedAmount.toLocaleString()})
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex flex-col items-end text-right">
+                                {(comp.adjustmentAmount > 0 || comp.waivedAmount > 0) && (
+                                  <span className="text-[10px] line-through text-slate-400 font-bold mb-0.5">
+                                    ₹{(comp.originalAmount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}
+                                  </span>
+                                )}
+                                <span className="font-black text-[#03045e]">
+                                  {comp.amount === 0 ? "₹0" : `₹${(comp.amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}`}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-3 mt-3 flex flex-col gap-2 border-t-2 border-slate-100 border-dashed">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-400 uppercase">{t("feeDetails.amountAlreadyPaid", { fallback: "Amount Already Paid" })}</span>
-                          <span className="text-sm font-bold text-emerald-600">₹{(item.paidAmount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Gross Amount</span>
+                          <span className="text-xs font-bold text-slate-500">₹{(item.grossAmount || item.total).toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-200">
-                          <span className="text-base font-bold text-[#03045e]">{t("feeDetails.structure.total", { fallback: "Total Invoice Amount" })}</span>
-                          <span className="text-lg font-black text-[#00b4d8]">₹{(item.total || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}</span>
+                        {item.totalAdjustments > 0 && (
+                          <div className="flex justify-between items-center text-emerald-600">
+                            <span className="text-[10px] font-black uppercase tracking-wider">Adjustments Applied</span>
+                            <span className="text-xs font-bold">-₹{item.totalAdjustments.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {item.totalWaivers > 0 && (
+                          <div className="flex justify-between items-center text-emerald-600">
+                            <span className="text-[10px] font-black uppercase tracking-wider">Vacation Waivers</span>
+                            <span className="text-xs font-bold">-₹{item.totalWaivers.toLocaleString()}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-sm font-black text-[#03045e]">Net Invoice Total</span>
+                          <span className="text-base font-black text-[#00b4d8]">₹{(item.total || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-emerald-600">
+                          <span className="text-[10px] font-black uppercase tracking-wider">Amount Paid</span>
+                          <span className="text-sm font-black">₹{(item.paidAmount || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[#dc2626]">
+                          <span className="text-[10px] font-black uppercase tracking-wider">Outstanding Balance</span>
+                          <span className="text-sm font-black">₹{(item.remainingAmount || 0).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -171,6 +218,7 @@ function FeeStructure({ structure }) {
   );
 }
 
+// eslint-disable-next-line react/prop-types
 function FeeBill({ bills }) {
   const { t, lang } = useLanguage();
   return (
@@ -200,9 +248,21 @@ function FeeBill({ bills }) {
               </div>
             </div>
             
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black text-gray-400 uppercase">{t("feeDetails.invoiceAmount", { fallback: "Invoice Amount" })}</span>
-              <span className="text-3xl font-black text-[#03045e]">₹{(bill.amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}</span>
+            <div className="flex flex-col gap-2 bg-gray-50/50 p-4 rounded-xl border border-gray-100 mt-2">
+              <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                <span>Gross Amount</span>
+                <span>₹{(bill.grossAmount || bill.amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}</span>
+              </div>
+              {(bill.totalAdjustments > 0 || bill.totalWaivers > 0) && (
+                <div className="flex justify-between items-center text-[10px] font-black text-emerald-600 uppercase tracking-wider">
+                  <span>Savings Applied</span>
+                  <span>-₹{((bill.totalAdjustments || 0) + (bill.totalWaivers || 0)).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-200">
+                <span className="text-xs font-black text-[#03045e] uppercase tracking-wider">Net Amount</span>
+                <span className="text-xl font-black text-[#03045e]">₹{(bill.amount || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}</span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 bg-gray-50/80 p-3 rounded-2xl border border-gray-100">
@@ -229,6 +289,7 @@ function FeeBill({ bills }) {
   );
 }
 
+// eslint-disable-next-line react/prop-types
 function FeeReceipt({ receipts }) {
   const { t, lang } = useLanguage();
   return (
@@ -260,6 +321,7 @@ function FeeReceipt({ receipts }) {
   );
 }
 
+// eslint-disable-next-line react/prop-types
 function ITCertificate({ cert }) {
   const { t, lang } = useLanguage();
   if (!cert || !cert.studentName) return null;
@@ -389,29 +451,48 @@ export default function FeeDetailsPage() {
 
       <div className="bg-white rounded-2xl shadow-sm p-5 mb-6 border border-gray-100" style={{ outline: "1px solid #caf0f8" }}>
         {/* Metric Row with thin responsive separators */}
+        {/* Metric Row with thin responsive separators */}
         <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-center divide-y md:divide-y-0 md:divide-x divide-gray-100">
           
-          {/* Metric 1: Total Planned Billing */}
+          {/* Metric 1: Total Gross & Planned */}
           <div className="flex items-center gap-4 pb-4 md:pb-0">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#f1f5f9" }}>
               <Layers size={24} style={{ color: "#475569" }} />
             </div>
-            <div className="text-left">
+            <div className="text-left flex flex-col justify-center">
               <span className="text-xl font-black block leading-none text-[#03045e]">
                 ₹{(summary.totalFees || 0).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}
               </span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mt-1.5">
-                {t("feeDetails.summary.totalPlannedBilling") || "Total Planned Billing"}
+                {t("feeDetails.summary.totalPlannedBilling", { fallback: "Net Planned Billing" })}
               </span>
-              <span className="text-[10px] font-bold text-gray-400 block mt-1">
-                {lang === "hi" 
-                  ? `${summary.totalInvoicesCount || 12} ${t("feeDetails.billingCyclesConfigured", { fallback: "बिलिंग चक्र नियोजित" })}`
-                  : `${summary.totalInvoicesCount || 12} ${t("feeDetails.billingCyclesConfigured", { fallback: "billing cycles configured" })}`}
+              {summary.totalGrossAmount > 0 && (
+                <span className="text-[10px] font-bold text-gray-400 block mt-1">
+                  Gross: ₹{summary.totalGrossAmount.toLocaleString()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Metric 2: Total Savings */}
+          <div className="flex items-center gap-4 py-4 md:py-0 md:pl-6">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#ecfdf5" }}>
+              <Award size={24} style={{ color: "#10b981" }} />
+            </div>
+            <div className="text-left flex flex-col justify-center">
+              <span className="text-xl font-black block leading-none text-emerald-600">
+                ₹{((summary.totalAdjustments || 0) + (summary.totalWaivers || 0)).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")}
+              </span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mt-1.5">
+                Total Savings & Concessions
+              </span>
+              <span className="text-[10px] font-bold text-emerald-600 block mt-1">
+                {(summary.totalAdjustments > 0 || summary.totalWaivers > 0) ? "Adjustments applied" : "No adjustments active"}
               </span>
             </div>
           </div>
 
-          {/* Metric 2: Total Paid To Date */}
+          {/* Metric 3: Total Paid To Date */}
           <div className="flex items-center gap-4 py-4 md:py-0 md:pl-6">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#d1fae5" }}>
               <CheckCircle size={24} style={{ color: "#059669" }} />
@@ -431,7 +512,7 @@ export default function FeeDetailsPage() {
             </div>
           </div>
 
-          {/* Metric 3: Active Liability Status */}
+          {/* Metric 4: Active Liability Status */}
           {(() => {
             const outstandingIsZero = (summary.outstandingBalance || 0) === 0;
             const outstandingIconBg = outstandingIsZero ? "#d1fae5" : "#fee2e2";

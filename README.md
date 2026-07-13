@@ -149,6 +149,7 @@ Recently completed:
 - ✅ Academic Calendar (Frozen)
 - ✔ Student Examination Synchronization
 - ✅ Translation Subsystem (Frozen)
+- ✅ Fee Management (Frozen)
 
 ## 🗺️ Roadmap
 

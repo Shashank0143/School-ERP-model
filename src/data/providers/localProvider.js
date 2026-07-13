@@ -1497,9 +1497,119 @@ const localProvider = {
     return true;
   },
 
+  // === FEE HEADS ===
+  getFeeHeads: async () => {
+    const heads = getItem(STORAGE_KEYS.FEE_HEADS) || [];
+    return heads.map(h => ({
+      ...h,
+      billingFrequency: h.billingFrequency || "MONTHLY",
+      billingType: h.billingType || "RECURRING",
+      dueDay: h.dueDay || 15,
+      vacationBehavior: h.vacationBehavior || "CHARGE",
+      optional: h.optional || false
+    }));
+  },
+
+  getFeeHeadById: async (id) => {
+    const heads = getItem(STORAGE_KEYS.FEE_HEADS) || [];
+    return heads.find((h) => h.id === id) || null;
+  },
+
+  createFeeHead: async (feeHeadData) => {
+    const heads = getItem(STORAGE_KEYS.FEE_HEADS) || [];
+    const newHead = {
+      ...feeHeadData,
+      id: feeHeadData.id || `fh-${Date.now()}`,
+      active: feeHeadData.active !== undefined ? feeHeadData.active : true,
+      displayOrder: feeHeadData.displayOrder || heads.length + 1,
+      billingFrequency: feeHeadData.billingFrequency || "MONTHLY",
+      billingType: feeHeadData.billingType || "RECURRING",
+      dueDay: feeHeadData.dueDay || 15,
+      vacationBehavior: feeHeadData.vacationBehavior || "CHARGE",
+      optional: feeHeadData.optional || false,
+      createdAt: new Date().toISOString()
+    };
+    heads.push(newHead);
+    setItem(STORAGE_KEYS.FEE_HEADS, heads);
+    return newHead;
+  },
+
+  updateFeeHead: async (id, updates) => {
+    const heads = getItem(STORAGE_KEYS.FEE_HEADS) || [];
+    const idx = heads.findIndex((h) => h.id === id);
+    if (idx === -1) throw new Error("Fee head not found");
+    heads[idx] = { ...heads[idx], ...updates, updatedAt: new Date().toISOString() };
+    setItem(STORAGE_KEYS.FEE_HEADS, heads);
+    return heads[idx];
+  },
+
+  deleteFeeHead: async (id) => {
+    const heads = getItem(STORAGE_KEYS.FEE_HEADS) || [];
+    const filtered = heads.filter((h) => h.id !== id);
+    if (filtered.length === heads.length) return false;
+    setItem(STORAGE_KEYS.FEE_HEADS, filtered);
+    return true;
+  },
+
+  // === STUDENT FEE ADJUSTMENTS ===
+  getStudentFeeAdjustments: async () => {
+    return getItem(STORAGE_KEYS.FEE_ADJUSTMENTS) || [];
+  },
+
+  getStudentFeeAdjustmentById: async (id) => {
+    const adjs = getItem(STORAGE_KEYS.FEE_ADJUSTMENTS) || [];
+    return adjs.find((a) => a.id === id) || null;
+  },
+
+  createStudentFeeAdjustment: async (adjustmentData) => {
+    const adjs = getItem(STORAGE_KEYS.FEE_ADJUSTMENTS) || [];
+    const newAdj = {
+      ...adjustmentData,
+      id: adjustmentData.id || `fadj-${Date.now()}`,
+      active: adjustmentData.active !== undefined ? adjustmentData.active : true,
+      createdAt: new Date().toISOString()
+    };
+    adjs.push(newAdj);
+    setItem(STORAGE_KEYS.FEE_ADJUSTMENTS, adjs);
+    return newAdj;
+  },
+
+  updateStudentFeeAdjustment: async (id, updates) => {
+    const adjs = getItem(STORAGE_KEYS.FEE_ADJUSTMENTS) || [];
+    const idx = adjs.findIndex((a) => a.id === id);
+    if (idx === -1) throw new Error("Fee adjustment not found");
+    adjs[idx] = { ...adjs[idx], ...updates, updatedAt: new Date().toISOString() };
+    setItem(STORAGE_KEYS.FEE_ADJUSTMENTS, adjs);
+    return adjs[idx];
+  },
+
+  deleteStudentFeeAdjustment: async (id) => {
+    const adjs = getItem(STORAGE_KEYS.FEE_ADJUSTMENTS) || [];
+    const filtered = adjs.filter((a) => a.id !== id);
+    if (filtered.length === adjs.length) return false;
+    setItem(STORAGE_KEYS.FEE_ADJUSTMENTS, filtered);
+    return true;
+  },
+
   // === FEE STRUCTURE ===
   getFeeStructures: async () => {
     return getItem(STORAGE_KEYS.FEE_STRUCTURES) || [];
+  },
+
+  getFeeConfiguration: async () => {
+    // Default migration handler built-in for new fields
+    const defaultConfig = {
+      vacationMonths: ["jun", "dec"] // Default IDs matching FEE_MONTHS short strings
+    };
+    const stored = getItem(STORAGE_KEYS.FEE_CONFIGURATION) || {};
+    return { ...defaultConfig, ...stored };
+  },
+
+  updateFeeConfiguration: async (updates) => {
+    const current = getItem(STORAGE_KEYS.FEE_CONFIGURATION) || {};
+    const updated = { ...current, ...updates };
+    setItem(STORAGE_KEYS.FEE_CONFIGURATION, updated);
+    return updated;
   },
 
   getFeeStructureById: async (id) => {
